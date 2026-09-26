@@ -170,7 +170,7 @@ async function previewRow(row) {
     body.innerHTML = `<img class="file-preview-image" src="${objectUrl}" alt="${escapeHtml(record.filename || row.filename)}">`;
   } else if (record.blob.type === "application/pdf" || ext === "pdf") {
     body.innerHTML = `<iframe class="file-preview-frame" src="${objectUrl}" title="PDF preview"></iframe>`;
-  } else if (record.blob.type.startsWith("text/") || ["csv", "txt"].includes(ext)) {
+  } else if (record.blob.type.startsWith("text/") || ["csv", "txt", "log"].includes(ext)) {
     const text = await record.blob.text();
     body.innerHTML = `<pre class="file-preview-text">${escapeHtml(text.slice(0, 200000))}</pre>`;
   } else {

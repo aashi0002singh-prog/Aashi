@@ -216,3 +216,28 @@ export async function deleteAuditLogs(){
     tx.onabort=()=>{db.close();reject(tx.error||new Error("Audit reset aborted"))};
   });
 }
+
+export async function listStoredFileKeys(){
+  const db=await openDB();
+  try{return await new Promise((resolve,reject)=>{const tx=db.transaction(FILE_STORE,"readonly"),req=tx.objectStore(FILE_STORE).getAllKeys();req.onsuccess=()=>resolve(req.result||[]);req.onerror=()=>reject(req.error||new Error("File key lookup failed"));tx.onerror=()=>reject(tx.error||new Error("File key lookup failed"));})}
+  finally{db.close()}
+}
+
+export async function renameStoredFile(oldKey,newKey){
+  if(oldKey===newKey)return;
+  const db=await openDB();
+  try{
+    const record=await new Promise((resolve,reject)=>{const tx=db.transaction(FILE_STORE,"readonly"),req=tx.objectStore(FILE_STORE).get(oldKey);req.onsuccess=()=>resolve(req.result||null);req.onerror=()=>reject(req.error||new Error("File lookup failed"));});
+    if(!record)return;
+    await new Promise((resolve,reject)=>{const tx=db.transaction([FILE_STORE,CHUNK_STORE],"readwrite");tx.objectStore(FILE_STORE).put(record,newKey);if(record.chunked&&record.chunkCount){for(let i=0;i<record.chunkCount;i++){const req=tx.objectStore(CHUNK_STORE).get([oldKey,i]);req.onsuccess=()=>{if(req.result)tx.objectStore(CHUNK_STORE).put(req.result,[newKey,i])}}}tx.oncomplete=resolve;tx.onerror=()=>reject(tx.error||new Error("File rename failed"));});
+    await new Promise((resolve,reject)=>{const tx=db.transaction([FILE_STORE,CHUNK_STORE],"readwrite");tx.objectStore(FILE_STORE).delete(oldKey);if(record.chunked&&record.chunkCount){for(let i=0;i<record.chunkCount;i++)tx.objectStore(CHUNK_STORE).delete([oldKey,i])}tx.oncomplete=resolve;tx.onerror=()=>reject(tx.error||new Error("Old file cleanup failed"));});
+  }finally{db.close()}
+}
+
+export async function deleteStoredFile(key){
+  const db=await openDB();
+  try{
+    const record=await new Promise((resolve,reject)=>{const tx=db.transaction(FILE_STORE,"readonly"),req=tx.objectStore(FILE_STORE).get(key);req.onsuccess=()=>resolve(req.result||null);req.onerror=()=>reject(req.error||new Error("File lookup failed"));});
+    await new Promise((resolve,reject)=>{const tx=db.transaction([FILE_STORE,CHUNK_STORE],"readwrite");tx.objectStore(FILE_STORE).delete(key);if(record?.chunked&&record.chunkCount){for(let i=0;i<record.chunkCount;i++)tx.objectStore(CHUNK_STORE).delete([key,i])}tx.oncomplete=resolve;tx.onerror=()=>reject(tx.error||new Error("File delete failed"));});
+  }finally{db.close()}
+}
