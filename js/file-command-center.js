@@ -1,6 +1,6 @@
 import {MODEL_ORDER, RECORD_ORDER, createDefaultData} from "../data/models.js";
-import {getRepositoryDocuments, getFileVersion, getAuditLogs, addAudit} from "./database.js";
-import {downloadBlob, formatBytes, escapeHtml, fileExtension, mimeForFilename, normalizeFileBlob} from "./ui.js";
+import {getFile, getAuditLogs, addAudit} from "./database.js";
+import {downloadBlob, formatBytes, escapeHtml} from "./ui.js";
 
 /*
   Isolated File Command Center.
@@ -17,10 +17,54 @@ function loadData() {
   catch { return createDefaultData(); }
 }
 
-async function collectRecords(){
-  const versions=await getRepositoryDocuments();
-  return versions.map(v=>({model:v.modelCode,key:v.recordCode,subpart:v.slotName||'',title:v.recordCode,category:'Engineering Record',filename:v.filename||'Uploaded file',size:v.size?formatBytes(v.size):'—',versionId:v.versionId,revision:v.revision||'',modelId:v.modelId||null,recordId:v.recordId||null,slotId:v.slotId||null}));
+function subpartId(sub, index) {
+  return String(sub?.id || sub?.name || `part-${index + 1}`).trim().toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "") || `part-${index + 1}`;
 }
+
+function keyForSubpart(model, key, sub, index) {
+  const storageKey = key === "M" ? "O" : key;
+  return `${model}_${storageKey}_${subpartId(sub, index)}`;
+}
+
+function modelCodes(data) {
+  return Object.keys(data || {});
+}
+
+async function collectRecords() {
+  const data=loadData(),out=[];
+  for(const model of modelCodes(data)){
+    const items=data[model]?.items||{};
+    for(const key of RECORD_ORDER){
+      const item=items[key]; if(!item) continue;
+      if(Array.isArray(item.mergedSources)){
+        for(const src of item.mergedSources){
+          try{
+            const storageKey=`${model}_${src.key}`,stored=await getFile(storageKey);
+            if(!stored?.blob) continue;
+            out.push({model,key,subpart:src.name||"",title:item.title||key,category:item.category||"General",filename:stored.filename||src.filename||"Uploaded file",size:stored.size?formatBytes(stored.size):(src.size||"—"),storageKey});
+          }catch(err){console.warn("File Command Center lookup failed",model,key,src.key,err)}
+        }
+        continue;
+      }
+      if(Array.isArray(item.subItems)){
+        for(let index=0;index<item.subItems.length;index++){
+          const sub=item.subItems[index],storageKey=keyForSubpart(model,key,sub,index);
+          try{
+            const stored=await getFile(storageKey); if(!stored?.blob) continue;
+            out.push({model,key,subpart:sub.name||`Part ${index+1}`,title:item.title||key,category:item.category||"General",filename:stored.filename||sub.filename||"Uploaded file",size:stored.size?formatBytes(stored.size):(sub.size||"—"),storageKey});
+          }catch(err){console.warn("File Command Center lookup failed",model,key,sub.name,err)}
+        }
+        continue;
+      }
+      try{
+        const storageKey=`${model}_${key}`,stored=await getFile(storageKey); if(!stored?.blob) continue;
+        out.push({model,key,title:item.title||key,category:item.category||"General",filename:stored.filename||item.filename||"Uploaded file",size:stored.size?formatBytes(stored.size):(item.size||"—"),storageKey});
+      }catch(err){console.warn("File Command Center lookup failed",model,key,err)}
+    }
+  }
+  return out;
+}
+
 function iconFor(filename = "") {
   const ext = filename.split(".").pop().toLowerCase();
   if (ext === "pdf") return "fa-file-pdf";
@@ -42,7 +86,7 @@ function renderModelOptions() {
   const select = document.getElementById("fileCenterModel");
   if (!select || select.options.length > 1) return;
   const data = loadData();
-  select.innerHTML = `<option value="">All models</option>` + Object.keys(data).filter(Boolean).sort().map(m => `<option value="${escapeHtml(m)}">${escapeHtml(m)}</option>`).join("");
+  select.innerHTML = `<option value="">All models</option>` + modelCodes(data).map(m => `<option value="${escapeHtml(m)}">${escapeHtml(m)}</option>`).join("");
 }
 
 function filtered() {
@@ -98,7 +142,7 @@ function clearPreview() {
 }
 
 async function getSelected(row) {
-  return getFileVersion(row.versionId);
+  return getFile(row.storageKey || `${row.model}_${row.key}`);
 }
 
 async function downloadRow(row) {
@@ -107,34 +151,30 @@ async function downloadRow(row) {
   const filename=record.filename || row.filename;
   const ok = downloadBlob(record.blob, filename);
   if (!ok) throw new Error("Browser blocked the download.");
-  await addAudit("DOWNLOAD",{model:row.model,key:row.key,subpart:row.subpart || "",filename,modelId:row.modelId||null,recordId:row.recordId||null,slotId:row.slotId||null,versionId:row.versionId||null});
+  await addAudit("DOWNLOAD",{model:row.model,key:row.key,subpart:row.subpart || "",filename});
 }
 
 async function previewRow(row) {
   const record = await getSelected(row);
   if (!record?.blob) throw new Error("File is not present in local storage.");
   clearPreview();
-  const filename=record.filename || row.filename || "engineering-file";
-  const ext=fileExtension(filename);
-  const blob=normalizeFileBlob(record.blob,filename);
-  objectUrl = URL.createObjectURL(blob);
+  objectUrl = URL.createObjectURL(record.blob);
   const body = document.getElementById("filePreviewBody");
   const title = document.getElementById("filePreviewTitle");
   const meta = document.getElementById("filePreviewMeta");
-  if (title) title.textContent = filename;
-  if (meta) meta.textContent = `${row.model} · ${row.key} · ${formatBytes(blob.size)} · ${blob.type || mimeForFilename(filename)}`;
+  if (title) title.textContent = record.filename || row.filename;
+  if (meta) meta.textContent = `${row.model} · ${row.key} · ${formatBytes(record.blob.size)} · ${record.blob.type || "unknown type"}`;
   if (!body) return;
-  const type=blob.type || mimeForFilename(filename);
-  if (type.startsWith("image/") || ["png","jpg","jpeg","webp","gif"].includes(ext)) {
-    body.innerHTML = `<img class="file-preview-image" src="${objectUrl}" alt="${escapeHtml(filename)}">`;
-  } else if (type === "application/pdf" || ext === "pdf") {
-    body.innerHTML = `<iframe class="file-preview-frame" src="${objectUrl}#view=FitH" title="PDF preview"></iframe>`;
-  } else if (type.startsWith("text/") || ["csv","txt","json","xml","log"].includes(ext)) {
-    const text = await blob.text();
+  const ext = extOf(record.filename || row.filename);
+  if (record.blob.type.startsWith("image/") || ["png", "jpg", "jpeg", "webp", "gif"].includes(ext)) {
+    body.innerHTML = `<img class="file-preview-image" src="${objectUrl}" alt="${escapeHtml(record.filename || row.filename)}">`;
+  } else if (record.blob.type === "application/pdf" || ext === "pdf") {
+    body.innerHTML = `<iframe class="file-preview-frame" src="${objectUrl}" title="PDF preview"></iframe>`;
+  } else if (record.blob.type.startsWith("text/") || ["csv", "txt"].includes(ext)) {
+    const text = await record.blob.text();
     body.innerHTML = `<pre class="file-preview-text">${escapeHtml(text.slice(0, 200000))}</pre>`;
   } else {
-    body.innerHTML = `<div class="file-preview-unsupported"><i class="fa-solid fa-file-circle-check"></i><strong>File uploaded successfully.</strong><span>This format is stored safely but your browser does not provide an inline viewer for it.</span><div class="preview-action-row"><button type="button" class="btn btn-dark" id="openUploadedFile"><i class="fa-solid fa-arrow-up-right-from-square"></i> Open File</button><button type="button" class="btn btn-dark" id="previewDownloadBtn"><i class="fa-solid fa-download"></i> Download</button></div></div>`;
-    document.getElementById("openUploadedFile")?.addEventListener("click",()=>{const w=window.open(objectUrl,"_blank","noopener,noreferrer");if(!w)downloadRow(row).catch(e=>window.alert(e.message));});
+    body.innerHTML = `<div class="file-preview-unsupported"><i class="fa-solid ${iconFor(row.filename)}"></i><strong>Preview not available for this file type.</strong><span>You can download the original file from the command center.</span><button type="button" class="btn btn-dark" id="previewDownloadBtn"><i class="fa-solid fa-download"></i> Download</button></div>`;
     document.getElementById("previewDownloadBtn")?.addEventListener("click", () => downloadRow(row).catch(e => window.alert(e.message)));
   }
   document.getElementById("filePreviewModal")?.classList.remove("hidden");
@@ -154,7 +194,7 @@ function bind() {
   document.getElementById("fileCenterRefresh")?.addEventListener("click", () => refresh());
   document.getElementById("fileCenterSearch")?.addEventListener("input", render);
   document.getElementById("fileCenterModel")?.addEventListener("change", render);
-  document.querySelectorAll("[data-close-file-center]").forEach(b => b.addEventListener("click", () => close()));
+  document.querySelectorAll("[data-close-file-center]").forEach(b => b.addEventListener("click", () => document.getElementById(b.dataset.closeFileCenter)?.classList.add("hidden")));
   document.getElementById("fileCenterModal")?.addEventListener("click", async e => {
     if (e.target.classList.contains("modal-backdrop")) { close(); return; }
     const action = e.target.closest("[data-action]")?.dataset.action;

@@ -1,45 +1,15 @@
-import {MODEL_ORDER,RECORD_ORDER,CATEGORIES,CATEGORY_COLORS,createDefaultData,compareRecordCodes} from "../data/models.js";
-import {getFileVersion,listDocumentsByContext,migrateLegacyFilesToVersions,deleteAllFiles,deleteAuditLogs,addAudit,registerModel,registerRecord,registerSlot,renameModelCode,createFullBackup,restoreFullBackup} from "./database.js";
-import {toast,escapeHtml,formatBytes,downloadBlob,downloadText,normalizeFileBlob,mimeForFilename,fileExtension} from "./ui.js";
+import {MODEL_ORDER,RECORD_ORDER,CATEGORIES,CATEGORY_COLORS,createDefaultData} from "../data/models.js";
+import {saveFile,getFile,getFiles,listFileVersions,deleteAllFiles,deleteAuditLogs,addAudit} from "./database.js";
+import {toast,escapeHtml,formatBytes,downloadBlob,downloadText} from "./ui.js";
 
 const STORAGE_KEY="MOBILE_RND_DB_DATA_V10";
 const PREF_KEY="MOBILE_RND_PREFS_V3";
 const AUTH_KEY="RND_AUTH_V3";
 const MAX_FILE_SIZE=500*1024*1024;
 const ALLOWED=["pdf","xlsx","xls","zip","bin","dwg","csv","doc","docx","ppt","pptx"];
-const LEGACY_RECORD_MAP={};
+const LEGACY_RECORD_MAP={S:"A",B:"B",I:"C",P:"D",K:"E",L:"F",M:"G",T:"H",C:"I",E:"J",H:"K",F:"L",G:"M",Q:"N",J:"O",A:"P",D:"Q",N:"R",O:"S",R:"U",U:"T",VSWR:"H",HWC:"T"};
 const HARDWARE_DEFAULT={title:"Hardware Checklist",category:"Specification",icon:"fa-clipboard-check",tags:["Hardware verification","Pre-S sign-off"],filename:"",size:""};
 const CUSTOM_MODELS_KEY="MOBILE_RND_CUSTOM_MODELS_V1";
-const MODEL_IDS_KEY="MOBILE_RND_MODEL_IDS_V1";
-const RECORD_IDS_KEY="MOBILE_RND_RECORD_IDS_V1";
-const SLOT_IDS_KEY="MOBILE_RND_SLOT_IDS_V1";
-function stableIdMap(key){return readJson(key,{});}
-async function ensureRepositoryIdentity(){
-  const modelIds=stableIdMap(MODEL_IDS_KEY), recordIds=stableIdMap(RECORD_IDS_KEY), slotIds=stableIdMap(SLOT_IDS_KEY);
-  const codes=modelList();
-  for(const code of codes){
-    modelIds[code] ||= crypto.randomUUID();
-    const meta=data[code]?.meta||{};
-    await registerModel({modelId:modelIds[code],modelCode:code,name:meta.name||code,processor:meta.ap||"",launchYear:meta.modelYear||"",pic:meta.sielHwPic||meta.leadKorea||"",rfNetwork:meta.rfNetwork||meta.modem||"",modelType:meta.modelType||"Development Model",status:meta.status||"Development"});
-    for(const [recordCode,item] of Object.entries(data[code]?.items||{})){
-      if(!String(recordCode).trim())continue;
-      recordIds[recordCode] ||= crypto.randomUUID();
-      await registerRecord({recordId:recordIds[recordCode],code:recordCode,title:item.title||recordCode,category:item.category||"Specification",order:recordCodeValueSafe(recordCode),icon:item.icon||"fa-folder"});
-      const sources=[];
-      if(Array.isArray(item.mergedSources)) item.mergedSources.forEach((x,i)=>sources.push({id:String(x.key),name:x.name||x.key,required:true,order:i}));
-      else if(Array.isArray(item.subItems)) item.subItems.forEach((x,i)=>sources.push({id:String(x.id||i),name:x.name||`File ${i+1}`,required:true,order:i}));
-      else sources.push({id:"main",name:item.title||recordCode,required:true,order:0});
-      for(const src of sources){
-        const refKey=src.id==="main"?`${code}_${recordCode}`:(Array.isArray(item.mergedSources)?`${code}_${src.id}`:`${code}_${recordCode}_${src.id}`);
-        const mapKey=`${code}::${recordCode}::${src.id}`; slotIds[mapKey] ||= crypto.randomUUID();
-        await registerSlot({slotId:slotIds[mapKey],modelId:modelIds[code],recordId:recordIds[recordCode],name:src.name,slotKey:src.id,required:src.required,order:src.order,legacyKey:refKey,createdAt:Date.now()});
-      }
-    }
-  }
-  localStorage.setItem(MODEL_IDS_KEY,JSON.stringify(modelIds)); localStorage.setItem(RECORD_IDS_KEY,JSON.stringify(recordIds)); localStorage.setItem(SLOT_IDS_KEY,JSON.stringify(slotIds));
-}
-function recordCodeValueSafe(code){return String(code).toUpperCase().split("").reduce((n,c)=>n*26+(c.charCodeAt(0)-64),0)}
-
 function customModelCodes(){return readJson(CUSTOM_MODELS_KEY,[]).map(x=>String(x?.code||"").trim().toUpperCase()).filter(Boolean)}
 function modelList(){return [...MODEL_ORDER,...customModelCodes()].filter((m,i,a)=>a.indexOf(m)===i&&data?.[m])}
 
@@ -96,12 +66,13 @@ function migrateRecordKeys(raw){
       block.items=reordered;
       changed=true;
     }
-    else if(legacyLayout && Object.keys(LEGACY_RECORD_MAP).length){
+    else if(legacyLayout){
       const migrated={};
       for(const [oldKey,newKey] of Object.entries(LEGACY_RECORD_MAP)){
         if(items[oldKey] && !migrated[newKey]) migrated[newKey]=clone(items[oldKey]);
       }
-      if(Object.keys(migrated).length){block.items={...items,...migrated};changed=true;}
+      block.items=migrated;
+      changed=true;
     }
     // V64.2 dashboard restructuring: Schematics are grouped as a section, but
     // Block Diagram (A), Circuit Diagram (B), and SOC Table (C) remain separate cards.
@@ -225,9 +196,7 @@ function currentItemsFor(model){return data[model]?.items||{}}
 function itemText(k,item){return [k,item.title,item.category,item.filename,item.uploadedFilename,...(item.tags||[]),...(item.subItems||[]).flatMap(s=>[s.name,s.filename,s.size]),...(item.mergedSources||[]).flatMap(s=>[s.name,s.filename,s.size,s.detail])].join(" ").toLowerCase()}
 function markRecent(key){const id=`${currentModel}:${key}`;recentlyViewed=[id,...recentlyViewed.filter(x=>x!==id)].slice(0,8);localStorage.setItem("MOBILE_RND_RECENT_V1",JSON.stringify(recentlyViewed))}
 function parseHash(){const m=location.hash.match(/^#record\/([^/]+)\/?([^/]*)$/);if(m&&modelList().includes(m[1])&&currentItemsFor(m[1])[m[2]]){currentModel=m[1];activeCategory="all";query="";renderAll();refreshUploadedFlags(currentModel);setTimeout(()=>focusRecord(m[2]),0)}}
-async function init(){
-  await ensureRepositoryIdentity();
-  await migrateLegacyFilesToVersions();
+function init(){
   populateUploadModels(currentModel);
   const last=localStorage.getItem("MOBILE_RND_LAST_MODEL_V1");if(last&&modelList().includes(last))currentModel=last;
   populateUploadModels(currentModel);
@@ -243,48 +212,133 @@ function isKoreaMemberFile(record){
   const n=String(record?.filename||"").toLowerCase();
   return n.includes("korea") || n.includes("hq_roster") || n.includes("member_stage") || n.includes("member");
 }
+function recordStoredFor(model,key,storedMap){
+  const primary=storedMap.get(`${model}_${key}`);
+  if(key==="T"){
+    if(primary && !isKoreaMemberFile(primary)) return primary;
+    return storedMap.get(`${model}_U`) || primary;
+  }
+  if(key==="U"){
+    if(primary && isKoreaMemberFile(primary)) return primary;
+    const legacy=storedMap.get(`${model}_T`);
+    return legacy && isKoreaMemberFile(legacy) ? legacy : (isKoreaMemberFile(primary) ? primary : null);
+  }
+  return primary;
+}
+
 async function renderFileSummary(){ return; }
 function renderAll(){renderHero();renderCategories();renderCards();populateUploadRecords(document.getElementById("uploadModel")?.value||currentModel);renderAuth();renderRecent()}
 async function refreshUploadedFlags(model=currentModel){
   const items=data[model]?.items||{};
-  const keys=Object.keys(items).filter(Boolean).sort(compareRecordCodes);
+  const keys=RECORD_ORDER.filter(k=>items[k]);
+  const baseKeys=[];
   const slotDescriptors=new Map();
   for(const key of keys){
-    const item=items[key],slots=[];
-    if(Array.isArray(item.mergedSources)) item.mergedSources.forEach(src=>slots.push({slotKey:String(src.key),sourceKey:src.key,selectorValue:src.key,name:src.name,detail:src.detail||"",filename:src.filename||"No document uploaded",size:src.size||"—"}));
-    else if(Array.isArray(item.subItems)&&item.subItems.length) item.subItems.forEach((sub,i)=>slots.push({slotKey:subpartId(sub,i),sourceKey:key,selectorValue:String(i),subpartIndex:i,name:sub.name||`File ${i+1}`,detail:sub.note||"",filename:sub.filename||"No document uploaded",size:sub.size||"—"}));
-    else slots.push({slotKey:"main",sourceKey:key,selectorValue:"",name:item.title,detail:"",filename:key==="T"?"No checklist uploaded":item.filename||"No document uploaded",size:item.size||"—"});
-    slotDescriptors.set(key,slots);
-  }
-  if(model!==currentModel)return;
-  const expanded=new Map(); uploadedFiles=new Map(); uploadedKeys=new Set(); expandedFileMap=new Map();
-  for(const key of keys){
-    const item=items[key], slots=slotDescriptors.get(key)||[];
-    const entries=[];
-    for(const slot of slots){
-      let bundle={slot:null,versions:[]};
-      try{bundle=await listDocumentsByContext({modelCode:model,recordCode:key,slotKey:slot.slotKey});}catch(err){console.warn("Document lookup failed",model,key,slot.slotKey,err)}
-      const versions=(bundle.versions||[]).map(v=>({key:v.versionId,versionLabel:v.revision||`v${new Date(v.createdAt).toLocaleString()}`,filename:v.filename||slot.filename||"Uploaded document",size:v.size?formatBytes(v.size):slot.size||"—",note:v.note||"",updatedAt:v.createdAt||""}));
-      const latest=versions.at(-1);
-      entries.push({...slot,slotId:bundle.slot?.slotId||null,present:versions.length>0,versions,versionCount:versions.length,storageKey:latest?.key||null,filename:latest?.filename||slot.filename,size:latest?.size||slot.size,versionLabel:latest?.versionLabel||"",updatedAt:latest?.updatedAt||""});
+    const item=items[key];
+    const slots=[];
+    if(Array.isArray(item.mergedSources)){
+      item.mergedSources.forEach(src=>slots.push({baseKey:`${model}_${src.key}`,sourceKey:src.key,selectorValue:src.key,name:src.name,detail:src.detail||"",filename:src.filename||"No document uploaded",size:src.size||"—"}));
+    }else if(Array.isArray(item.subItems)&&item.subItems.length){
+      item.subItems.forEach((sub,i)=>slots.push({baseKey:keyForSubpart(model,key,sub,i),sourceKey:key,selectorValue:String(i),subpartIndex:i,name:sub.name||`File ${i+1}`,detail:sub.note||"",filename:sub.filename||"No document uploaded",size:sub.size||"—"}));
+    }else{
+      slots.push({baseKey:`${model}_${key}`,sourceKey:key,selectorValue:"",name:item.title,detail:"",filename:key==="T"?"No checklist uploaded":item.filename||"No document uploaded",size:item.size||"—"});
     }
-    expanded.set(key,entries); expandedFileMap.set(key,entries);
-    const present=entries.find(x=>x.present); if(present)uploadedFiles.set(key,{...present}); if(entries.some(x=>x.present))uploadedKeys.add(key);
+    const extras=Array.isArray(item.extraDocuments)?item.extraDocuments:[];
+    extras.forEach(doc=>slots.push({baseKey:`${model}_${key}__extra__${doc.id}`,sourceKey:key,selectorValue:`extra:${doc.id}`,extraId:doc.id,name:doc.name||"Additional document",detail:doc.detail||"",filename:doc.filename||"No document uploaded",size:doc.size||"—"}));
+    slotDescriptors.set(key,slots);
+    slots.forEach(slot=>baseKeys.push(slot.baseKey));
   }
-  if(model!==currentModel)return; renderCards();
+  const files=await getFiles(baseKeys);
+  const versionCache=new Map();
+  await Promise.all([...new Set(baseKeys)].map(async baseKey=>{
+    try{versionCache.set(baseKey,await listFileVersions(baseKey));}
+    catch(err){console.warn("Version lookup failed",baseKey,err);versionCache.set(baseKey,[])}
+  }));
+  if(model!==currentModel)return;
+  uploadedFiles=new Map();
+  uploadedKeys=new Set();
+  expandedFileMap=new Map();
+  for(const key of keys){
+    const slots=slotDescriptors.get(key)||[];
+    const entries=slots.map(slot=>{
+      const versions=versionCache.get(slot.baseKey)||[];
+      const direct=files.get(slot.baseKey);
+      let normalizedVersions=versions.map(v=>({
+        key:v.key,
+        versionLabel:v.versionLabel||"Version",
+        filename:v.filename||slot.filename||"Uploaded document",
+        size:v.size?formatBytes(v.size):slot.size||"—",
+        note:v.note||"",
+        updatedAt:v.updatedAt||""
+      }));
+      if(!normalizedVersions.length && direct){
+        normalizedVersions=[{key:slot.baseKey,versionLabel:"Current",filename:direct.filename||slot.filename||"Uploaded document",size:direct.size?formatBytes(direct.size):slot.size||"—",note:direct.note||"",updatedAt:direct.updatedAt||""}];
+      }
+      const latest=normalizedVersions[normalizedVersions.length-1];
+      return {
+        ...slot,
+        present:normalizedVersions.length>0,
+        versions:normalizedVersions,
+        versionCount:normalizedVersions.length,
+        storageKey:latest?.key||slot.baseKey,
+        filename:latest?.filename||slot.filename,
+        size:latest?.size||slot.size,
+        versionLabel:latest?.versionLabel||"",
+        updatedAt:latest?.updatedAt||""
+      };
+    });
+    expandedFileMap.set(key,entries);
+    const present=entries.find(x=>x.present);
+    if(present) uploadedFiles.set(key,{...present,storageKey:present.storageKey});
+    if(entries.some(x=>x.present)) uploadedKeys.add(key);
+  }
+  renderCards();
 }
-function subpartId(sub,index){return String(sub?.id||sub?.name||`part-${index+1}`).trim().toLowerCase().replace(/[^a-z0-9]+/g,"-").replace(/^-+|-+$/g,"")||`part-${index+1}`}
 
-function hydrateInlinePreviews(entries){
-  for(const [key] of entries){
+function subpartId(sub,index){return String(sub?.id||sub?.name||`part-${index+1}`).trim().toLowerCase().replace(/[^a-z0-9]+/g,"-").replace(/^-+|-+$/g,"")||`part-${index+1}`}
+function keyForSubpart(model,key,sub,index){const storageKey=key==="M"?"O":key;return `${model}_${storageKey}_${subpartId(sub,index)}`}
+async function hydrateInlinePreviews(entries){
+  const modelAtStart=currentModel;
+  const expandedKeys=new Set(expandedCards);
+  for(const [key,item] of entries){
+    if(!(expandedKeys.has(key)||activeCategory!=="all")) continue;
     const host=document.querySelector(`#record-${CSS.escape(key)} [data-inline-preview]`);
-    if(host) host.innerHTML=`<div class="inline-preview-empty"><i class="fa-solid fa-eye"></i><span>Select Preview on a document below to load the binary without preloading large engineering files.</span></div>`;
+    if(!host) continue;
+    const files=expandedFileMap.get(key)||[];
+    const entry=files.find(x=>x.present);
+    if(!entry){host.innerHTML=`<div class="inline-preview-empty"><i class="fa-solid fa-file-circle-xmark"></i><span>No uploaded document is available for inline preview.</span></div>`;continue;}
+    try{
+      const record=await getFile(entry.storageKey);
+      if(modelAtStart!==currentModel||!expandedCards.has(key)) continue;
+      if(!record?.blob){host.innerHTML=`<div class="inline-preview-empty"><i class="fa-solid fa-file-circle-xmark"></i><span>Document metadata is configured, but no stored binary is available.</span></div>`;continue;}
+      const blob=record.blob;
+      const name=entry.filename||record.filename||"document";
+      const ext=(name.split(".").pop()||"").toLowerCase();
+      const url=URL.createObjectURL(blob);
+      host.dataset.objectUrl=url;
+      if(blob.type?.startsWith("image/")||["png","jpg","jpeg","webp","gif"].includes(ext)){
+        host.innerHTML=`<div class="inline-preview-toolbar"><span><i class="fa-solid fa-image"></i> IMAGE PREVIEW</span><span>${escapeHtml(name)}</span></div><div class="inline-preview-canvas"><img src="${url}" alt="${escapeHtml(name)}" loading="lazy"></div>`;
+      }else if(blob.type==="application/pdf"||ext==="pdf"){
+        host.innerHTML=`<div class="inline-preview-toolbar"><span><i class="fa-solid fa-file-pdf"></i> PDF PREVIEW</span><span>${escapeHtml(name)}</span></div><iframe class="inline-preview-frame" src="${url}" title="PDF preview of ${escapeHtml(name)}"></iframe>`;
+      }else if(blob.type?.startsWith("text/")||["csv","txt","log"].includes(ext)){
+        const text=await blob.text();
+        if(modelAtStart!==currentModel||!expandedCards.has(key)) return;
+        host.innerHTML=`<div class="inline-preview-toolbar"><span><i class="fa-solid fa-file-lines"></i> TEXT PREVIEW</span><span>${escapeHtml(name)}</span></div><pre class="inline-preview-text">${escapeHtml(text.slice(0,120000))}</pre>`;
+      }else{
+        const typeLabel=ext?ext.toUpperCase():"FILE";
+        host.innerHTML=`<div class="inline-preview-unsupported"><i class="fa-solid fa-file-circle-check"></i><div><strong>${escapeHtml(typeLabel)} document ready</strong><span>Browser inline rendering is not available for this engineering file type. Use Download to inspect the native document.</span></div></div>`;
+      }
+    }catch(err){
+      console.error("Inline preview failed",err);
+      host.innerHTML=`<div class="inline-preview-empty"><i class="fa-solid fa-triangle-exclamation"></i><span>Unable to load the inline preview. Use Preview or Download.</span></div>`;
+    }
   }
+  if(modelAtStart===currentModel && activeCategory!=="all") requestAnimationFrame(syncGroupCardHeight);
 }
 
 function renderVersionHistory(entry,color){
   if(!entry.present||!entry.versions?.length)return "";
-  const rows=[...entry.versions].reverse().map(v=>`<div class="version-row"><span class="version-badge">${escapeHtml(v.versionLabel||"Version")}</span><span class="version-name" title="${escapeHtml(v.filename||"")}">${escapeHtml(v.filename||"Uploaded document")}</span><span class="version-size">${escapeHtml(v.size||"—")}</span><span class="version-note">${escapeHtml(v.note||"")}</span><span class="version-actions"><button type="button" class="mini-file-action" style="--action-color:${color}" data-preview-file="${escapeHtml(v.key)}" data-filename="${escapeHtml(v.filename||"")}" title="Preview"><i class="fa-solid fa-eye"></i><span>PREVIEW</span></button><button type="button" class="mini-file-action" style="--action-color:${color}" data-download="${escapeHtml(v.key)}" data-filename="${escapeHtml(v.filename||"")}" title="Download"><i class="fa-solid fa-download"></i><span>DOWNLOAD</span></button></span></div>`).join("");
+  const rows=[...entry.versions].reverse().map(v=>`<div class="version-row"><span class="version-badge">${escapeHtml(v.versionLabel||"Version")}</span><span class="version-name" title="${escapeHtml(v.filename||"")}">${escapeHtml(v.filename||"Uploaded document")}</span><span class="version-size">${escapeHtml(v.size||"—")}</span><span class="version-note">${escapeHtml(v.note||"")}</span><span class="version-actions"><button type="button" class="mini-file-action" style="--action-color:${color}" data-preview-file="${escapeHtml(v.key)}" data-filename="${escapeHtml(v.filename||"")}" title="Preview"><i class="fa-solid fa-eye"></i></button><button type="button" class="mini-file-action" style="--action-color:${color}" data-download="${escapeHtml(v.key)}" data-filename="${escapeHtml(v.filename||"")}" title="Download"><i class="fa-solid fa-download"></i></button></span></div>`).join("");
   return `<div class="version-history"><div class="version-history-head"><span><i class="fa-solid fa-clock-rotate-left"></i> ${entry.versionCount} version${entry.versionCount===1?"":"s"}</span><span>Latest: ${escapeHtml(entry.versionLabel||"Current")}</span></div>${rows}</div>`;
 }
 
@@ -295,9 +349,9 @@ function renderExpandedFiles(key,item){
   return entries.map(entry=>{
     const actions=entry.present
       ? `<div class="expanded-file-actions"><button class="download-btn" style="background:${color}" data-preview-file="${escapeHtml(entry.storageKey)}" data-filename="${escapeHtml(entry.filename)}"><i class="fa-solid fa-eye"></i> PREVIEW LATEST</button><button class="download-btn" style="background:${color}" data-download="${escapeHtml(entry.storageKey)}" data-filename="${escapeHtml(entry.filename)}"><i class="fa-solid fa-download"></i> DOWNLOAD</button>${isAdmin?`<button class="download-btn hw-upload-btn" style="background:${color}" data-open-upload="${escapeHtml(key)}" data-subpart-index="${escapeHtml(entry.selectorValue??entry.sourceKey??"")}"><i class="fa-solid fa-plus"></i> NEW VERSION</button>`:""}</div>`
-      : (isAdmin?`<button class="download-btn hw-upload-btn" style="background:${color}" data-open-upload="${escapeHtml(key)}" data-subpart-index="${escapeHtml(entry.selectorValue??entry.sourceKey??"")}"><i class="fa-solid fa-cloud-arrow-up"></i> UPLOAD</button>`:``);
+      : `<div class="expanded-file-actions missing-doc-actions"><span class="missing-label">NO DOCUMENT</span>${isAdmin?`<button class="download-btn hw-upload-btn" style="background:${color}" data-open-upload="${escapeHtml(key)}" data-subpart-index="${escapeHtml(entry.selectorValue??entry.sourceKey??"")}"><i class="fa-solid fa-cloud-arrow-up"></i> UPLOAD</button>`:`<span class="slot-missing-note">No document uploaded yet.</span>`}</div>`;
     const versionSummary=entry.present?`<span class="version-count">${entry.versionCount} version${entry.versionCount===1?"":"s"}</span>`:"";
-    return `<div class="expanded-file-row ${entry.present?"is-present":"is-missing"}"><div class="expanded-file-main"><div class="expanded-file-title"><i class="fa-solid ${escapeHtml(entry.present?"fa-file-circle-check":"fa-file-circle-xmark")}"></i><span>${escapeHtml(entry.name)}</span><span class="expanded-status ${entry.present?"present":"missing"}">${entry.present?"PRESENT":"MISSING"}</span>${versionSummary}</div><div class="expanded-file-meta"><span>${escapeHtml(entry.filename)}</span><span>${escapeHtml(entry.size)}</span>${entry.detail?`<span>${escapeHtml(entry.detail)}</span>`:""}</div>${entry.present?renderVersionHistory(entry,color):`<div class="slot-missing-note">No document uploaded yet.</div>`}</div>${actions}</div>`;
+    return `<div class="expanded-file-row ${entry.present?"is-present":"is-missing"}"><div class="expanded-file-main"><div class="expanded-file-title"><i class="fa-solid ${escapeHtml(entry.present?"fa-file-circle-check":"fa-file-circle-xmark")}"></i><span>${escapeHtml(entry.name)}</span><span class="expanded-status ${entry.present?"present":"missing"}">${entry.present?"PRESENT":"MISSING"}</span>${versionSummary}</div><div class="expanded-file-meta">${entry.present?`<span>${escapeHtml(entry.filename)}</span><span>${escapeHtml(entry.size)}</span>`:""}${entry.detail?`<span>${escapeHtml(entry.detail)}</span>`:""}</div>${entry.present?renderVersionHistory(entry,color):""}</div>${actions}</div>`;
   }).join("");
 }
 
@@ -325,10 +379,10 @@ function ensureSchematicCardsVisible(){
   }
 }
 
-function filteredEntries(){let arr=Object.entries(currentItems()).filter(([k,i])=>i&&String(k).trim()).filter(([k,i])=>{const cat=activeCategory==="all"||i.category===activeCategory;const fav=!favoritesOnly||favorites.includes(`${currentModel}:${k}`);return cat&&fav&&(!query||itemText(k,i).includes(query.toLowerCase()))});arr.sort((a,b)=>compareRecordCodes(a[0],b[0]));if(sortMode==="title")arr.sort((a,b)=>a[1].title.localeCompare(b[1].title));if(sortMode==="category")arr.sort((a,b)=>a[1].category.localeCompare(b[1].category)||compareRecordCodes(a[0],b[0]));if(sortMode==="favorite")arr.sort((a,b)=>Number(favorites.includes(`${currentModel}:${b[0]}`))-Number(favorites.includes(`${currentModel}:${a[0]}`)));return arr}
+function filteredEntries(){let arr=RECORD_ORDER.map(k=>[k,currentItems()[k]]).filter(([,i])=>i).filter(([k,i])=>{const cat=activeCategory==="all"||i.category===activeCategory;const fav=!favoritesOnly||favorites.includes(`${currentModel}:${k}`);return cat&&fav&&(!query||itemText(k,i).includes(query.toLowerCase()))});if(sortMode==="title")arr.sort((a,b)=>a[1].title.localeCompare(b[1].title));if(sortMode==="category")arr.sort((a,b)=>a[1].category.localeCompare(b[1].category)||a[0].localeCompare(b[0]));if(sortMode==="favorite")arr.sort((a,b)=>Number(favorites.includes(`${currentModel}:${b[0]}`))-Number(favorites.includes(`${currentModel}:${a[0]}`)));return arr}
 function renderCards(){
   ensureSchematicCardsVisible();
-  const grid=document.getElementById("cardsGrid"),entries=filteredEntries(),total=Object.keys(currentItems()).filter(Boolean).length;
+  const grid=document.getElementById("cardsGrid"),entries=filteredEntries(),total=RECORD_ORDER.filter(k=>currentItems()[k]).length;
   const groupView=activeCategory!=="all";
   document.body.dataset.recordView=groupView?"group":"all";
   document.body.dataset.activeRecordCategory=activeCategory;
@@ -351,9 +405,20 @@ function renderCard(key,item){
   const groupView=activeCategory!=="all";
   const expanded=groupView||expandedCards.has(key);
   const statusClass=presentCount===totalSlots?"all-present":presentCount>0?"partial":"all-missing";
-  const statusText=presentCount===0?"NO DOCUMENT":presentCount===totalSlots?"DOCUMENTS AVAILABLE":"PARTIAL DOCUMENTS";
-  const detail=expanded?`<div class="record-expanded-panel"><div class="expanded-summary"><span><i class="fa-solid fa-layer-group"></i> ${versionTotal} uploaded version${versionTotal===1?"":"s"} • unlimited history</span><span><i class="fa-solid fa-circle-info"></i> Document details</span></div><div class="inline-preview" data-inline-preview><div class="inline-preview-loading"><i class="fa-solid fa-spinner"></i><span>Loading document preview…</span></div></div><div class="expanded-file-list">${renderExpandedFiles(key,item)}</div><div class="expanded-footer"><button class="text-action" data-copy-record="${escapeHtml(key)}"><i class="fa-regular fa-copy"></i> Copy details</button><button class="text-action" data-link-record="${escapeHtml(key)}"><i class="fa-solid fa-link"></i> Copy link</button><button class="text-action" data-open-record="${escapeHtml(key)}"><i class="fa-solid fa-up-right-and-down-left-from-center"></i> Open details</button></div></div>`:"";
+  const statusText=totalSlots===1?(presentCount?"FILE PRESENT":"FILE MISSING"):(presentCount===totalSlots?`${totalSlots}/${totalSlots} REQUIRED PRESENT`:presentCount?`${presentCount}/${totalSlots} REQUIRED PRESENT`:`0/${totalSlots} REQUIRED MISSING`);
+  const detail=expanded?`<div class="record-expanded-panel"><div class="expanded-summary"><span><i class="fa-solid fa-database"></i> ${presentCount} document${presentCount===1?"":"s"} present</span><span><i class="fa-solid fa-layer-group"></i> ${versionTotal} uploaded version${versionTotal===1?"":"s"}</span><span><i class="fa-solid fa-circle-info"></i> Document details</span></div><div class="inline-preview" data-inline-preview><div class="inline-preview-loading"><i class="fa-solid fa-spinner"></i><span>Loading document preview…</span></div></div><div class="expanded-file-list">${renderExpandedFiles(key,item)}</div><div class="expanded-footer"><button class="text-action" data-add-document="${escapeHtml(key)}"><i class="fa-solid fa-file-circle-plus"></i> Add document</button><button class="text-action" data-copy-record="${escapeHtml(key)}"><i class="fa-regular fa-copy"></i> Copy details</button><button class="text-action" data-link-record="${escapeHtml(key)}"><i class="fa-solid fa-link"></i> Copy link</button><button class="text-action" data-open-record="${escapeHtml(key)}"><i class="fa-solid fa-up-right-and-down-left-from-center"></i> Open details</button></div></div>`:"";
   return `<article id="record-${escapeHtml(key)}" class="record-card ${expanded?"is-expanded":""} ${groupView?"is-group-view":""} ${isFav?"is-favorite":""}" style="--record-accent:${color}" data-record="${escapeHtml(key)}" tabindex="0" aria-expanded="${expanded}"><div class="record-stripe" style="background:${color}"></div><div class="record-collapsed-face"><div class="record-icon" style="background:${color}"><i class="fa-solid ${escapeHtml(item.icon)}"></i></div><div class="record-title-only">${escapeHtml(item.title)}</div><div class="record-status ${statusClass}"><span class="status-dot ${presentCount?"present":"missing"}"></span><span>${escapeHtml(statusText)}</span></div><button class="favorite-btn ${isFav?"active":""}" data-favorite="${escapeHtml(favKey)}" title="Favorite"><i class="fa-${isFav?"solid":"regular"} fa-star"></i></button><span class="expand-cue"><i class="fa-solid fa-chevron-down"></i></span></div>${detail}</article>`;
+}
+
+function syncGroupCardHeight(){
+  if(activeCategory==="all") return;
+  const cards=[...document.querySelectorAll('#cardsGrid .record-card.is-group-view')];
+  if(!cards.length)return;
+  cards.forEach(c=>{c.style.height="auto";c.style.minHeight="0";c.style.maxHeight="none";c.style.overflow="visible"});
+  requestAnimationFrame(()=>{
+    const max=Math.max(...cards.map(c=>c.scrollHeight));
+    cards.forEach(c=>{c.style.height=`${max}px`;c.style.minHeight=`${max}px`;c.style.maxHeight=`${max}px`});
+  });
 }
 
 function renderAuth(){const slot=document.getElementById("adminAuthSlot");slot.innerHTML=isAdmin?`<div class="flex gap-1"><button id="uploadBtn" class="btn btn-cyan"><i class="fa-solid fa-cloud-arrow-up"></i> Upload</button><button id="addModelBtn" class="btn btn-dark"><i class="fa-solid fa-plus"></i> Model</button><button id="editModelBtn" class="btn btn-dark"><i class="fa-solid fa-pen-to-square"></i> Edit</button><button id="logoutBtn" class="header-icon-btn" title="Logout"><i class="fa-solid fa-right-from-bracket"></i></button></div>`:`<button id="loginBtn" class="btn btn-dark"><i class="fa-solid fa-lock"></i> Admin • Shivam</button>`;document.getElementById(isAdmin?"uploadBtn":"loginBtn").addEventListener("click",()=>isAdmin?openUploadModal():openModal("loginModal"));if(isAdmin)document.getElementById("addModelBtn")?.addEventListener("click",openAddModelModal);document.getElementById("editModelBtn")?.addEventListener("click",openEditModelModal);if(isAdmin)document.getElementById("logoutBtn").addEventListener("click",()=>{isAdmin=false;sessionStorage.removeItem(AUTH_KEY);renderAuth();renderCards();document.dispatchEvent(new Event("rnd-auth-changed"));toast("Admin session ended.","info")})}
@@ -361,23 +426,31 @@ function populateUploadModels(selected=currentModel){const el=document.getElemen
 function populateUploadRecords(model=document.getElementById("uploadModel")?.value||currentModel,preferredKey=""){
   const el=document.getElementById("uploadRecord");if(!el)return;
   const items=data[model]?.items||{};
-  el.innerHTML=Object.entries(items).sort((a,b)=>compareRecordCodes(a[0],b[0])).map(([k,i])=>`<option value="${k}">[${k}] ${escapeHtml(i.title)}</option>`).join("");
+  el.innerHTML=RECORD_ORDER.filter(k=>items[k]).map(k=>`<option value="${k}">[${k}] ${escapeHtml(items[k].title)}</option>`).join("");
   if(preferredKey&&items[preferredKey])el.value=preferredKey;
   updateSubpartSelector();
 }
 function updateSubpartSelector(preferredIndex=""){
-  const model=document.getElementById("uploadModel")?.value||currentModel,key=document.getElementById("uploadRecord")?.value,wrap=document.getElementById("uploadSubPartWrap"),el=document.getElementById("uploadSubPart");
+  const model=document.getElementById("uploadModel")?.value||currentModel,key=document.getElementById("uploadRecord")?.value,wrap=document.getElementById("uploadSubPartWrap"),el=document.getElementById("uploadSubPart"),newWrap=document.getElementById("uploadNewDocumentWrap"),newName=document.getElementById("uploadNewDocumentName");
   if(!wrap||!el)return;
-  const item=data[model]?.items?.[key],sources=Array.isArray(item?.mergedSources)?item.mergedSources:[],subs=Array.isArray(item?.subItems)?item.subItems:[];
-  if(!sources.length&&!subs.length){wrap.classList.add("hidden");el.innerHTML="";return}
-  const options=sources.length?sources.map(s=>({value:s.key,label:s.name,filename:s.filename})):subs.map((s,i)=>({value:String(i),label:s.name||`File ${i+1}`,filename:s.filename}));
+  const item=data[model]?.items?.[key],sources=Array.isArray(item?.mergedSources)?item.mergedSources:[],subs=Array.isArray(item?.subItems)?item.subItems:[],extras=Array.isArray(item?.extraDocuments)?item.extraDocuments:[];
+  const options=[];
+  if(sources.length) sources.forEach(x=>options.push({value:x.key,label:x.name,filename:x.filename}));
+  else if(subs.length) subs.forEach((x,i)=>options.push({value:String(i),label:x.name||`File ${i+1}`,filename:x.filename}));
+  extras.forEach(x=>options.push({value:`extra:${x.id}`,label:x.name||"Additional document",filename:x.filename}));
+  options.push({value:"__new__",label:"＋ Add new document",filename:""});
   wrap.classList.remove("hidden");
   el.innerHTML=options.map(o=>`<option value="${escapeHtml(o.value)}">${escapeHtml(o.label)}${o.filename?` • ${escapeHtml(o.filename)}`:""}</option>`).join("");
-  if(preferredIndex!==""&&options.some(o=>String(o.value)===String(preferredIndex)))el.value=String(preferredIndex);
+  const wanted=preferredIndex!==""?String(preferredIndex):(options[0]?.value||"__new__");
+  el.value=options.some(o=>String(o.value)===wanted)?wanted:(options[0]?.value||"__new__");
+  const isNew=el.value==="__new__";
+  newWrap?.classList.toggle("hidden",!isNew);
+  if(!isNew&&newName)newName.value="";
 }
+
 function openUploadModal(recordKey="",subpartIndex=""){if(!isAdmin){toast("Admin authentication is required to upload documents.","error");return}const model=currentModel;populateUploadModels(model);populateUploadRecords(model,recordKey);updateSubpartSelector(subpartIndex);resetSelectedFile();openModal("uploadModal")}
 
-function resetSelectedFile(){selectedFile=null;const input=document.getElementById("fileInput");if(input)input.value="";const name=document.getElementById("fileName");if(name)name.textContent="Drop file here or click to browse";const status=document.getElementById("uploadStatus");if(status)status.textContent="";const rev=document.getElementById("uploadRevision");if(rev)rev.value="";const note=document.getElementById("uploadNote");if(note)note.value=""}
+function resetSelectedFile(){selectedFile=null;const newName=document.getElementById("uploadNewDocumentName");if(newName)newName.value="";const input=document.getElementById("fileInput");if(input)input.value="";const name=document.getElementById("fileName");if(name)name.textContent="Drop file here or click to browse";const status=document.getElementById("uploadStatus");if(status)status.textContent="";const rev=document.getElementById("uploadRevision");if(rev)rev.value="";const note=document.getElementById("uploadNote");if(note)note.value=""}
 function openModal(id){document.getElementById(id)?.classList.remove("hidden")}
 function closeModal(id){document.getElementById(id)?.classList.add("hidden");if(id==="uploadModal")resetSelectedFile()}
 function findModel(value){const v=String(value||"").trim().toUpperCase();return modelList().find(m=>m===v)||modelList().find(m=>m.toUpperCase()===v)||null}
@@ -424,6 +497,7 @@ function bindEvents(){
     const fav=e.target.closest("[data-favorite]");if(fav){toggleFavorite(fav.dataset.favorite);return}
     const preview=e.target.closest("[data-preview-file]");if(preview){previewStoredFile(preview.dataset.previewFile,preview.dataset.filename);return}
     const d=e.target.closest("[data-download]");if(d){downloadRecord(d.dataset.download,d.dataset.filename);return}
+    const add=e.target.closest("[data-add-document]");if(add){openUploadModal(add.dataset.addDocument,"__new__");return}
     const o=e.target.closest("[data-open-record]");if(o){openRecord(o.dataset.openRecord);openPresentation(o.dataset.openRecord);return}
     const c=e.target.closest("[data-copy-record]");if(c){copyRecord(c.dataset.copyRecord);return}
     const l=e.target.closest("[data-link-record]");if(l){copyLink(l.dataset.linkRecord);return}
@@ -442,9 +516,9 @@ function bindEvents(){
   document.getElementById("loginForm").addEventListener("submit",login);document.getElementById("addModelForm")?.addEventListener("submit",addModel);document.getElementById("editModelSelect")?.addEventListener("change",e=>loadEditModelFields(e.target.value));
   const passwordToggle=document.getElementById("passwordToggle");
   passwordToggle?.addEventListener("click",()=>{const input=document.getElementById("passwordInput"); const showing=input.type==="text"; input.type=showing?"password":"text"; passwordToggle.innerHTML=showing?'<i class="fa-solid fa-eye"></i>':'<i class="fa-solid fa-eye-slash"></i>'; passwordToggle.setAttribute("aria-label",showing?"Show password":"Hide password"); passwordToggle.title=showing?"Show password":"Hide password"});
-  document.getElementById("uploadModel").addEventListener("change",e=>{populateUploadRecords(e.target.value);const first=document.getElementById("uploadRecord")?.value;if(first)document.getElementById("uploadRecord").value=first;updateSubpartSelector()});document.getElementById("uploadRecord").addEventListener("change",()=>updateSubpartSelector());
+  document.getElementById("uploadModel").addEventListener("change",e=>{populateUploadRecords(e.target.value);const first=document.getElementById("uploadRecord")?.value;if(first)document.getElementById("uploadRecord").value=first;updateSubpartSelector()});document.getElementById("uploadRecord").addEventListener("change",()=>updateSubpartSelector());document.getElementById("uploadSubPart")?.addEventListener("change",()=>updateSubpartSelector(document.getElementById("uploadSubPart").value));
   document.getElementById("dropZone").addEventListener("click",()=>document.getElementById("fileInput").click());document.getElementById("dropZone").addEventListener("dragover",e=>{e.preventDefault();document.getElementById("dropZone").classList.add("drag-active")});document.getElementById("dropZone").addEventListener("dragleave",()=>document.getElementById("dropZone").classList.remove("drag-active"));document.getElementById("dropZone").addEventListener("drop",e=>{e.preventDefault();document.getElementById("dropZone").classList.remove("drag-active");selectFile(e.dataTransfer.files[0])});document.getElementById("fileInput").addEventListener("change",e=>selectFile(e.target.files[0]));document.getElementById("uploadForm").addEventListener("submit",upload);
-  document.getElementById("backupBtn").addEventListener("click",backupCompleteRepository);document.getElementById("restoreBtn")?.addEventListener("click",()=>document.getElementById("restoreInput")?.click());document.getElementById("restoreInput")?.addEventListener("change",restoreCompleteRepository);document.getElementById("resetBtn").addEventListener("click",resetData);
+  document.getElementById("backupBtn").addEventListener("click",()=>downloadText(JSON.stringify(data,null,2),`MobileRD_Backup_${dateStamp()}.json`));document.getElementById("resetBtn").addEventListener("click",resetData);
   document.addEventListener("keydown",e=>{const tag=document.activeElement?.tagName||"",typing=/INPUT|TEXTAREA|SELECT/.test(tag);if(e.key==="Escape")document.querySelectorAll(".modal:not(.hidden)").forEach(m=>m.classList.add("hidden"));if((e.ctrlKey||e.metaKey)&&e.key.toLowerCase()==="k"){e.preventDefault();document.getElementById("parameter360HeaderBtn")?.click()}if(e.key==="/"&&!typing){e.preventDefault();document.getElementById("parameter360HeaderBtn")?.click()}if(e.key.toLowerCase()==="f"&&!typing)toggleFullscreen();if(e.key.toLowerCase()==="p"&&!typing){e.preventDefault();document.getElementById("presentationBtn").click()}if((e.key==="ArrowLeft"||e.key==="ArrowRight")&&!typing&&!document.querySelector(".modal:not(.hidden)")){navigateRecord(e.key==="ArrowLeft"?-1:1)}});
 }
 function syncDraftPrefs(){draftPrefs={theme:document.getElementById("themeSelect").value,accent:document.getElementById("accentSelect").value,density:document.getElementById("densitySelect").value,motion:document.getElementById("motionToggle").checked}}
@@ -457,40 +531,28 @@ function toggleFavorite(id){favorites=favorites.includes(id)?favorites.filter(x=
 async function toggleFullscreen(){try{if(!document.fullscreenElement)await document.documentElement.requestFullscreen();else await document.exitFullscreen()}catch{toast("Fullscreen is not available.","error")}}
 function customModels(){return readJson(CUSTOM_MODELS_KEY,[]).filter(x=>x&&x.code&&data[x.code])}
 function editableModels(){return modelList()}
-function openAddModelModal(){if(!isAdmin){toast("Admin authentication is required.","error");return}setModelAdminFormMode("add");const f=document.getElementById("addModelForm");f?.reset();if(f)delete f.dataset.editingCode;document.getElementById("addModelError")?.classList.add("hidden");openModal("addModelModal")}
-function openEditModelModal(){if(!isAdmin){toast("Admin authentication is required.","error");return}const models=editableModels();if(!models.length){toast("No editable model is available.","info");return}setModelAdminFormMode("edit");const f=document.getElementById("addModelForm");if(f)f.dataset.editingCode=models[0];populateEditModelSelect(models[0]);openModal("addModelModal")}
-function setModelAdminFormMode(mode){const edit=mode==="edit",title=document.getElementById("addModelTitle"),desc=document.querySelector("#addModelModal .modal-description"),submit=document.getElementById("addModelSubmit"),icon=document.querySelector("#addModelModal .modal-icon i"),wrap=document.getElementById("editModelSelectWrap"),code=document.getElementById("newModelCode"),help=document.getElementById("addModelHelp");if(title)title.textContent=edit?"Edit Existing Model":"Add New Model";if(desc)desc.textContent=edit?"Admin-only model update. Existing engineering records and uploaded files are preserved.":"Admin-only model registration. New models appear automatically in the model selector.";if(submit)submit.innerHTML=edit?'<i class="fa-solid fa-floppy-disk"></i> Save Updated Model':'<i class="fa-solid fa-plus"></i> Add Model';if(icon)icon.className=`fa-solid ${edit?"fa-pen-to-square":"fa-square-plus"}`;wrap?.classList.toggle("hidden",!edit);if(code)code.readOnly=false;if(help)help.innerHTML=edit?'<i class="fa-solid fa-database"></i> Updated model details are stored locally in this browser and survive page reloads.':'<i class="fa-solid fa-database"></i> Model registration is stored locally in this browser and survives page reloads.';["newModelName","newModelProcessor","newModelYear","newModelPic","newModelRf","newModelType"].forEach(id=>document.getElementById(id)?.toggleAttribute("required",!edit||id!=="newModelPic"));document.getElementById("addModelForm")?.setAttribute("data-mode",mode)}
+function openAddModelModal(){if(!isAdmin){toast("Admin authentication is required.","error");return}setModelAdminFormMode("add");document.getElementById("addModelForm")?.reset();document.getElementById("addModelError")?.classList.add("hidden");openModal("addModelModal")}
+function openEditModelModal(){if(!isAdmin){toast("Admin authentication is required.","error");return}const models=editableModels();if(!models.length){toast("No editable model is available.","info");return}setModelAdminFormMode("edit");populateEditModelSelect(models[0]);openModal("addModelModal")}
+function setModelAdminFormMode(mode){const edit=mode==="edit",title=document.getElementById("addModelTitle"),desc=document.querySelector("#addModelModal .modal-description"),submit=document.getElementById("addModelSubmit"),icon=document.querySelector("#addModelModal .modal-icon i"),wrap=document.getElementById("editModelSelectWrap"),code=document.getElementById("newModelCode"),help=document.getElementById("addModelHelp");if(title)title.textContent=edit?"Edit Existing Model":"Add New Model";if(desc)desc.textContent=edit?"Admin-only model update. Existing engineering records and uploaded files are preserved.":"Admin-only model registration. New models appear automatically in the model selector.";if(submit)submit.innerHTML=edit?'<i class="fa-solid fa-floppy-disk"></i> Save Updated Model':'<i class="fa-solid fa-plus"></i> Add Model';if(icon)icon.className=`fa-solid ${edit?"fa-pen-to-square":"fa-square-plus"}`;wrap?.classList.toggle("hidden",!edit);if(code)code.readOnly=edit;if(help)help.innerHTML=edit?'<i class="fa-solid fa-database"></i> Updated model details are stored locally in this browser and survive page reloads.':'<i class="fa-solid fa-database"></i> Model registration is stored locally in this browser and survives page reloads.';["newModelName","newModelProcessor","newModelYear","newModelPic","newModelRf","newModelType"].forEach(id=>document.getElementById(id)?.toggleAttribute("required",!edit||id!=="newModelPic"));document.getElementById("addModelForm")?.setAttribute("data-mode",mode)}
 function populateEditModelSelect(selected=""){const el=document.getElementById("editModelSelect");if(!el)return;const models=editableModels();el.innerHTML=models.map(code=>`<option value="${escapeHtml(code)}">${escapeHtml(code)} • ${escapeHtml(data[code]?.meta?.name||code)}</option>`).join("");if(selected&&models.includes(selected))el.value=selected;loadEditModelFields(el.value)}
 function loadEditModelFields(code){const model=data[code];if(!model)return;document.getElementById("newModelCode").value=code;document.getElementById("newModelName").value=model.meta?.name||"";document.getElementById("newModelProcessor").value=model.meta?.ap||"";document.getElementById("newModelYear").value=model.meta?.modelYear||"";document.getElementById("newModelPic").value=model.meta?.sielHwPic||model.meta?.leadKorea||"";document.getElementById("newModelRf").value=model.meta?.rfNetwork||model.meta?.modem||"";document.getElementById("newModelType").value=model.meta?.modelType||(model.meta?.status==="Mass Production"?"Mass Production Model":"Development Model")}
-async function addModel(e){
-  e.preventDefault(); if(!isAdmin)return;
-  const form=document.getElementById("addModelForm"),mode=form?.dataset.mode||"add";
-  const selectedOld=form?.dataset.editingCode||"";
-  const code=document.getElementById("newModelCode").value.trim().toUpperCase(),name=document.getElementById("newModelName").value.trim(),processor=document.getElementById("newModelProcessor").value.trim(),modelYear=document.getElementById("newModelYear").value.trim(),pic=document.getElementById("newModelPic").value.trim(),rf=document.getElementById("newModelRf").value.trim(),modelType=document.getElementById("newModelType").value,err=document.getElementById("addModelError");
-  const fail=msg=>{err.textContent=msg;err.classList.remove("hidden")}; err.classList.add("hidden");
-  if(!/^[A-Z][A-Z0-9_-]{1,23}$/.test(code))return fail("Use a valid model code (2–24 characters, letters/numbers/_/-).");
+function addModel(e){
+  e.preventDefault();if(!isAdmin)return;
+  const form=document.getElementById("addModelForm"),mode=form?.dataset.mode||"add",code=document.getElementById("newModelCode").value.trim().toUpperCase(),name=document.getElementById("newModelName").value.trim(),processor=document.getElementById("newModelProcessor").value.trim(),modelYear=document.getElementById("newModelYear").value.trim(),pic=document.getElementById("newModelPic").value.trim(),rf=document.getElementById("newModelRf").value.trim(),modelType=document.getElementById("newModelType").value,err=document.getElementById("addModelError");
+  const fail=msg=>{err.textContent=msg;err.classList.remove("hidden")};
+  if(!/^[A-Z][A-Z0-9_-]{1,23}$/.test(code))return fail("Use a valid model code (2–24 characters, letters/numbers/_/-). ");
   if(!name||!processor||!modelYear||!rf||!["Development Model","Mass Production Model"].includes(modelType)||(mode!=="edit"&&!pic))return fail("Complete all required model information fields.");
   if(mode==="edit"){
-    if(!selectedOld||!data[selectedOld])return fail("Select a valid existing model to edit.");
-    if(code!==selectedOld&&modelList().includes(code))return fail("That model code is already in use.");
-    const model=data[selectedOld]; model.meta={...model.meta,name,ap:processor,modelYear,sielHwPic:pic,rfNetwork:rf,modem:rf,leadKorea:pic,modelType,status:modelType==="Mass Production Model"?"Mass Production":"Development"};
-    if(code!==selectedOld){
-      const modelIds=stableIdMap(MODEL_IDS_KEY), slotIds=stableIdMap(SLOT_IDS_KEY);
-      if(modelIds[selectedOld]) await renameModelCode(modelIds[selectedOld],code);
-      if(modelIds[selectedOld]){modelIds[code]=modelIds[selectedOld];delete modelIds[selectedOld];localStorage.setItem(MODEL_IDS_KEY,JSON.stringify(modelIds));}
-      const migratedSlots={}; Object.entries(slotIds).forEach(([k,v])=>{if(k.startsWith(selectedOld+"::"))migratedSlots[code+k.slice(selectedOld.length)]=v;else migratedSlots[k]=v}); localStorage.setItem(SLOT_IDS_KEY,JSON.stringify(migratedSlots));
-      data[code]=model; delete data[selectedOld];
-      const custom=readJson(CUSTOM_MODELS_KEY,[]).filter(x=>x.code!==selectedOld); custom.push({code,name,processor,modelYear,sielHwPic:pic,rfNetwork:rf,modelType}); localStorage.setItem(CUSTOM_MODELS_KEY,JSON.stringify(custom));
-      if(currentModel===selectedOld) currentModel=code;
-      const last=localStorage.getItem("MOBILE_RND_LAST_MODEL_V1"); if(last===selectedOld)localStorage.setItem("MOBILE_RND_LAST_MODEL_V1",code);
-      const recent=readJson("MOBILE_RND_RECENT_V1",[]).map(x=>String(x).startsWith(selectedOld+":")?code+String(x).slice(selectedOld.length):x); localStorage.setItem("MOBILE_RND_RECENT_V1",JSON.stringify(recent));
-    } else {const custom=readJson(CUSTOM_MODELS_KEY,[]);const idx=custom.findIndex(x=>x.code===code);if(idx>=0)custom[idx]={...custom[idx],code,name,processor,modelYear,sielHwPic:pic,rfNetwork:rf,modelType};else if(!MODEL_ORDER.includes(code))custom.push({code,name,processor,modelYear,sielHwPic:pic,rfNetwork:rf,modelType});localStorage.setItem(CUSTOM_MODELS_KEY,JSON.stringify(custom));}
-    saveData();closeModal("addModelModal");populateUploadModels(currentModel);renderAll();renderModelPicker("");const picker=document.getElementById("modelPickerInput");if(picker)picker.value=currentModel;toast(`${code} model details updated.`,"success");await addAudit("MODEL_EDIT",{oldModel:selectedOld,model:code,name,processor,modelYear,sielHwPic:pic,rfNetwork:rf,modelType});return;
+    if(!modelList().includes(code)||!data[code])return fail("Select a valid existing model to edit.");
+    const model=data[code];model.meta={...model.meta,name,ap:processor,modelYear,sielHwPic:pic,rfNetwork:rf,modem:rf,leadKorea:pic,modelType,status:modelType==="Mass Production Model"?"Mass Production":"Development"};
+    const custom=readJson(CUSTOM_MODELS_KEY,[]),idx=custom.findIndex(x=>x.code===code);
+    if(idx>=0)custom[idx]={...custom[idx],code,name,processor,modelYear,sielHwPic:pic,rfNetwork:rf,modelType};
+    localStorage.setItem(CUSTOM_MODELS_KEY,JSON.stringify(custom));saveData();closeModal("addModelModal");populateUploadModels(currentModel);renderAll();renderModelPicker("");if(currentModel===code){const picker=document.getElementById("modelPickerInput");if(picker)picker.value=code}toast(`${code} model details updated.`,'success');addAudit("MODEL_EDIT",{model:code,name,processor,modelYear,sielHwPic:pic,rfNetwork:rf,modelType});return;
   }
   if(modelList().includes(code))return fail("This model code already exists. Use Edit Model to update its details.");
   const defaults=createDefaultData().A576,model=clone(defaults);model.meta={...model.meta,name,ap:processor,modelYear,sielHwPic:pic,rfNetwork:rf,modem:rf,leadKorea:pic,modelType,status:modelType==="Mass Production Model"?"Mass Production":"Development"};
   for(const item of Object.values(model.items)){if(item.filename)item.filename=item.filename.replaceAll("A576",code);item.subItems?.forEach(sub=>{if(sub.filename)sub.filename=sub.filename.replaceAll("A576",code)});item.mergedSources?.forEach(src=>{if(src.filename)src.filename=src.filename.replaceAll("A576",code)})}
-  data[code]=model;const custom=readJson(CUSTOM_MODELS_KEY,[]);custom.push({code,name,processor,modelYear,sielHwPic:pic,rfNetwork:rf,modelType});localStorage.setItem(CUSTOM_MODELS_KEY,JSON.stringify(custom));saveData();closeModal("addModelModal");populateUploadModels(currentModel);renderAll();renderModelPicker("");toast(`${code} added to the model selection list.`,"success");await addAudit("MODEL_ADD",{model:code,name,processor,modelYear,sielHwPic:pic,rfNetwork:rf,modelType});
+  data[code]=model;const custom=readJson(CUSTOM_MODELS_KEY,[]);custom.push({code,name,processor,modelYear,sielHwPic:pic,rfNetwork:rf,modelType});localStorage.setItem(CUSTOM_MODELS_KEY,JSON.stringify(custom));saveData();closeModal("addModelModal");populateUploadModels(currentModel);renderAll();renderModelPicker("");toast(`${code} added to the model selection list.`,'success');addAudit("MODEL_ADD",{model:code,name,processor,modelYear,sielHwPic:pic,rfNetwork:rf,modelType});
 }
 function login(e){e.preventDefault();const input=document.getElementById("passwordInput");const error=document.getElementById("loginError");if(input.value==="admin123"){isAdmin=true;sessionStorage.setItem(AUTH_KEY,"true");closeModal("loginModal");document.getElementById("passwordInput").value="";renderAuth();renderCards();document.dispatchEvent(new Event("rnd-auth-changed"));toast("Admin session authenticated.","success");addAudit("LOGIN")}else{error.classList.remove("hidden");input.classList.add("input-error");input.focus();setTimeout(()=>input.classList.remove("input-error"),700)}}
 function selectFile(file){if(!isAdmin){toast("Admin authentication is required to upload documents.","error");return}if(!file)return;const ext=file.name.split(".").pop().toLowerCase();if(!ALLOWED.includes(ext)){toast(`File type .${ext} is not supported.`,"error");return}if(file.size>MAX_FILE_SIZE){toast("File exceeds the 500 MB application limit.","error");return}selectedFile=file;document.getElementById("fileName").textContent=`${file.name} (${formatBytes(file.size)})`;document.getElementById("uploadStatus").textContent="File ready for upload."}
@@ -498,38 +560,77 @@ async function upload(e){
   e.preventDefault();if(!selectedFile){toast("Please select a file first.","error");return}
   const model=document.getElementById("uploadModel").value,key=document.getElementById("uploadRecord").value,note=document.getElementById("uploadNote").value.trim(),revision=document.getElementById("uploadRevision")?.value.trim()||"",item=data[model]?.items?.[key];
   if(!item){toast("Upload target is not available.","error");return}
-  const selector=document.getElementById("uploadSubPart"),sourceValue=selector?.value||"";
-  let slotKey="main",targetLabel=item.title,source=null;
-  if(Array.isArray(item.mergedSources)&&item.mergedSources.length){ source=item.mergedSources.find(x=>String(x.key)===String(sourceValue))||item.mergedSources[0]; slotKey=String(source.key); targetLabel=`${item.title} / ${source.name}`; }
-  else if(Array.isArray(item.subItems)&&item.subItems.length){ const idx=Number(sourceValue); source=item.subItems[idx]; if(!source){toast("Select a document entry first.","error");return} slotKey=subpartId(source,idx); targetLabel=`${item.title} / ${source.name}`; }
-  const btn=document.getElementById("saveUploadBtn"),progressWrap=document.getElementById("uploadProgressWrap"),progress=document.getElementById("uploadProgress"),status=document.getElementById("uploadStatus");btn.disabled=true;progressWrap.classList.remove("hidden");progress.style.width="0%";if(status)status.textContent=`Saving large file in secure browser storage… 0%`;
+  const selector=document.getElementById("uploadSubPart"),sourceValue=selector?.value||"",newName=document.getElementById("uploadNewDocumentName")?.value.trim()||"";
+  let storageKey=`${model}_${key}`,targetLabel=item.title,source=null,extraDoc=null;
+  if(sourceValue==="__new__"){
+    if(!newName){toast("Enter a document name first.","error");document.getElementById("uploadNewDocumentName")?.focus();return}
+    item.extraDocuments=Array.isArray(item.extraDocuments)?item.extraDocuments:[];
+    const id=`doc-${Date.now().toString(36)}-${Math.random().toString(36).slice(2,8)}`;
+    extraDoc={id,name:newName,filename:"No document uploaded",size:"—"}; item.extraDocuments.push(extraDoc);
+    storageKey=`${model}_${key}__extra__${id}`;targetLabel=`${item.title} / ${newName}`;
+  }else if(String(sourceValue).startsWith("extra:")){
+    const id=String(sourceValue).slice(6);extraDoc=(item.extraDocuments||[]).find(x=>String(x.id)===id);
+    if(!extraDoc){toast("Document entry is no longer available.","error");return}
+    storageKey=`${model}_${key}__extra__${id}`;targetLabel=`${item.title} / ${extraDoc.name}`;
+  }else if(Array.isArray(item.mergedSources)&&item.mergedSources.length){
+    source=item.mergedSources.find(x=>String(x.key)===String(sourceValue))||item.mergedSources[0];
+    storageKey=`${model}_${source.key}`;targetLabel=`${item.title} / ${source.name}`;
+  }else if(Array.isArray(item.subItems)&&item.subItems.length){
+    const idx=Number(sourceValue);source=item.subItems[idx];
+    if(!source){toast("Select a document entry first.","error");return}
+    storageKey=keyForSubpart(model,key,source,idx);targetLabel=`${item.title} / ${source.name}`;
+  }
+  const baseStorageKey=storageKey; const btn=document.getElementById("saveUploadBtn"),progressWrap=document.getElementById("uploadProgressWrap"),progress=document.getElementById("uploadProgress"),status=document.getElementById("uploadStatus");btn.disabled=true;progressWrap.classList.remove("hidden");progress.style.width="0%";if(status)status.textContent=`Saving large file in secure browser storage… 0%`;
   try{
-    const saved=await (async()=>{ const bundle=await listDocumentsByContext({modelCode:model,recordCode:key,slotKey}); if(!bundle.slot) throw new Error("Document slot is not registered."); const {saveVersionForSlot}=await import("./database.js"); const version=await saveVersionForSlot(bundle.slot.slotId,selectedFile,{revision,note},(pct,part,total)=>{progress.style.width=`${pct}%`;if(status)status.textContent=`Saving large file in secure browser storage… ${pct}% (${part}/${total} chunks)`}); version._context={modelId:bundle.slot.modelId,recordId:bundle.slot.recordId,slotId:bundle.slot.slotId}; return version; })();
+    const saved=await saveFileVersion(baseStorageKey,selectedFile,{revision,note},(pct,part,total)=>{progress.style.width=`${pct}%`;if(status)status.textContent=`Saving large file in secure browser storage… ${pct}% (${part}/${total} chunks)`});
+    storageKey=saved.key;
     if(source){source.uploadedFilename=selectedFile.name;source.uploadedSize=formatBytes(selectedFile.size);source.updatedAt=new Date().toISOString();if(note)source.detail=note;}
+    else if(extraDoc){extraDoc.uploadedFilename=selectedFile.name;extraDoc.uploadedSize=formatBytes(selectedFile.size);extraDoc.filename=selectedFile.name;extraDoc.size=formatBytes(selectedFile.size);extraDoc.updatedAt=new Date().toISOString();if(note)extraDoc.detail=note;}
     else {item.filename=selectedFile.name;item.size=formatBytes(selectedFile.size);item.uploadedFilename=selectedFile.name;item.uploadedSize=formatBytes(selectedFile.size);if(note)item.tags=[note];}
-    saveData();await addAudit("UPLOAD",{model,key,subpart:source?.name||"",filename:selectedFile.name,size:selectedFile.size,modelId:saved._context?.modelId||null,recordId:saved._context?.recordId||null,slotId:saved._context?.slotId||null,versionId:saved.versionId,revision:saved.revision||""});
+    saveData();await addAudit("UPLOAD",{model,key,subpart:source?.name||"",filename:selectedFile.name,size:selectedFile.size});
     if(status)status.textContent="Upload completed successfully.";
     expandedCards.add(key);await refreshUploadedFlags(currentModel);renderAll();closeModal("uploadModal");toast(`${selectedFile.name} saved to ${targetLabel}.`,`success`);selectedFile=null;document.getElementById("uploadForm").reset();document.getElementById("uploadModel").value=currentModel;populateUploadRecords(currentModel);document.getElementById("fileName").textContent="Drop file here or click to browse";if(document.getElementById("uploadRevision"))document.getElementById("uploadRevision").value="";if(document.getElementById("uploadNote"))document.getElementById("uploadNote").value="";updateSubpartSelector();
   }catch(err){console.error("Large file upload failed",err);if(status)status.textContent="Upload failed. The file was not committed.";toast("Could not save the file to IndexedDB. Check available browser storage and try again.","error")}finally{btn.disabled=false;setTimeout(()=>progressWrap.classList.add("hidden"),300)}
 }
 
-async function downloadRecord(versionId,filename){
-  try{const record=await getFileVersion(versionId); if(!record?.blob){toast("No uploaded file is available for this version.","info");return;} const ok=downloadBlob(record.blob,record.filename||filename); if(ok){await addAudit("DOWNLOAD",{versionId,filename:record.filename||filename});toast("Download started.","success")}else toast("Browser blocked the download. Please allow downloads for this site.","error");}
-  catch(err){console.error("File download lookup failed",err);toast("No uploaded file is available for this record.","info")}
+async function downloadRecord(storageKey,filename){
+  try{
+    let record=await getFile(storageKey),resolvedKey=storageKey;
+    const parts=storageKey.split("_"),model=parts[0],key=parts[1];
+    if(key==="T"||key==="U"){
+      const primaryMatches=record?.blob && ((key==="T"&&!isKoreaMemberFile(record))||(key==="U"&&isKoreaMemberFile(record)));
+      if(!primaryMatches){
+        const legacyKey=`${model}_${key==="T"?"U":"T"}`;
+        const legacy=await getFile(legacyKey);
+        if(legacy?.blob && ((key==="T"&&!isKoreaMemberFile(legacy))||(key==="U"&&isKoreaMemberFile(legacy)))){record=legacy;resolvedKey=legacyKey;}
+        else if(!record?.blob) record=null;
+      }
+    }
+    if(record?.blob){
+      const ok=downloadBlob(record.blob,record.filename||filename);
+      if(ok){
+        const resolvedParts=resolvedKey.split("_"),resolvedModel=resolvedParts[0],resolvedRecord=resolvedParts[1],subpart=resolvedParts.length>2?resolvedParts.slice(2).join("_"):"";
+        await addAudit("DOWNLOAD",{model:resolvedModel,key:resolvedRecord,subpart,filename:record.filename||filename});
+        toast("Download started.","success");
+        return;
+      }
+      toast("Browser blocked the download. Please allow downloads for this site.","error");
+      return;
+    }
+  }catch(err){console.error("File download lookup failed",err)}
+  toast("No uploaded file is available for this record. Admin must upload the document first.","info");
 }
 async function previewStoredFile(storageKey,filename){
   try{
-    const record=await getFileVersion(storageKey);if(!record?.blob){toast("No uploaded file is available for preview.","info");return;}
-    const name=record.filename||filename||"file", ext=fileExtension(name), blob=normalizeFileBlob(record.blob,name), type=blob.type||mimeForFilename(name);
-    if(activePreviewObjectUrl)URL.revokeObjectURL(activePreviewObjectUrl);
-    const objectUrl=URL.createObjectURL(blob); activePreviewObjectUrl=objectUrl;
-    const body=document.getElementById("filePreviewBody"),title=document.getElementById("filePreviewTitle"),meta=document.getElementById("filePreviewMeta");
-    if(title)title.textContent=name; if(meta)meta.textContent=`${currentModel} · ${formatBytes(record.size||blob.size)} · ${type}`;
-    if(body){
-      if(type.startsWith("image/")||["png","jpg","jpeg","webp","gif"].includes(ext)) body.innerHTML=`<img class="file-preview-image" src="${objectUrl}" alt="${escapeHtml(name)}">`;
-      else if(type==="application/pdf"||ext==="pdf") body.innerHTML=`<iframe class="file-preview-frame" src="${objectUrl}#view=FitH" title="PDF preview"></iframe>`;
-      else if(type.startsWith("text/")||["csv","txt"].includes(ext)){const text=await blob.text();body.innerHTML=`<pre class="file-preview-text">${escapeHtml(text.slice(0,200000))}</pre>`;}
-      else body.innerHTML=`<div class="file-preview-unsupported"><i class="fa-solid fa-file-circle-check"></i><strong>File uploaded successfully.</strong><span>This format is stored safely but your browser does not provide an inline viewer for it.</span><button type="button" class="btn btn-dark" id="inlinePreviewDownload"><i class="fa-solid fa-download"></i> Download</button></div>`;
+    const record=await getFile(storageKey);if(!record?.blob){toast("No uploaded file is available for preview.","info");return;}
+    const objectUrl=URL.createObjectURL(record.blob),body=document.getElementById("filePreviewBody"),title=document.getElementById("filePreviewTitle"),meta=document.getElementById("filePreviewMeta");
+    if(title)title.textContent=record.filename||filename||"Engineering file";
+    if(meta)meta.textContent=`${currentModel} · ${formatBytes(record.size||record.blob.size)} · ${record.blob.type||"unknown type"}`;
+    if(body){const name=record.filename||filename||"file",ext=name.split(".").pop().toLowerCase();
+      if(record.blob.type?.startsWith("image/")||["png","jpg","jpeg","webp","gif"].includes(ext)) body.innerHTML=`<img class="file-preview-image" src="${objectUrl}" alt="${escapeHtml(name)}">`;
+      else if(record.blob.type==="application/pdf"||ext==="pdf") body.innerHTML=`<iframe class="file-preview-frame" src="${objectUrl}" title="PDF preview"></iframe>`;
+      else if(record.blob.type?.startsWith("text/")||["csv","txt"].includes(ext)){const text=await record.blob.text();body.innerHTML=`<pre class="file-preview-text">${escapeHtml(text.slice(0,200000))}</pre>`;}
+      else body.innerHTML=`<div class="file-preview-unsupported"><i class="fa-solid fa-file-lines"></i><strong>Preview is not available for this file type.</strong><span>Use Download to open the original file in its native application.</span><button type="button" class="btn btn-dark" id="inlinePreviewDownload"><i class="fa-solid fa-download"></i> Download</button></div>`;
       document.getElementById("inlinePreviewDownload")?.addEventListener("click",()=>downloadRecord(storageKey,name));
     }
     document.getElementById("filePreviewModal")?.classList.remove("hidden");
@@ -540,32 +641,6 @@ function recordData(key){return currentItems()[key]}
 async function copyRecord(key){const i=recordData(key),entries=expandedFileMap.get(key)||[];const files=entries.map(x=>{const versions=(x.versions||[]).map(v=>`${v.versionLabel}: ${v.filename} | ${v.size}`).join("\n    ");return `${x.name}: ${x.present?"PRESENT":"MISSING"} | ${x.versionCount||0} version(s)${versions?`\n    ${versions}`:""}`}).join("\n");const text=`${currentModel}\n${i.title}\nCategory: ${i.category}\n${files}`;try{await navigator.clipboard.writeText(text);toast(`${i.title} copied.`,`success`)}catch{toast("Clipboard access is unavailable.","error")}}
 async function copyLink(key){const url=`${location.href.split("#")[0]}#record/${currentModel}/${key}`;try{await navigator.clipboard.writeText(url);toast("Record link copied.","success")}catch{toast("Clipboard access is unavailable.","error")}}
 async function copySpecs(){const m=data[currentModel].meta;try{await navigator.clipboard.writeText(`Model: ${currentModel} (${m.name})\nProcessor: ${m.ap}\nLaunch Year: ${m.modelYear||"—"}\nKorea Lead / SIEL HW PIC: ${m.sielHwPic||m.leadKorea||"—"}\nRF / Network: ${m.rfNetwork||m.modem||"—"}\nModel Type: ${m.modelType||(m.status==="Mass Production"?"Mass Production Model":"Development Model")}\nStatus: ${m.status}`);toast("Model specification copied.","success")}catch{toast("Clipboard access is unavailable.","error")}}
-async function backupCompleteRepository(){
-  try{
-    const appState={data,favorites,recentlyViewed,prefs,currentModel,activeCategory,customModels:readJson(CUSTOM_MODELS_KEY,[]),modelIds:readJson(MODEL_IDS_KEY,{}),recordIds:readJson(RECORD_IDS_KEY,{}),slotIds:readJson(SLOT_IDS_KEY,{}),lastModel:localStorage.getItem("MOBILE_RND_LAST_MODEL_V1")};
-    const blob=await createFullBackup(appState);
-    const ok=downloadBlob(blob,`MobileRD_Full_Backup_${dateStamp()}.mrdbackup`);
-    if(ok) toast(`Complete backup created (${formatBytes(blob.size)}). Includes metadata and uploaded binaries.`,`success`); else toast("Browser blocked the backup download. Please allow downloads for this site.","error");
-  }catch(err){console.error("Complete backup failed",err);toast(`Backup failed: ${err.message||"Unknown error"}`,"error")}
-}
-async function restoreCompleteRepository(e){
-  const input=e.target,file=input?.files?.[0]; if(!file)return;
-  if(!confirm(`Restore the complete dashboard from ${file.name}? Existing local models, records, files, versions and audit data will be replaced.`)){input.value="";return}
-  try{
-    const manifest=await restoreFullBackup(file); const state=manifest.appState||{};
-    if(state.data){data=state.data;saveData()}
-    if(Array.isArray(state.favorites)){favorites=state.favorites;localStorage.setItem("MOBILE_RND_FAVORITES_V1",JSON.stringify(favorites))}
-    if(Array.isArray(state.recentlyViewed)){recentlyViewed=state.recentlyViewed;localStorage.setItem("MOBILE_RND_RECENT_V1",JSON.stringify(recentlyViewed))}
-    if(state.prefs){prefs={...prefs,...state.prefs};savePrefs()}
-    if(state.customModels)localStorage.setItem(CUSTOM_MODELS_KEY,JSON.stringify(state.customModels));
-    if(state.modelIds)localStorage.setItem(MODEL_IDS_KEY,JSON.stringify(state.modelIds));
-    if(state.recordIds)localStorage.setItem(RECORD_IDS_KEY,JSON.stringify(state.recordIds));
-    if(state.slotIds)localStorage.setItem(SLOT_IDS_KEY,JSON.stringify(state.slotIds));
-    if(state.lastModel)localStorage.setItem("MOBILE_RND_LAST_MODEL_V1",state.lastModel);
-    if(state.currentModel) currentModel=state.currentModel; if(state.activeCategory) activeCategory=state.activeCategory;
-    toast("Complete backup restored successfully. Reloading dashboard…","success"); setTimeout(()=>location.reload(),500);
-  }catch(err){console.error("Complete restore failed",err);toast(`Restore failed: ${err.message||"Invalid backup"}`,"error")} finally{input.value=""}
-}
 function exportModel(){downloadText(JSON.stringify(data[currentModel],null,2),`${currentModel}_Engineering_Master.json`);toast("Model JSON exported.","success")}
 async function exportReport(){
   const m=data[currentModel].meta,entries=filteredEntries();
@@ -573,12 +648,12 @@ async function exportReport(){
     if(k==="M"){
       const subs=Array.isArray(i.subItems)?i.subItems:[];
       const subRows=await Promise.all(subs.map(async(s,index)=>{
-        const b=await listDocumentsByContext({modelCode:currentModel,recordCode:k,slotKey:subpartId(s,index)});const stored=b.versions?.at(-1)||null;
+        const stored=await getFile(keyForSubpart(currentModel,k,s,index));
         return `  - ${s.name} | ${stored?.filename||"MISSING"} | ${stored?formatBytes(stored.size):"MISSING"}`;
       }));
       return [`${k} | ${i.title} | ${i.category}`,...subRows].join("\n");
     }
-    const b=await listDocumentsByContext({modelCode:currentModel,recordCode:k,slotKey:"main"});const stored=b.versions?.at(-1)||null;
+    let stored=await getFile(`${currentModel}_${k}`);
     return `${k} | ${i.title} | ${i.category} | ${stored?.filename||"MISSING"} | ${stored?formatBytes(stored.size):"MISSING"}`;
   }));
   const text=`MOBILE R&D ENGINEERING REPORT
@@ -599,8 +674,8 @@ Generated: ${new Date().toISOString()}`;
   toast("Engineering report exported.","success");
 }
 function openPresentation(key){const i=recordData(key);if(!i)return;const entries=expandedFileMap.get(key)||[];document.getElementById("presentationContent").innerHTML=`<div class="presentation-code">${currentModel} · ${escapeHtml(i.title)}</div><h2>${escapeHtml(i.title)}</h2><div class="presentation-category">${escapeHtml(i.category)}</div><div class="presentation-tags">${(i.tags||[]).map(t=>`<span class="tag">${escapeHtml(t)}</span>`).join("")}</div><div class="presentation-file">${entries.map(x=>`<strong>${escapeHtml(x.name)}</strong><span class="${x.present?"status-present":"status-missing"}">${x.present?"PRESENT":"MISSING"}</span><strong>File</strong><span>${escapeHtml(x.filename)}</span><strong>Size</strong><span>${escapeHtml(x.size)}</span>`).join("")}</div>`;openModal("presentationModal")}
-function navigateRecord(delta){const arr=Object.keys(currentItems()).sort(compareRecordCodes),idx=arr.indexOf(location.hash.split("/").pop()),next=arr[Math.max(0,Math.min(arr.length-1,(idx<0?0:idx)+delta))];if(next)openRecord(next)}
-async function resetData(){if(!confirm("Reset all local dashboard data and stored files? This cannot be undone."))return;data=createDefaultData();saveData();await deleteAllFiles();await deleteAuditLogs();await ensureRepositoryIdentity();uploadedFiles=new Map();uploadedKeys=new Set();favorites=[];recentlyViewed=[];expandedCards.clear();localStorage.removeItem("MOBILE_RND_FAVORITES_V1");localStorage.removeItem("MOBILE_RND_RECENT_V1");localStorage.removeItem(CUSTOM_MODELS_KEY);currentModel=modelList()[0];activeCategory="all";query="";renderCategories();populateUploadModels(currentModel);renderAll();closeModal("settingsModal");toast("Local data reset to default dataset.","success")}
+function navigateRecord(delta){const arr=RECORD_ORDER.filter(k=>currentItems()[k]),idx=arr.indexOf(location.hash.split("/").pop()),next=arr[Math.max(0,Math.min(arr.length-1,(idx<0?0:idx)+delta))];if(next)openRecord(next)}
+async function resetData(){if(!confirm("Reset all local dashboard data and stored files? This cannot be undone."))return;data=createDefaultData();saveData();await deleteAllFiles();await deleteAuditLogs();uploadedFiles=new Map();uploadedKeys=new Set();favorites=[];recentlyViewed=[];expandedCards.clear();localStorage.removeItem("MOBILE_RND_FAVORITES_V1");localStorage.removeItem("MOBILE_RND_RECENT_V1");localStorage.removeItem(CUSTOM_MODELS_KEY);currentModel=modelList()[0];activeCategory="all";query="";renderCategories();populateUploadModels(currentModel);renderAll();closeModal("settingsModal");toast("Local data reset to default dataset.","success")}
 function dateStamp(){return new Date().toISOString().slice(0,10).replaceAll("-","")}
 function restoreSidebarState(){if(localStorage.getItem("MOBILE_RND_SIDEBAR_V1")==="collapsed"){document.body.classList.add("sidebar-collapsed");document.getElementById("sidebarCollapseBtn").innerHTML='<i class="fa-solid fa-angles-right"></i>'}}
 
