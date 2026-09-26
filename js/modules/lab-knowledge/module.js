@@ -1,6 +1,6 @@
 import {isModuleEnabled} from '../module-manager.js';
 import {LAB_SETUPS,LAB_EQUIPMENT,LAB_TROUBLESHOOTING} from './data.js';
-import {saveLabVersion,getLabFile,getLatestLabVersion,listLabVersions,addAudit} from '../../database.js';
+import {saveFile,getFile,getFiles,addAudit} from '../../database.js';
 import {downloadBlob,formatBytes,toast} from '../../ui.js';
 
 const AUTH_KEY='RND_AUTH_V3';
@@ -10,10 +10,11 @@ const esc=s=>String(s??'').replace(/[&<>'"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&
 let tab='setups',q='',selectedId='';
 const modal=()=>document.getElementById('labKnowledgeModal'),body=()=>document.getElementById('labKnowledgeBody');
 const isAdmin=()=>sessionStorage.getItem(AUTH_KEY)==='true';
+const fileKey=id=>`LAB_${id}`;
 const allItems=()=>[...LAB_SETUPS,...LAB_EQUIPMENT];
 function fileExt(name){return String(name||'').split('.').pop().toLowerCase()}
 function card(x,f){const admin=isAdmin();return `<article class="lab-card"><button class="lab-card-main" data-lab-open="${esc(x.id)}"><span class="lab-card-icon"><i class="fa-solid ${x.icon}"></i></span><span class="lab-card-copy"><strong>${esc(x.name)}</strong><small>${esc(x.desc)}</small></span><span class="lab-rev">${esc(x.revision)}</span><i class="fa-solid fa-chevron-right lab-arrow"></i></button><div class="lab-card-actions">${f?`<span class="lab-file-badge present"><i class="fa-solid fa-paperclip"></i> FILE</span><button type="button" class="lab-mini-btn" data-lab-download="${esc(x.id)}"><i class="fa-solid fa-download"></i> DOWNLOAD</button>`:`<span class="lab-file-badge missing"><i class="fa-solid fa-file-circle-xmark"></i> NO FILE</span>`}${admin?`<button type="button" class="lab-mini-btn admin" data-lab-upload="${esc(x.id)}"><i class="fa-solid fa-cloud-arrow-up"></i> ${f?'UPDATE':'UPLOAD'}</button>`:''}</div></article>`}
-async function fileState(id){try{return await getLatestLabVersion(id)}catch{return null}}
+async function fileState(id){try{return await getFile(fileKey(id))}catch{return null}}
 async function renderLibrary(){
   const z=q.toLowerCase();
   const list=tab==='setups'?LAB_SETUPS:LAB_EQUIPMENT;
@@ -22,15 +23,15 @@ async function renderLibrary(){
     return;
   }
   const filtered=list.filter(x=>(x.name+' '+x.desc).toLowerCase().includes(z));
-  const map=new Map();
-  try{await Promise.all(filtered.map(async x=>{const f=await fileState(x.id); if(f) map.set(x.id,f)}));}catch(err){console.error(err)}
-  body().innerHTML=`<div class="lab-section-head"><span class="lab-kicker">${tab==='setups'?'TEST SETUP LIBRARY':'EQUIPMENT LIBRARY'}</span><h3>${tab==='setups'?'R&D Test Setups':'R&D Lab Equipment'}</h3><p>${tab==='setups'?'Model-linked setup knowledge, connections, work instructions, checklist and troubleshooting.':'Working manual, operating checks, calibration and related setups.'}</p></div><div class="lab-grid">${filtered.map(x=>card(x,map.get(x.id))).join('')}</div>`;
+  let map=new Map();
+  try{map=await getFiles(filtered.map(x=>fileKey(x.id)));}catch(err){console.error(err)}
+  body().innerHTML=`<div class="lab-section-head"><span class="lab-kicker">${tab==='setups'?'TEST SETUP LIBRARY':'EQUIPMENT LIBRARY'}</span><h3>${tab==='setups'?'R&D Test Setups':'R&D Lab Equipment'}</h3><p>${tab==='setups'?'Model-linked setup knowledge, connections, work instructions, checklist and troubleshooting.':'Working manual, operating checks, calibration and related setups.'}</p></div><div class="lab-grid">${filtered.map(x=>card(x,map.get(fileKey(x.id)))).join('')}</div>`;
 }
 async function detail(id){
   const x=allItems().find(a=>a.id===id);if(!x)return;selectedId=id;
-  const f=await fileState(id);const versions=await listLabVersions(id);if(selectedId!==id)return;
+  const f=await fileState(id);if(selectedId!==id)return;
   const admin=isAdmin();
-  const filePanel=f?`<div class="lab-file-panel present"><div><strong><i class="fa-solid fa-file-circle-check"></i> Knowledge File Available</strong><small>${esc(f.filename||'Uploaded file')} · ${formatBytes(f.size||0)} · ${versions.length} version${versions.length===1?'':'s'}</small></div><div class="lab-file-actions"><button class="btn btn-light" data-lab-download="${esc(id)}"><i class="fa-solid fa-download"></i> Download</button>${admin?`<button class="btn btn-cyan" data-lab-upload="${esc(id)}"><i class="fa-solid fa-arrow-up-from-bracket"></i> NEW VERSION</button>`:''}</div></div>`:`<div class="lab-file-panel missing"><div><strong><i class="fa-solid fa-file-circle-xmark"></i> No knowledge file uploaded</strong><small>Upload a manual, setup guide, diagram, checklist or related document for this ${tab==='setups'?'test setup':'equipment'} item.</small></div>${admin?`<button class="btn btn-cyan" data-lab-upload="${esc(id)}"><i class="fa-solid fa-cloud-arrow-up"></i> Upload File</button>`:`<span class="lab-admin-hint"><i class="fa-solid fa-lock"></i> Admin upload required</span>`}</div>`;
+  const filePanel=f?`<div class="lab-file-panel present"><div><strong><i class="fa-solid fa-file-circle-check"></i> Knowledge File Available</strong><small>${esc(f.filename||'Uploaded file')} · ${formatBytes(f.size||0)}</small></div><div class="lab-file-actions"><button class="btn btn-light" data-lab-download="${esc(id)}"><i class="fa-solid fa-download"></i> Download</button>${admin?`<button class="btn btn-cyan" data-lab-upload="${esc(id)}"><i class="fa-solid fa-arrow-up-from-bracket"></i> Replace</button>`:''}</div></div>`:`<div class="lab-file-panel missing"><div><strong><i class="fa-solid fa-file-circle-xmark"></i> No knowledge file uploaded</strong><small>Upload a manual, setup guide, diagram, checklist or related document for this ${tab==='setups'?'test setup':'equipment'} item.</small></div>${admin?`<button class="btn btn-cyan" data-lab-upload="${esc(id)}"><i class="fa-solid fa-cloud-arrow-up"></i> Upload File</button>`:`<span class="lab-admin-hint"><i class="fa-solid fa-lock"></i> Admin upload required</span>`}</div>`;
   body().innerHTML=`<div class="lab-detail"><button class="lab-back" data-lab-back><i class="fa-solid fa-arrow-left"></i> Back to library</button><div class="lab-detail-hero"><span class="lab-card-icon"><i class="fa-solid ${x.icon}"></i></span><div><span class="lab-kicker">R&D LAB TESTING SETUP</span><h3>${esc(x.name)}</h3><p>${esc(x.desc)}</p><small>Knowledge revision: ${esc(x.revision)} · Model linkage: A576, A376, A076, A075, A085, S741 or future models</small></div></div>${filePanel}<div class="lab-detail-grid"><section><h4>Working Manual</h4><p>Purpose, pre-checks, operating sequence, acceptance criteria and revision-controlled work instruction.</p></section><section><h4>Setup Procedure / Checklist</h4><p>Step-by-step setup sequence, pre-test checklist, pass/fail checks and sign-off placeholders.</p></section><section><h4>Connections / Cable / Port</h4><p>From / To / cable / port / adapter / calibration path, with an approved connection map placeholder.</p></section><section><h4>Setup Photos / Diagrams</h4><p>Reserved attachment area for setup photographs, wiring diagrams and station illustrations.</p></section><section><h4>Common Problems / Troubleshooting</h4><p>Symptoms, probable causes, diagnostic checks and approved resolution steps.</p></section><section><h4>Model Link / Revision</h4><p>Link this knowledge item to one or more models and maintain future revisions without changing the core portal.</p></section></div></div>`;
 }
 async function upload(id,file){
@@ -38,10 +39,10 @@ async function upload(id,file){
   if(!file)return;
   if(file.size>MAX_FILE_SIZE){toast('File exceeds the 500 MB limit.','error');return}
   const ext=fileExt(file.name);if(!ALLOWED.includes(ext)){toast(`Unsupported file type: .${ext||'unknown'}`,'error');return}
-  try{const item=allItems().find(a=>a.id===id);await saveLabVersion(id,file,{name:item?.name||'Lab Knowledge',revision:file.name});await addAudit('LAB_UPLOAD',{id,filename:file.name,size:file.size,type:file.type||''});toast(`${file.name} uploaded to the R&D Lab Testing Setup.`,'success');await detail(id)}catch(err){console.error(err);toast('Lab file upload failed.','error')}
+  try{await saveFile(fileKey(id),file);await addAudit('LAB_UPLOAD',{id,filename:file.name,size:file.size,type:file.type||''});toast(`${file.name} uploaded to the R&D Lab Testing Setup.`,'success');await detail(id)}catch(err){console.error(err);toast('Lab file upload failed.','error')}
 }
 async function download(id){
-  try{const f=await getLabFile(id);if(!f?.blob){toast('No uploaded file is available.','info');return}if(downloadBlob(f.blob,f.filename||'lab-knowledge-file')){await addAudit('LAB_DOWNLOAD',{id,filename:f.filename||''});toast('Download started.','success')}else toast('Browser blocked the download.','error')}catch(err){console.error(err);toast('Lab file download failed.','error')}
+  try{const f=await getFile(fileKey(id));if(!f?.blob){toast('No uploaded file is available.','info');return}if(downloadBlob(f.blob,f.filename||'lab-knowledge-file')){await addAudit('LAB_DOWNLOAD',{id,filename:f.filename||''});toast('Download started.','success')}else toast('Browser blocked the download.','error')}catch(err){console.error(err);toast('Lab file download failed.','error')}
 }
 export function initLabKnowledge(){
   if(!isModuleEnabled('labKnowledge'))return;
