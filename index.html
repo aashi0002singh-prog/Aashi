@@ -190,7 +190,7 @@
         </div>
         <p id="addModelError" class="error-text hidden"></p>
         <p id="addModelHelp" class="help-text"><i class="fa-solid fa-database"></i> Model registration is stored locally in this browser and survives page reloads.</p>
-        <div class="modal-actions"><button type="button" class="btn btn-light" data-close="addModelModal">Cancel</button><button class="btn btn-cyan" type="submit" id="addModelSubmit"><i class="fa-solid fa-plus"></i> Add Model</button></div>
+        <div class="modal-actions"><button type="button" id="deleteModelBtn" class="btn btn-danger hidden">Delete Model</button><button type="button" class="btn btn-light" data-close="addModelModal">Cancel</button><button class="btn btn-cyan" type="submit" id="addModelSubmit"><i class="fa-solid fa-plus"></i> Add Model</button></div>
       </form>
     </section>
   </div>
@@ -222,8 +222,8 @@
         <div id="dropZone" class="drop-zone">
           <i class="fa-solid fa-file-arrow-up"></i>
           <strong id="fileName">Drop file here or click to browse</strong>
-          <span>PDF, XLSX, XLS, ZIP, BIN, DWG, CSV, DOCX, PPTX • Application limit 500 MB</span>
-          <input id="fileInput" type="file" hidden>
+          <span>PDF, XLSX, XLS, ZIP, BIN, DWG, CSV, DOCX, PPTX, PNG, JPG, WEBP, GIF, SVG, TXT, LOG • Up to 500 MB per file • Unlimited files</span>
+          <input id="fileInput" type="file" multiple hidden>
         </div>
         <div class="upload-progress hidden" id="uploadProgressWrap"><div id="uploadProgress"></div></div>
         <div id="uploadStatus" class="help-text"></div>
