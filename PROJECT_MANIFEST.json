@@ -7,7 +7,7 @@
     "modelCode": "editable and unique",
     "uploads": "unlimited versions per document slot",
     "binaryStorage": "4 MB chunks, 500 MB per-file application limit",
-    "documentStatus": "document entries are informational; uploads support unlimited versions per entry",
+    "requiredStatus": "required slots with at least one version / required slot count",
     "allView": "65px compact cards with natural-flow expansion",
     "groupView": "all cards expanded with natural document flow",
     "recordOrdering": "dynamic A, B ... Z, AA, AB ...; no fixed A-V ceiling"
