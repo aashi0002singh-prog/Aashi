@@ -1,0 +1,34 @@
+{
+  "version": "V64.1.8.1",
+  "features": {
+    "modelDocuments": true,
+    "excelComparison": true,
+    "labKnowledge": true,
+    "parameter360": true,
+    "indexedDbFiles": true,
+    "fileCommandCenter": true,
+    "auditLogging": true,
+    "favorites": true,
+    "sorting": true,
+    "searchAndFilters": true,
+    "presentationMode": true,
+    "engineeringReport": true,
+    "responsiveLayout": true
+  },
+  "uiRequirements": {
+    "activeModelUninterrupted": true,
+    "portalModulesSeparateBlock": true,
+    "noAbsolutePositioningForModules": true,
+    "slimmerEngineeringRecords": true,
+    "balancedLightWorkspace": true
+  },
+  "baseline": "V64.1.8",
+  "additions": [
+    "Launch Year terminology",
+    "Mobile R&D Technical Hub branding",
+    "Visible Specification category color",
+    "Model Documents navigation to upper Model Technical Document Summary",
+    "Development Model / Mass Production Model field",
+    "Excel comparison background worker with bounded fuzzy matching and explicit parser errors"
+  ]
+}

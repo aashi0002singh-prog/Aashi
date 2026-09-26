@@ -1,42 +1,41 @@
 {
-  "project": "Mobile R&D Technical Hub",
-  "version": "V65.0-FINAL-CLEAN-MIGRATION",
-  "reference": "Mobile_RD_V64_2_FINAL_MULTI_SLOT_VERSIONED_ENGINEERING_WORKSPACE_CORRECTED.zip",
-  "architecture": {
-    "identity": "immutable modelId / recordId / slotId / versionId",
-    "modelCode": "editable and unique",
-    "uploads": "unlimited versions per document slot",
-    "binaryStorage": "4 MB chunks, 500 MB per-file application limit",
-    "requiredStatus": "required slots with at least one version / required slot count",
-    "allView": "65px compact cards with natural-flow expansion",
-    "groupView": "all cards expanded with natural document flow",
-    "recordOrdering": "dynamic A, B ... Z, AA, AB ...; no fixed A-V ceiling"
-  },
-  "stores": [
-    "models",
-    "records",
-    "slots",
-    "versions",
-    "version_chunks",
-    "refs",
-    "audit",
-    "files",
-    "file_chunks",
-    "heavy_files"
-  ],
+  "project": "Mobile R&D Engineering Portal",
+  "version": "V64.1.8.1-5-IMPROVEMENTS-EXCEL-STABILITY",
+  "sourceBaseline": "Mobile_RD_V64_1_5_LARGE_FILE_UPLOAD_FIX_FINAL.zip",
+  "architecture": "multi-folder",
   "modules": [
-    "engineering-records",
-    "file-command-center",
-    "parameter-360",
-    "lab-knowledge",
-    "excel-comparison"
+    "modelDocument",
+    "excelComparison",
+    "labKnowledge",
+    "parameter360"
   ],
-  "validation": [
-    "javascript syntax",
-    "HTML IDs/scripts",
-    "module imports",
-    "file inventory",
-    "duplicate active CSS override scan"
+  "models": [
+    "A576",
+    "A376",
+    "A076",
+    "A075",
+    "A085",
+    "S741"
   ],
-  "verification": "FINAL_VERIFICATION.md"
+  "records": "A-V",
+  "storage": "IndexedDB",
+  "sidebarOrder": [
+    "activeModel",
+    "portalModules",
+    "telemetry",
+    "actions"
+  ],
+  "modelDocumentsTarget": "#engineeringRecordsSection",
+  "excelComparisonTrigger": "portal-open-excel-comparison",
+  "liveBrowserCertification": false,
+  "title": "Mobile R&D Engineering Portal \u2014 V64.1.8 Large File Storage and Test Condition Fix",
+  "excelComparison": "Background worker parsing + bounded candidate matching; Test Item/Test Condition preserved",
+  "requestedChanges": [
+    "Model Year label/data presentation renamed to Launch Year",
+    "Mobile R&D Hub renamed to Mobile R&D Technical Hub",
+    "Specification category color changed from grey/slate to visible magenta",
+    "Mobile Documents navigates to Model Technical Document Summary",
+    "Add/Edit Model includes Development Model / Mass Production Model",
+    "Excel comparison fixed for UI hangs and improved parser error handling"
+  ]
 }

@@ -11,10 +11,10 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;600;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="css/dashboard.css?v=V65-CLEAN-REBUILD">
-  <link rel="stylesheet" href="css/lab-knowledge.css?v=V65-CLEAN-REBUILD">
-  <link rel="stylesheet" href="css/modular-features.css?v=V65-CLEAN-REBUILD">
-  <link rel="stylesheet" href="css/model-comparison.css?v=V65-CLEAN-REBUILD">
+  <link rel="stylesheet" href="css/dashboard.css?v=V64-2-EXPANDABLE-CARDS">
+  <link rel="stylesheet" href="css/lab-knowledge.css?v=V64-2-EXPANDABLE-CARDS">
+  <link rel="stylesheet" href="css/modular-features.css?v=V64-2-EXPANDABLE-CARDS">
+  <link rel="stylesheet" href="css/model-comparison.css?v=V64-1-8-STABLE">
 </head>
 
 <body class="min-h-screen bg-slate-100 text-slate-800 antialiased">
@@ -143,7 +143,7 @@
   <footer class="app-footer">
     <div class="app-container footer-inner">
       <div><span class="online-dot"></span> Mobile R&D Technical Hub</div>
-      <div class="mono">IndexedDB • Local Repository • <span id="appVersion">V65.2.4 • Visual QA Release Candidate</span></div>
+      <div class="mono">IndexedDB • Local Repository • <span id="appVersion">V64.2 • Expandable Engineering Cards</span></div>
     </div>
   </footer>
 
@@ -213,7 +213,12 @@
         <div id="uploadSubPartWrap" class="hidden">
           <label class="form-label">Document Entry</label>
           <select id="uploadSubPart" class="form-input"></select>
-          <p class="help-text">Choose the required document slot. You can upload unlimited versions to the same slot; existing versions are preserved.</p>
+          <p class="help-text">Existing document entries are optional. You can add unlimited documents and unlimited versions; existing files are preserved.</p>
+        </div>
+        <div id="uploadNewDocumentWrap" class="hidden">
+          <label class="form-label">New Document Name</label>
+          <input id="uploadNewDocumentName" class="form-input" maxlength="160" placeholder="e.g. RF validation report">
+          <p class="help-text">Add a new document without creating a fixed slot.</p>
         </div>
         <div class="form-grid-2">
           <div><label class="form-label">Revision / Version</label><input id="uploadRevision" class="form-input" maxlength="80" placeholder="e.g. Rev 03 / V2.1"></div>
@@ -370,9 +375,9 @@
       </div>
 
       <div class="settings-danger">
-        <div><strong>Local data</strong><small>Create or restore a complete local repository backup, including uploaded engineering files, versions and metadata.</small></div>
+        <div><strong>Local data</strong><small>Export or reset the local dashboard dataset.</small></div>
         <div class="flex gap-2">
-          <button id="backupBtn" class="btn btn-light">Full Backup</button><button id="restoreBtn" class="btn btn-light">Restore Backup</button><input id="restoreInput" type="file" accept=".mrdbackup,application/octet-stream" hidden>
+          <button id="backupBtn" class="btn btn-light">Backup Data</button>
           <button id="resetBtn" class="btn btn-danger">Reset Local Data</button>
         </div>
       </div>
@@ -436,8 +441,8 @@
       document.getElementById('modelComparisonBtnTop')?.addEventListener('click',()=>document.dispatchEvent(new CustomEvent('portal-open-excel-comparison')));
     });
   </script>
-  <script type="module" src="js/app.js?v=V65-CLEAN-REBUILD"></script>
-  <script type="module" src="js/file-command-center.js?v=V65-CLEAN-REBUILD"></script>
-  <script type="module" src="js/model-comparison/comparison.js?v=V65-CLEAN-REBUILD"></script>
+  <script type="module" src="js/app.js?v=V64-2-EXPANDABLE-CARDS"></script>
+  <script type="module" src="js/file-command-center.js?v=V64-2-EXPANDABLE-CARDS"></script>
+  <script type="module" src="js/model-comparison/comparison.js?v=V64-1-8-STABLE"></script>
 </body>
 </html>
