@@ -1,0 +1,1142 @@
+<!doctype html><html><head><!DOCTYPE html>
+<html lang="en" class="h-full">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Mobile R&D Technical Hub — engineering records, specifications, lab testing setup and model comparison">
+  <title>Mobile R&D Technical Hub</title>
+
+  
+  
+  
+  
+  
+  
+  
+  
+  
+</head>
+
+<style>:root{--navy:#0b1220;--navy2:#14233d;--accent:#2f64c8;--accent-soft:#eef5ff;--bg:#edf1f6;--card:#fff;--border:#d3dbe7;--text:#1d2939;--muted:#64748b;--good:#16a34a;--warn:#d97706;--bad:#dc2626;--shadow:0 8px 24px rgba(15,23,42,.07);--radius:12px;--collapsed-card:65px}
+*{box-sizing:border-box}html{scroll-behavior:smooth}body{margin:0;font-family:Inter,system-ui,sans-serif;background:var(--bg);color:var(--text)}button,input,select,textarea{font:inherit}.hidden{display:none!important}.top-accent{height:3px;background:linear-gradient(90deg,#f59e0b,#06b6d4,#6366f1,#f59e0b);background-size:300% 100%;animation:flow 7s ease infinite}@keyframes flow{50%{background-position:100% 50%}}
+.app-container{width:100%;max-width:2400px;margin:auto;padding-left:24px;padding-right:24px}.app-header{background:linear-gradient(180deg,#0d192d,#142642);color:#fff;position:sticky;top:0;z-index:40;border-bottom:2px solid #2f64c8;box-shadow:0 7px 24px rgba(2,8,23,.18)}.header-inner{min-height:76px;display:flex;align-items:center;justify-content:space-between;gap:18px}.brand{display:flex;align-items:center;gap:11px;min-width:0}.brand-mark{width:42px;height:42px;border-radius:11px;display:grid;place-items:center;background:#071326;border:1px solid #405b86;color:#67e8f9;flex:none}.brand-title{margin:0;font-size:17px;font-weight:800;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.brand-title span{color:#fbbf24}.brand-subtitle{margin:3px 0 0;font-size:11px;color:#a9c7ff}.env-badge{font:700 8px "JetBrains Mono";color:#67e8f9;border:1px solid rgba(34,211,238,.3);padding:4px 7px;border-radius:999px;white-space:nowrap}.header-actions{display:flex;align-items:center;gap:7px;min-width:0}.header-module-btn,.header-icon-btn{height:40px;border:1px solid #405b86;border-radius:9px;background:#10223e;color:#dbeafe;cursor:pointer}.header-module-btn{padding:0 11px;display:inline-flex;align-items:center;gap:7px;font-size:10px;font-weight:800}.header-icon-btn{width:40px}.model-picker-search{position:relative;height:40px;min-width:190px;display:flex;align-items:center;gap:7px;padding:0 9px;background:#10223e;border:1px solid #405b86;border-radius:9px}.model-picker-caption{position:absolute;top:3px;left:31px;font:700 6px "JetBrains Mono";color:#7f9bc5;letter-spacing:.08em}.model-picker-search>i{color:#67e8f9;font-size:11px}.model-picker-search input{width:100%;height:34px;padding:9px 28px 0 2px;border:0;outline:0;background:transparent;color:#fff;font:800 11px "JetBrains Mono"}.model-picker-toggle{position:absolute;right:4px;border:0;background:transparent;color:#94a3b8;cursor:pointer}.model-picker-menu{position:absolute;top:45px;right:0;width:290px;max-height:360px;overflow:auto;background:#fff;border:1px solid var(--border);border-radius:10px;box-shadow:0 20px 45px rgba(2,8,23,.2);z-index:80;padding:6px}.model-picker-menu.hidden{display:none}.model-picker-label{padding:7px 9px;font:800 8px "JetBrains Mono";color:#64748b}.model-picker-option{width:100%;display:grid;grid-template-columns:65px 1fr;text-align:left;gap:8px;padding:9px;border:0;background:#fff;border-radius:7px;cursor:pointer}.model-picker-option:hover,.model-picker-option.active{background:#eef5ff}.model-picker-code{font:800 10px "JetBrains Mono";color:#2f64c8}.model-picker-name{font-size:10px;color:#334155}.model-picker-empty{padding:14px;color:#64748b;font-size:10px}
+.workspace-shell{display:flex;min-height:calc(100vh - 125px)}.model-sidebar{width:255px;flex:0 0 255px;background:linear-gradient(180deg,#0d192d,#14243d);color:#e2e8f0;padding:18px 14px;display:flex;flex-direction:column;gap:14px;border-right:1px solid #253a5b}.sidebar-kicker{font:800 8px "JetBrains Mono";color:#8db5ff;letter-spacing:.12em}.sidebar-model-identity{display:flex;align-items:baseline;gap:9px;margin-top:5px;flex-wrap:wrap}.sidebar-model-code{font:800 31px "JetBrains Mono";color:#fff}.sidebar-model-name{font-size:12px;font-weight:700;color:#cbd5e1}.status-pill{display:inline-flex;align-items:center;gap:5px;width:max-content;margin-top:7px;padding:4px 7px;border-radius:999px;color:#86efac;background:rgba(16,185,129,.08);border:1px solid rgba(16,185,129,.3);font:700 8px "JetBrains Mono"}.status-pill i{font-size:5px}.sidebar-telemetry{display:grid;gap:7px}.sidebar-metric{padding:9px;border:1px solid rgba(148,163,184,.15);background:rgba(2,8,23,.18);border-radius:8px;min-width:0}.sidebar-metric span{display:block;font:700 7px "JetBrains Mono";color:#8fa3ba}.sidebar-metric strong{display:block;margin-top:4px;font:700 10px "JetBrains Mono";color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.sidebar-actions{padding-top:2px}.sidebar-action,.sidebar-module-btn{width:100%;min-height:34px;border:1px solid #314a70;background:#10223e;color:#dbeafe;border-radius:8px;cursor:pointer;text-align:left;padding:0 9px;display:flex;align-items:center;gap:8px;font-size:9px;font-weight:800}.sidebar-module-btn{margin-top:5px}.sidebar-action:hover,.sidebar-module-btn:hover{border-color:#5f8bd0;background:#18345d}.sidebar-module-title{font:800 7px "JetBrains Mono";color:#7f9bc5;letter-spacing:.1em}.sidebar-footer{margin-top:auto;display:flex;justify-content:space-between;align-items:center;color:#7f9bc5;font-size:8px;border-top:1px solid rgba(148,163,184,.13);padding-top:12px}.sidebar-collapse-btn{border:0;background:transparent;color:#8db5ff;cursor:pointer}.sidebar-collapsed .model-sidebar{width:64px;flex-basis:64px;padding:18px 8px}.sidebar-collapsed .model-sidebar .sidebar-model-name,.sidebar-collapsed .model-sidebar .sidebar-kicker,.sidebar-collapsed .model-sidebar .status-pill,.sidebar-collapsed .model-sidebar .sidebar-metric span,.sidebar-collapsed .model-sidebar .sidebar-metric strong,.sidebar-collapsed .model-sidebar .sidebar-action span,.sidebar-collapsed .model-sidebar .sidebar-module-title,.sidebar-collapsed .model-sidebar .sidebar-module-btn span,.sidebar-collapsed .model-sidebar .sidebar-footer span{display:none}.sidebar-collapsed .sidebar-metric,.sidebar-collapsed .sidebar-action,.sidebar-collapsed .sidebar-module-btn{justify-content:center}.sidebar-collapsed .sidebar-model-code{font-size:16px}
+.records-control-panel{background:#fff;border:1px solid var(--border);border-radius:14px;box-shadow:var(--shadow);overflow:visible}.records-control-main{padding:13px 14px 8px}.engineering-records-heading-row{display:flex;align-items:center;justify-content:space-between;gap:10px}.section-heading{display:flex;align-items:center;gap:9px}.section-icon{width:33px;height:33px;border-radius:8px;background:#101c33;color:#fff;display:grid;place-items:center;font-size:11px}.section-heading h2{margin:0;font-size:12px;font-weight:800}.section-heading p{margin:2px 0 0;font:600 8px "JetBrains Mono";color:#94a3b8}.records-tabs-toggle{border:1px solid var(--border);background:#f8fafc;border-radius:7px;height:29px;padding:0 8px;font-size:8px;font-weight:800;color:#64748b;cursor:pointer}.engineering-records-tabs-row{margin-top:9px}.engineering-records-tabs-row.tabs-hidden{display:none}.category-tabs{display:flex;gap:5px;overflow:auto;padding-bottom:2px}.cat-btn{white-space:nowrap;border:1px solid var(--border);background:#fff;color:#475569;border-radius:8px;padding:7px 10px;font-size:9px;font-weight:800;cursor:pointer}.cat-btn.active{background:#101c33;color:#fff;border-color:#101c33}.records-control-tools{border-top:1px solid #edf1f5;padding:8px 12px}.data-tools{display:flex;justify-content:flex-end;gap:8px;align-items:center}.tool-group{display:flex;gap:7px;align-items:center;flex-wrap:wrap}.tool-btn{height:29px;border:1px solid #cbd5e1;background:#fff;border-radius:7px;color:#334155;padding:0 9px;font-size:8px;font-weight:800;cursor:pointer}.tool-btn:hover,.tool-btn.active{border-color:var(--accent);color:var(--accent);background:var(--accent-soft)}.tool-select{display:flex;align-items:center;gap:5px;font-size:8px;font-weight:800;color:#64748b}.tool-select select{height:29px;border:1px solid #cbd5e1;border-radius:7px;background:#fff;padding:0 7px;font-size:8px}.records-more-tools{position:relative}.records-more-tools summary{list-style:none;height:29px;border:1px solid #cbd5e1;border-radius:7px;padding:7px 9px;font-size:8px;font-weight:800;color:#475569;cursor:pointer}.records-more-menu{position:absolute;right:0;top:34px;background:#fff;border:1px solid var(--border);border-radius:8px;padding:6px;box-shadow:0 15px 35px rgba(2,8,23,.15);z-index:20;display:grid;gap:5px;min-width:160px}.active-filters{display:flex;gap:6px;align-items:center;flex-wrap:wrap;margin:9px 0}.filter-chip{padding:5px 8px;border-radius:7px;background:#e0f2fe;color:#075985;font-size:8px;font-weight:800}
+.records-grid{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:12px;margin-top:12px;align-items:start}.record-card{position:relative;min-width:0;background:var(--card);border:1px solid var(--border);border-radius:10px;box-shadow:0 2px 8px rgba(15,23,42,.04);overflow:hidden;align-self:start;transition:box-shadow .16s ease,border-color .16s ease,transform .16s ease}.record-card:hover{box-shadow:0 10px 24px rgba(15,23,42,.1);border-color:#b9c7da}.record-card:focus-visible{outline:3px solid rgba(47,100,200,.18)}.record-stripe{height:3px}.record-collapsed-face{min-height:var(--collapsed-card);height:auto;display:grid;grid-template-columns:31px minmax(0,1fr) auto 22px 16px;align-items:center;gap:7px;padding:5px 8px}.record-icon{width:31px;height:31px;border-radius:7px;color:#fff;display:grid;place-items:center;font-size:10px}.record-title-only{min-width:0;font-size:10px;font-weight:800;line-height:1.15;display:block;overflow-wrap:anywhere;overflow:hidden}.record-status{display:inline-flex;align-items:center;gap:4px;max-width:115px;padding:4px 5px;border-radius:999px;background:#f8fafc;color:#64748b;font:700 7px "JetBrains Mono";white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.record-status.all-present{color:#15803d;background:#f0fdf4}.record-status.partial{color:#b45309;background:#fffbeb}.record-status.all-missing{color:#b91c1c;background:#fff1f2}.status-dot{width:5px;height:5px;border-radius:50%;background:var(--bad);flex:none}.status-dot.present{background:var(--good)}.favorite-btn{border:0;background:transparent;color:#94a3b8;cursor:pointer;padding:2px}.favorite-btn.active{color:#f59e0b}.expand-cue{color:#94a3b8;font-size:9px;display:grid;place-items:center}.record-card.is-expanded .expand-cue{transform:rotate(180deg)}.record-expanded-panel{border-top:1px solid #e5eaf0;padding:10px;display:flex;flex-direction:column;gap:9px;background:#fbfcfe}.expanded-summary{display:flex;flex-wrap:wrap;gap:5px 10px;font:700 8px "JetBrains Mono";color:#64748b}.inline-preview{min-height:0;width:100%;overflow:hidden;border:1px solid #e1e7ef;border-radius:8px;background:#fff}.inline-preview:empty{display:none}.inline-preview-toolbar{display:flex;justify-content:space-between;gap:8px;padding:6px 8px;background:#f8fafc;border-bottom:1px solid #e5e7eb;font-size:7px;color:#64748b}.inline-preview-frame{display:block;width:100%;height:280px;border:0}.inline-preview-text{max-height:220px;overflow:auto;margin:0;padding:10px;white-space:pre-wrap;font:8px/1.45 "JetBrains Mono"}.inline-preview-empty,.inline-preview-loading,.inline-preview-unsupported{display:flex;align-items:center;gap:8px;padding:12px;font-size:8px;color:#64748b}.expanded-file-list{display:flex;flex-direction:column;gap:7px}.expanded-file-entry{border:1px solid #dfe7ef;border-radius:8px;background:#fff;padding:8px;min-width:0}.expanded-file-header{display:flex;justify-content:space-between;gap:8px;align-items:flex-start}.expanded-file-title{font-size:9px;font-weight:800;overflow-wrap:anywhere}.expanded-file-meta{margin-top:3px;font-size:7px;color:#64748b}.expanded-file-actions{display:flex;gap:5px;flex-wrap:wrap;margin-top:7px}.mini-file-action,.expanded-upload-action{height:25px;padding:0 7px;border:1px solid #cbd5e1;background:#fff;border-radius:6px;font-size:7px;font-weight:800;color:#475569;cursor:pointer}.mini-file-action:hover,.expanded-upload-action:hover{border-color:var(--record-accent);color:var(--record-accent)}.version-history{margin-top:7px;border-top:1px dashed #cbd5e1;padding-top:7px;display:flex;flex-direction:column;gap:5px}.version-history-head{display:flex;justify-content:space-between;gap:8px;font:800 7px "JetBrains Mono";color:#64748b}.version-row{display:grid;grid-template-columns:auto minmax(0,1fr) auto auto;gap:6px;align-items:center;border:1px solid #e3e8ef;border-radius:7px;padding:6px;background:#f8fafc;min-width:0}.version-badge{font:800 7px "JetBrains Mono";padding:3px 5px;border-radius:5px;background:#e2e8f0;color:#334155}.version-name{min-width:0;font-size:8px;font-weight:800;overflow-wrap:anywhere}.version-size,.version-note{font-size:7px;color:#64748b;overflow-wrap:anywhere}.version-actions{display:flex;gap:4px}.expanded-footer{display:flex;flex-wrap:wrap;gap:7px;padding-top:2px}.text-action{border:0;background:transparent;color:#64748b;font-size:8px;font-weight:800;cursor:pointer}.text-action:hover{color:var(--accent)}.empty-state{grid-column:1/-1;text-align:center;padding:60px 20px;color:#64748b}.recent-panel{margin:16px 0;padding:12px;background:#fff;border:1px solid var(--border);border-radius:10px}.recent-heading{display:flex;justify-content:space-between;gap:8px;font-size:9px;font-weight:800;color:#334155;margin-bottom:8px}.recent-heading small{color:#94a3b8;font-size:7px}.recent-list{display:flex;gap:7px;overflow:auto}.recent-item{min-width:190px;text-align:left;border:1px solid #e2e8f0;background:#f8fafc;border-radius:8px;padding:8px;cursor:pointer}.recent-item span{display:block;font:700 7px "JetBrains Mono";color:var(--accent)}.recent-item strong{display:block;margin-top:3px;font-size:8px;color:#334155}.app-footer{background:#fff;border-top:1px solid var(--border);margin-top:20px}.footer-inner{height:48px;display:flex;justify-content:space-between;align-items:center;color:#64748b;font-size:8px}.online-dot{display:inline-block;width:6px;height:6px;border-radius:50%;background:#10b981}
+.modal{position:fixed;inset:0;z-index:100;display:grid;place-items:center;padding:18px}.modal.hidden{display:none}.modal-backdrop{position:absolute;inset:0;background:rgba(2,8,23,.67);backdrop-filter:blur(5px)}.modal-panel{position:relative;width:100%;max-height:calc(100vh - 36px);overflow:auto;background:#fff;border:1px solid var(--border);border-radius:15px;box-shadow:0 25px 70px rgba(2,8,23,.28);padding:22px}.modal-sm{max-width:390px}.modal-md{max-width:620px}.modal-lg{max-width:760px}.modal-xl{max-width:1100px}.modal-close{position:absolute;right:14px;top:13px;border:0;background:transparent;color:#94a3b8;cursor:pointer;font-size:15px;z-index:2}.modal-heading{display:flex;gap:10px;align-items:center;margin-bottom:18px}.modal-icon{width:38px;height:38px;border-radius:10px;background:#0f172a;color:#22d3ee;display:grid;place-items:center}.modal-panel h2{margin:0;font-size:14px;font-weight:800}.modal-description{margin:3px 0 0;font-size:9px;color:#64748b}.form-label{display:block;margin:12px 0 5px;font-size:9px;font-weight:800;color:#334155}.form-input{width:100%;height:37px;border:1px solid #cbd5e1;border-radius:8px;background:#f8fafc;padding:0 10px;font-size:10px;outline:0}.form-input:focus{background:#fff;border-color:var(--accent);box-shadow:0 0 0 3px rgba(47,100,200,.1)}.form-grid-2{display:grid;grid-template-columns:1fr 1fr;gap:10px}.modal-actions{display:flex;justify-content:flex-end;gap:7px;margin-top:18px;padding-top:14px;border-top:1px solid #edf1f5}.btn{height:34px;border-radius:8px;padding:0 11px;display:inline-flex;align-items:center;justify-content:center;gap:7px;border:0;cursor:pointer;font-size:9px;font-weight:800}.btn-dark{background:#1e293b;color:#e2e8f0}.btn-cyan{background:#2f64c8;color:#fff}.btn-light{background:#f8fafc;color:#334155;border:1px solid #cbd5e1}.btn-danger{background:#fff1f2;color:#be123c;border:1px solid #fecdd3}.drop-zone{border:1.5px dashed #cbd5e1;background:#f8fafc;border-radius:11px;min-height:135px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:5px;margin-top:12px;cursor:pointer;text-align:center}.drop-zone>i{font-size:25px;color:#2f64c8}.upload-progress{height:6px;background:#e2e8f0;border-radius:999px;margin-top:10px;overflow:hidden}.upload-progress>div{height:100%;width:0;background:#2f64c8}.settings-list{border:1px solid #e2e8f0;border-radius:10px;overflow:hidden}.setting-row{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:13px;border-bottom:1px solid #e2e8f0}.setting-row:last-child{border-bottom:0}.setting-row strong,.setting-row small{display:block}.setting-row strong{font-size:10px}.setting-row small{font-size:8px;color:#94a3b8;margin-top:2px}.settings-select{height:32px;border:1px solid #cbd5e1;border-radius:7px;background:#fff;padding:0 8px;font-size:9px;font-weight:700}.settings-danger{margin-top:14px;padding:13px;border:1px solid #fecdd3;background:#fff7f7;border-radius:10px;display:flex;align-items:center;justify-content:space-between;gap:10px}.settings-danger strong{display:block;font-size:9px}.settings-danger small{display:block;font-size:8px;color:#9f1239;margin-top:3px}.settings-section-title{font:800 7px "JetBrains Mono";letter-spacing:.12em;color:#94a3b8;padding:8px 13px 4px}.setting-info{display:flex;gap:8px;align-items:center;background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;padding:9px;font-size:8px;color:#64748b}.shortcut-grid{display:grid;grid-template-columns:1fr 1fr;gap:6px;padding:10px 13px;font-size:8px;color:#64748b}.shortcut-grid span{display:flex;gap:5px;align-items:center}.shortcut-grid kbd{padding:3px 5px;border:1px solid #cbd5e1;border-radius:4px;background:#f8fafc}.toast-container{position:fixed;right:18px;bottom:18px;z-index:200;display:flex;flex-direction:column;gap:8px}.toast{min-width:260px;max-width:420px;background:#0f172a;color:#fff;border-radius:9px;padding:10px 12px;font-size:9px;box-shadow:0 15px 35px rgba(2,8,23,.2)}
+.file-center-toolbar{display:grid;grid-template-columns:minmax(0,1fr) 170px auto auto;gap:7px;align-items:center;margin-bottom:10px}.file-center-search{position:relative}.file-center-search i{position:absolute;left:9px;top:10px;color:#94a3b8;font-size:10px}.file-center-search input{width:100%;height:35px;border:1px solid #cbd5e1;border-radius:8px;padding:0 10px 0 28px}.file-center-layout{display:grid;grid-template-columns:minmax(0,1fr) 230px;gap:12px}.file-center-list{display:flex;flex-direction:column;gap:7px}.file-center-row{border:1px solid #dfe7ef;border-radius:8px;padding:9px;background:#fff}.file-center-recent{border-left:1px solid #e2e8f0;padding-left:12px}.file-center-side-title{font-size:9px;font-weight:800;margin-bottom:8px}.file-preview-body{min-height:420px;background:#f8fafc;border:1px solid #e2e8f0;border-radius:9px;overflow:auto}.file-preview-body iframe{width:100%;height:65vh;border:0}.file-preview-body img{display:block;max-width:100%;max-height:65vh;margin:auto}.file-preview-body pre{padding:12px;white-space:pre-wrap;font:9px/1.45 "JetBrains Mono"}.presentation-panel{max-width:900px;width:min(900px,calc(100vw - 32px));min-height:420px;display:flex;flex-direction:column;justify-content:space-between}.presentation-content h2{font-size:32px;line-height:1.1;margin:15px 0 8px}.presentation-code{font:800 10px "JetBrains Mono";color:var(--accent)}.presentation-category{font-size:10px;font-weight:800;color:#64748b;text-transform:uppercase}.presentation-tags{display:flex;gap:6px;flex-wrap:wrap;margin:20px 0}.presentation-file{display:grid;grid-template-columns:1fr auto;gap:8px;padding:14px;border:1px solid #e2e8f0;background:#f8fafc;border-radius:9px;font-size:9px}.presentation-nav{display:flex;justify-content:space-between;border-top:1px solid #e2e8f0;padding-top:12px}
+body[data-theme="dark"]{--bg:#0b1120;--card:#111827;--text:#e2e8f0;--border:#26364b;--muted:#94a3b8;background:var(--bg);color:var(--text)}body[data-theme="dark"] .records-control-panel,body[data-theme="dark"] .recent-panel,body[data-theme="dark"] .app-footer,body[data-theme="dark"] .record-card{background:#111827;border-color:#26364b}body[data-theme="dark"] .section-heading h2,body[data-theme="dark"] .record-title-only,body[data-theme="dark"] .expanded-file-title{color:#f8fafc}body[data-theme="dark"] .cat-btn,body[data-theme="dark"] .tool-btn,body[data-theme="dark"] .records-tabs-toggle,body[data-theme="dark"] .file-center-row,body[data-theme="dark"] .expanded-file-entry,body[data-theme="dark"] .version-row{background:#172033;color:#cbd5e1;border-color:#334155}body[data-theme="dark"] .modal-panel{background:#111827;color:#e2e8f0;border-color:#334155}body[data-theme="dark"] .form-input,body[data-theme="dark"] .settings-select{background:#172033;color:#f8fafc;border-color:#334155}
+body[data-density="compact"] .records-grid{gap:8px}body[data-density="compact"] .record-collapsed-face{--collapsed-card:58px;min-height:58px;height:auto}.no-motion *{animation:none!important;transition:none!important}
+@media(max-width:1500px){.records-grid{grid-template-columns:repeat(4,minmax(0,1fr))}}@media(max-width:1150px){.records-grid{grid-template-columns:repeat(3,minmax(0,1fr))}.model-sidebar{width:220px;flex-basis:220px}.header-module-btn span{display:none}.model-picker-search{min-width:160px}}@media(max-width:850px){.workspace-shell{display:block}.model-sidebar{width:auto;display:grid;grid-template-columns:1fr 1fr;gap:10px}.sidebar-footer{grid-column:1/-1}.records-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.header-inner{flex-wrap:wrap;padding-top:9px;padding-bottom:9px}.brand{width:100%}.header-actions{width:100%;overflow:auto}.file-center-layout{grid-template-columns:1fr}.file-center-recent{border-left:0;border-top:1px solid #e2e8f0;padding:10px 0}.file-center-toolbar{grid-template-columns:1fr 1fr}.file-center-toolbar .file-center-search{grid-column:1/-1}}@media(max-width:560px){.app-container{padding-left:12px;padding-right:12px}.records-grid{grid-template-columns:1fr}.model-sidebar{grid-template-columns:1fr}.form-grid-2{grid-template-columns:1fr}.shortcut-grid{grid-template-columns:1fr}.file-center-toolbar{grid-template-columns:1fr}.record-collapsed-face{grid-template-columns:30px minmax(0,1fr) 16px 15px}.record-status{display:none}.version-row{grid-template-columns:auto minmax(0,1fr) auto}.version-note{grid-column:2}.version-actions{grid-column:3;grid-row:1 / span 2}.presentation-content h2{font-size:25px}}
+
+/* V65.2.4 FINAL VISUAL/UX: balanced compact ALL cards.
+   Status is secondary information and never consumes half of the title lane. */
+body[data-record-view="all"] .records-grid .record-card:not(.is-expanded) .record-collapsed-face{
+  grid-template-columns:34px minmax(0,1fr) 22px 18px !important;
+  grid-template-rows:minmax(0,1fr) auto !important;
+  column-gap:8px !important; row-gap:2px !important;
+  min-height:65px !important; height:auto !important; padding:6px 9px !important;
+}
+body[data-record-view="all"] .records-grid .record-card:not(.is-expanded) .record-icon{grid-column:1 !important;grid-row:1 / span 2 !important;}
+body[data-record-view="all"] .records-grid .record-card:not(.is-expanded) .record-title-only{
+  grid-column:2 !important; grid-row:1 !important; align-self:end !important;
+  display:block !important; overflow-wrap:anywhere !important; white-space:normal !important;
+  overflow:visible !important; text-overflow:clip !important;
+  font-size:11px !important; line-height:1.12 !important;
+  padding-right:2px !important;
+}
+body[data-record-view="all"] .records-grid .record-card:not(.is-expanded) .record-status{
+  grid-column:2 !important; grid-row:2 !important; justify-self:start !important; align-self:start !important;
+  width:max-content !important; max-width:100% !important;
+  font-size:6.7px !important; line-height:1 !important; padding:2px 5px !important;
+}
+body[data-record-view="all"] .records-grid .record-card:not(.is-expanded) .favorite-btn{grid-column:3 !important;grid-row:1 / span 2 !important;align-self:center !important;}
+body[data-record-view="all"] .records-grid .record-card:not(.is-expanded) .expand-cue{grid-column:4 !important;grid-row:1 / span 2 !important;align-self:center !important;}
+
+/* Explicit version actions: icon + readable text. */
+.version-actions{display:flex !important;gap:4px !important;flex-wrap:wrap !important;justify-content:flex-end !important;}
+.mini-file-action{width:auto !important;min-width:68px !important;height:23px !important;padding:0 7px !important;gap:4px !important;font-size:7px !important;font-weight:850 !important;white-space:nowrap !important;}
+.mini-file-action span{display:inline !important;}
+@media(max-width:900px){.mini-file-action{min-width:64px !important;padding:0 6px !important;font-size:6.7px !important;}}
+/* V65.2.4 FINAL MOBILE VISUAL FIX: keep document status readable on phones. */
+@media(max-width:500px){
+  body[data-record-view="all"] .records-grid .record-card:not(.is-expanded) .record-collapsed-face{
+    grid-template-columns:32px minmax(0,1fr) 20px 16px !important;
+    grid-template-rows:minmax(0,1fr) auto !important;
+    min-height:70px !important;
+    height:auto !important;
+    padding:6px 8px !important;
+    row-gap:3px !important;
+  }
+  body[data-record-view="all"] .records-grid .record-card:not(.is-expanded) .record-title-only{
+    grid-column:2 !important;grid-row:1 !important;
+    font-size:10px !important;line-height:1.12 !important;
+    display:block !important;overflow:visible !important;
+  }
+  body[data-record-view="all"] .records-grid .record-card:not(.is-expanded) .record-status{
+    grid-column:2 !important;grid-row:2 !important;
+    display:inline-flex !important;justify-self:start !important;
+    max-width:100% !important;font-size:6.4px !important;
+  }
+  body[data-record-view="all"] .records-grid .record-card:not(.is-expanded) .record-status span:last-child{display:inline !important;}
+}
+.expanded-file-title .expanded-status{margin-left:6px !important;}
+.expanded-file-title .version-count{margin-left:3px !important;}
+
+/* V65.2.5 VISUAL BALANCE PATCH
+   Equal card rows + aligned internal content + remove vertical workspace centering. */
+.workspace-shell > .app-container{
+  margin:0 !important;
+  align-self:stretch !important;
+  padding-top:18px !important;
+  padding-bottom:26px !important;
+}
+
+.records-grid{
+  align-items:stretch !important;
+  grid-auto-rows:1fr;
+}
+
+.record-card{
+  height:100% !important;
+  display:flex !important;
+  flex-direction:column !important;
+}
+
+.record-collapsed-face{
+  flex:0 0 auto !important;
+}
+
+.record-card.is-expanded .record-expanded-panel{
+  flex:1 1 auto !important;
+  min-height:0 !important;
+}
+
+.record-card.is-expanded .expanded-footer{
+  margin-top:auto !important;
+}
+
+/* Group cards: each grid row shares one visual baseline. */
+body[data-record-view="group"] .records-grid{
+  align-items:stretch !important;
+}
+body[data-record-view="group"] .records-grid .record-card.is-group-view{
+  height:100% !important;
+}
+body[data-record-view="group"] .records-grid .record-card.is-group-view .record-expanded-panel{
+  flex:1 1 auto !important;
+}
+body[data-record-view="group"] .records-grid .record-card.is-group-view .expanded-footer{
+  margin-top:auto !important;
+  padding-top:12px !important;
+}
+
+/* Keep the card header geometry identical across records. */
+.record-collapsed-face{
+  min-height:65px !important;
+  grid-template-columns:34px minmax(0,1fr) auto 22px 16px !important;
+  align-items:center !important;
+}
+.record-title-only{
+  min-width:0 !important;
+  overflow-wrap:anywhere !important;
+}
+.record-status{
+  flex:none !important;
+}
+
+.recent-panel{
+  margin-top:14px !important;
+}
+
+@media(max-width:850px){
+  .workspace-shell > .app-container{
+    margin:0 !important;
+    padding-top:14px !important;
+  }
+  .records-grid{
+    grid-auto-rows:auto !important;
+  }
+  .record-card{
+    height:auto !important;
+  }
+}
+
+/* V65.2.7 CARD TITLE / STATUS BALANCE
+   Give record titles the primary horizontal lane. Missing-document status stays
+   on the far-right edge and never squeezes the title into awkward word breaks. */
+body[data-record-view="group"] .records-grid .record-card.is-group-view .record-collapsed-face{
+  position:relative !important;
+  grid-template-columns:34px minmax(0,1fr) 22px 16px !important;
+  grid-template-rows:minmax(0,1fr) !important;
+  column-gap:9px !important;
+  min-height:68px !important;
+  padding:7px 9px !important;
+  align-items:center !important;
+}
+body[data-record-view="group"] .records-grid .record-card.is-group-view .record-icon{
+  grid-column:1 !important;
+  grid-row:1 !important;
+  align-self:center !important;
+}
+body[data-record-view="group"] .records-grid .record-card.is-group-view .record-title-only{
+  grid-column:2 !important;
+  grid-row:1 !important;
+  min-width:0 !important;
+  max-width:none !important;
+  padding-right:2px !important;
+  white-space:normal !important;
+  overflow:hidden !important;
+  overflow-wrap:normal !important;
+  word-break:normal !important;
+  text-overflow:clip !important;
+  display:-webkit-box !important;
+  -webkit-box-orient:vertical !important;
+  -webkit-line-clamp:2 !important;
+  line-clamp:2 !important;
+  font-size:10px !important;
+  line-height:1.12 !important;
+  align-self:center !important;
+}
+body[data-record-view="group"] .records-grid .record-card.is-group-view .record-status{
+  position:absolute !important;
+  right:34px !important;
+  top:50% !important;
+  transform:translateY(-50%) !important;
+  width:auto !important;
+  max-width:70px !important;
+  padding:3px 5px !important;
+  font-size:6px !important;
+  line-height:1 !important;
+  z-index:2 !important;
+}
+body[data-record-view="group"] .records-grid .record-card.is-group-view .record-title-only{
+  padding-right:74px !important;
+}
+body[data-record-view="group"] .records-grid .record-card.is-group-view .favorite-btn{
+  grid-column:3 !important;
+  grid-row:1 !important;
+  z-index:3 !important;
+  align-self:center !important;
+}
+body[data-record-view="group"] .records-grid .record-card.is-group-view .expand-cue{
+  grid-column:4 !important;
+  grid-row:1 !important;
+  z-index:3 !important;
+  align-self:center !important;
+}
+
+/* In the expanded group area, keep the human-readable missing state secondary
+   and right aligned instead of consuming the main content width. */
+body[data-record-view="group"] .records-grid .record-card.is-group-view .slot-missing-note{
+  display:flex !important;
+  justify-content:flex-end !important;
+  align-items:center !important;
+  width:100% !important;
+  margin-top:6px !important;
+  padding:4px 0 !important;
+  background:transparent !important;
+  color:#991b1b !important;
+  font-size:7.5px !important;
+  font-weight:800 !important;
+  text-align:right !important;
+}
+
+/* The expanded file title is always given the full content lane; its status
+   badge is the right-most element. */
+body[data-record-view="group"] .records-grid .record-card.is-group-view .expanded-file-title{
+  display:grid !important;
+  grid-template-columns:16px minmax(0,1fr) auto !important;
+  align-items:center !important;
+  column-gap:6px !important;
+}
+body[data-record-view="group"] .records-grid .record-card.is-group-view .expanded-file-title > span:first-of-type{
+  min-width:0 !important;
+  overflow-wrap:normal !important;
+  word-break:normal !important;
+  white-space:normal !important;
+}
+body[data-record-view="group"] .records-grid .record-card.is-group-view .expanded-file-title .expanded-status{
+  margin-left:0 !important;
+  justify-self:end !important;
+}
+
+@media(max-width:560px){
+  body[data-record-view="group"] .records-grid .record-card.is-group-view .record-collapsed-face{
+    min-height:66px !important;
+    grid-template-columns:32px minmax(0,1fr) 18px 15px !important;
+    padding:6px 8px !important;
+  }
+  body[data-record-view="group"] .records-grid .record-card.is-group-view .record-title-only{
+    font-size:9.5px !important;
+    padding-right:66px !important;
+  }
+  body[data-record-view="group"] .records-grid .record-card.is-group-view .record-status{
+    right:30px !important;
+    max-width:64px !important;
+  }
+}
+
+/* V65.2.7.1 FINAL GROUP TITLE READABILITY
+   Long group titles may use up to four natural lines; no ellipsis or forced word splitting. */
+body[data-record-view="group"] .records-grid .record-card.is-group-view .record-title-only{
+  -webkit-line-clamp:unset !important;
+  line-clamp:unset !important;
+  display:block !important;
+  max-height:4.6em !important;
+  overflow:hidden !important;
+  overflow-wrap:normal !important;
+  word-break:normal !important;
+  white-space:normal !important;
+  text-overflow:clip !important;
+  line-height:1.12 !important;
+}
+
+/* V65.2.8 BASE-REFERENCE CARD STRUCTURE
+   Preserve the approved All Records compact-card geometry. For group/detail cards,
+   give the title a real content lane; status remains right-most without forcing
+   words to break. Favorite/expand controls remain available as compact overlays. */
+body[data-record-view="group"] .records-grid .record-card.is-group-view .record-collapsed-face{
+  position:relative !important;
+  display:grid !important;
+  grid-template-columns:34px minmax(0,1fr) !important;
+  grid-template-rows:auto !important;
+  column-gap:10px !important;
+  min-height:72px !important;
+  padding:8px 9px !important;
+  align-items:center !important;
+}
+body[data-record-view="group"] .records-grid .record-card.is-group-view .record-icon{
+  grid-column:1 !important;
+  grid-row:1 !important;
+  align-self:center !important;
+}
+body[data-record-view="group"] .records-grid .record-card.is-group-view .record-title-only{
+  grid-column:2 !important;
+  grid-row:1 !important;
+  min-width:0 !important;
+  width:100% !important;
+  max-width:none !important;
+  padding:0 86px 0 0 !important;
+  margin:0 !important;
+  display:block !important;
+  overflow:visible !important;
+  white-space:normal !important;
+  word-break:normal !important;
+  overflow-wrap:normal !important;
+  hyphens:none !important;
+  text-overflow:clip !important;
+  font-size:10px !important;
+  line-height:1.18 !important;
+  font-weight:800 !important;
+}
+body[data-record-view="group"] .records-grid .record-card.is-group-view .record-status{
+  position:absolute !important;
+  top:50% !important;
+  right:34px !important;
+  transform:translateY(-50%) !important;
+  width:auto !important;
+  max-width:76px !important;
+  margin:0 !important;
+  padding:3px 5px !important;
+  font-size:6px !important;
+  line-height:1 !important;
+  white-space:nowrap !important;
+  overflow:visible !important;
+  text-overflow:clip !important;
+  z-index:4 !important;
+}
+body[data-record-view="group"] .records-grid .record-card.is-group-view .favorite-btn{
+  position:absolute !important;
+  top:8px !important;
+  right:8px !important;
+  width:18px !important;
+  height:18px !important;
+  padding:0 !important;
+  z-index:5 !important;
+}
+body[data-record-view="group"] .records-grid .record-card.is-group-view .expand-cue{
+  display:none !important;
+}
+body[data-record-view="group"] .records-grid .record-card.is-group-view .slot-missing-note{
+  display:flex !important;
+  justify-content:flex-end !important;
+  align-items:center !important;
+  width:100% !important;
+  margin-top:5px !important;
+  padding:3px 0 !important;
+  background:transparent !important;
+  color:#991b1b !important;
+  font-size:7.5px !important;
+  font-weight:800 !important;
+  text-align:right !important;
+  white-space:nowrap !important;
+}
+body[data-record-view="group"] .records-grid .record-card.is-group-view .expanded-file-title{
+  display:grid !important;
+  grid-template-columns:16px minmax(0,1fr) auto !important;
+  align-items:center !important;
+  column-gap:6px !important;
+}
+body[data-record-view="group"] .records-grid .record-card.is-group-view .expanded-file-title > span:first-of-type{
+  min-width:0 !important;
+  overflow:visible !important;
+  white-space:normal !important;
+  word-break:normal !important;
+  overflow-wrap:normal !important;
+}
+body[data-record-view="group"] .records-grid .record-card.is-group-view .expanded-file-title .expanded-status{
+  margin-left:0 !important;
+  justify-self:end !important;
+  white-space:nowrap !important;
+}
+@media(max-width:560px){
+  body[data-record-view="group"] .records-grid .record-card.is-group-view .record-collapsed-face{
+    min-height:70px !important;
+    grid-template-columns:32px minmax(0,1fr) !important;
+    column-gap:8px !important;
+    padding:7px 8px !important;
+  }
+  body[data-record-view="group"] .records-grid .record-card.is-group-view .record-title-only{
+    font-size:9.5px !important;
+    padding-right:72px !important;
+  }
+  body[data-record-view="group"] .records-grid .record-card.is-group-view .record-status{
+    right:30px !important;
+    max-width:64px !important;
+  }
+}
+
+/* V65.2.9 FINAL APPROVED CARD GEOMETRY
+   Based on the user's approved compact-card reference.
+   Group/detail cards: title gets the real content lane, status is a small
+   intrinsic-width right-side badge, and missing-document copy sits at the
+   right of the document row instead of consuming the card body. */
+body[data-record-view="group"] .records-grid .record-card.is-group-view .record-collapsed-face{
+  position:relative !important;
+  display:grid !important;
+  grid-template-columns:34px minmax(0,1fr) auto !important;
+  grid-template-rows:auto !important;
+  column-gap:10px !important;
+  row-gap:0 !important;
+  min-height:76px !important;
+  height:auto !important;
+  padding:8px 9px !important;
+  align-items:center !important;
+}
+body[data-record-view="group"] .records-grid .record-card.is-group-view .record-icon{
+  grid-column:1 !important;
+  grid-row:1 !important;
+  align-self:center !important;
+}
+body[data-record-view="group"] .records-grid .record-card.is-group-view .record-title-only{
+  grid-column:2 !important;
+  grid-row:1 !important;
+  min-width:0 !important;
+  width:auto !important;
+  max-width:none !important;
+  padding:0 !important;
+  margin:0 !important;
+  display:block !important;
+  overflow:visible !important;
+  white-space:normal !important;
+  word-break:normal !important;
+  overflow-wrap:normal !important;
+  hyphens:none !important;
+  text-overflow:clip !important;
+  font-size:10px !important;
+  line-height:1.16 !important;
+  font-weight:800 !important;
+  align-self:center !important;
+}
+body[data-record-view="group"] .records-grid .record-card.is-group-view .record-status{
+  grid-column:3 !important;
+  grid-row:1 !important;
+  position:static !important;
+  transform:none !important;
+  justify-self:end !important;
+  align-self:center !important;
+  width:max-content !important;
+  max-width:78px !important;
+  margin:0 !important;
+  padding:3px 5px !important;
+  font-size:6px !important;
+  line-height:1 !important;
+  white-space:nowrap !important;
+  overflow:hidden !important;
+  text-overflow:ellipsis !important;
+  z-index:auto !important;
+}
+body[data-record-view="group"] .records-grid .record-card.is-group-view .favorite-btn{
+  position:absolute !important;
+  top:8px !important;
+  right:6px !important;
+  width:18px !important;
+  height:18px !important;
+  padding:0 !important;
+  z-index:5 !important;
+}
+body[data-record-view="group"] .records-grid .record-card.is-group-view .expand-cue{
+  display:none !important;
+}
+
+/* Group/detail document rows: the empty-state message is secondary and
+   occupies only the right-most content lane. */
+body[data-record-view="group"] .records-grid .record-card.is-group-view .expanded-file-main{
+  min-width:0 !important;
+  display:grid !important;
+  grid-template-columns:minmax(0,1fr) auto !important;
+  grid-template-rows:auto auto !important;
+  column-gap:10px !important;
+  row-gap:3px !important;
+  align-items:center !important;
+}
+body[data-record-view="group"] .records-grid .record-card.is-group-view .expanded-file-title{
+  grid-column:1 !important;
+  grid-row:1 !important;
+  display:grid !important;
+  grid-template-columns:16px minmax(0,1fr) auto !important;
+  align-items:center !important;
+  min-width:0 !important;
+  column-gap:6px !important;
+  font-size:9px !important;
+  line-height:1.15 !important;
+  font-weight:800 !important;
+}
+body[data-record-view="group"] .records-grid .record-card.is-group-view .expanded-file-title > span:first-of-type{
+  min-width:0 !important;
+  overflow:visible !important;
+  white-space:normal !important;
+  word-break:normal !important;
+  overflow-wrap:normal !important;
+  text-overflow:clip !important;
+}
+body[data-record-view="group"] .records-grid .record-card.is-group-view .expanded-file-meta{
+  grid-column:1 !important;
+  grid-row:2 !important;
+  min-width:0 !important;
+  margin-top:0 !important;
+}
+body[data-record-view="group"] .records-grid .record-card.is-group-view .slot-missing-note{
+  grid-column:2 !important;
+  grid-row:1 / span 2 !important;
+  justify-self:end !important;
+  align-self:center !important;
+  width:max-content !important;
+  max-width:150px !important;
+  margin:0 !important;
+  padding:5px 8px !important;
+  background:#fff1f2 !important;
+  border:1px solid #fecdd3 !important;
+  border-radius:7px !important;
+  color:#991b1b !important;
+  font-size:7px !important;
+  line-height:1.2 !important;
+  font-weight:800 !important;
+  text-align:right !important;
+  white-space:normal !important;
+}
+
+@media(max-width:560px){
+  body[data-record-view="group"] .records-grid .record-card.is-group-view .record-collapsed-face{
+    grid-template-columns:32px minmax(0,1fr) auto !important;
+    min-height:72px !important;
+    padding:7px 8px !important;
+    column-gap:8px !important;
+  }
+  body[data-record-view="group"] .records-grid .record-card.is-group-view .record-title-only{
+    font-size:9.5px !important;
+    line-height:1.15 !important;
+  }
+  body[data-record-view="group"] .records-grid .record-card.is-group-view .record-status{
+    max-width:66px !important;
+  }
+  body[data-record-view="group"] .records-grid .record-card.is-group-view .expanded-file-main{
+    grid-template-columns:minmax(0,1fr) !important;
+    grid-template-rows:auto auto auto !important;
+  }
+  body[data-record-view="group"] .records-grid .record-card.is-group-view .slot-missing-note{
+    grid-column:1 !important;
+    grid-row:3 !important;
+    justify-self:end !important;
+  }
+}
+
+/* V65.2.9.1: missing-state label is represented once, by the right-side
+   "No document uploaded yet." message. Do not duplicate it beside the title. */
+body[data-record-view="group"] .records-grid .record-card.is-group-view .expanded-file-title .expanded-status.missing{
+  display:none !important;
+}
+body[data-record-view="group"] .records-grid .record-card.is-group-view .expanded-file-title{
+  grid-template-columns:16px minmax(0,1fr) !important;
+}
+
+.lab-modal{max-width:1180px}.lab-hero{display:flex;justify-content:space-between;gap:20px;align-items:flex-start;padding:4px 0 18px}.lab-hero h2{font-size:26px;font-weight:800;margin:4px 0}.lab-hero p{color:#64748b}.lab-badge{font-size:10px;font-weight:800;letter-spacing:.12em;padding:8px 10px;border-radius:999px;background:#ecfeff;color:#0e7490}.lab-tabs{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px}.lab-tab{border:1px solid #dbe3eb;background:#f8fafc;padding:9px 13px;border-radius:10px;font-size:12px;font-weight:800}.lab-tab.active{background:#0f172a;color:white;border-color:#0f172a}.lab-search{display:flex;align-items:center;gap:8px;border:1px solid #dbe3eb;background:white;border-radius:10px;padding:10px 12px;margin-bottom:18px}.lab-search input{border:0;outline:0;width:100%}.lab-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}.lab-card{display:flex;text-align:left;align-items:center;gap:12px;border:1px solid #e2e8f0;background:white;border-radius:14px;padding:15px;transition:.2s}.lab-card:hover{transform:translateY(-2px);box-shadow:0 12px 28px rgba(15,23,42,.08)}.lab-card-icon{width:42px;height:42px;display:grid;place-items:center;border-radius:11px;background:#eff6ff;color:#0369a1;flex:none}.lab-card strong{display:block;font-size:14px}.lab-card small{display:block;color:#64748b;font-size:11px;line-height:1.45;margin-top:3px}.lab-arrow{margin-left:auto;color:#94a3b8}.lab-kicker{font-size:10px;font-weight:900;letter-spacing:.12em;color:#0891b2}.lab-section-head{margin-bottom:14px}.lab-section-head h3{font-size:19px;font-weight:800}.lab-section-head p{font-size:12px;color:#64748b}.lab-trouble-list{display:grid;gap:10px}.lab-trouble{border:1px solid #e2e8f0;border-radius:13px;padding:15px;background:#fff}.lab-trouble h4{font-weight:800;display:flex;gap:8px;align-items:center}.lab-trouble h4 i{color:#d97706}.lab-trouble-cols{display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-top:10px;font-size:12px;color:#475569}.lab-trouble ul{padding-left:18px}.lab-detail-hero{display:flex;gap:14px;align-items:center;margin:15px 0 20px}.lab-detail-hero h3{font-size:24px;font-weight:800}.lab-detail-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}.lab-detail-grid section{border:1px solid #e2e8f0;border-radius:12px;padding:16px;background:#fff}.lab-detail-grid h4{font-weight:800;margin-bottom:6px}.lab-detail-grid p{font-size:12px;color:#64748b;line-height:1.6}.lab-back{font-size:12px;font-weight:800}.p360-result{display:grid;grid-template-columns:72px 1fr auto;gap:12px;align-items:start;padding:14px;border:1px solid #e2e8f0;border-radius:12px;background:#fff}.p360-model{font-weight:900;color:#0369a1}.p360-result h4{font-weight:800}.p360-result p{font-size:11px;color:#64748b}.p360-key{font-family:monospace;font-size:11px;color:#64748b}.p360-tags{display:flex;gap:5px;flex-wrap:wrap;margin-top:6px}.p360-tags span{font-size:9px;padding:3px 6px;background:#f1f5f9;border-radius:999px}.p360-empty{text-align:center;padding:45px;color:#94a3b8}.p360-empty i{font-size:28px;margin-bottom:8px}@media(max-width:800px){.lab-grid,.lab-detail-grid,.lab-trouble-cols{grid-template-columns:1fr}.p360-result{grid-template-columns:1fr}.lab-hero{display:block}.lab-badge{display:inline-block;margin-top:10px}}
+.lab-rev{margin-left:auto;font:700 9px/1 JetBrains Mono,monospace;color:#64748b;white-space:nowrap}.lab-detail-hero small{display:block;margin-top:6px;color:#64748b;font-size:10px}.p360-subparts{font-size:10px;color:#475569;margin-top:4px}
+
+/* V57 FULL BASELINE — Lab Knowledge file controls. */
+.lab-file-badge{display:inline-flex;align-items:center;gap:4px;font:800 8px/1 Inter,sans-serif;padding:4px 6px;border-radius:999px;white-space:nowrap}
+.lab-file-badge.present{color:#67e8f9;background:rgba(34,211,238,.10);border:1px solid rgba(34,211,238,.25)}
+.lab-file-badge.missing{color:#94a3b8;background:rgba(148,163,184,.08);border:1px solid rgba(148,163,184,.18)}
+.lab-file-panel{display:flex;align-items:center;justify-content:space-between;gap:12px;margin:16px 0;padding:12px 14px;border-radius:12px;border:1px solid #dbe3ec;background:#f8fafc}
+.lab-file-panel.present{border-color:rgba(8,145,178,.28);background:rgba(8,145,178,.045)}
+.lab-file-panel.missing{border-color:#e2e8f0;background:#f8fafc}
+.lab-file-panel>div:first-child{min-width:0}.lab-file-panel strong{display:block;font-size:12px;color:#0f172a}.lab-file-panel strong i{margin-right:6px;color:#0891b2}.lab-file-panel small{display:block;margin-top:4px;color:#64748b;font-size:10px;line-height:1.4}.lab-file-actions{display:flex;gap:7px;flex:none}.lab-admin-hint{font-size:9px;font-weight:800;color:#64748b;white-space:nowrap}.lab-card{position:relative}.lab-card .lab-file-badge{margin-left:auto}
+body[data-theme="dark"] .lab-file-panel{background:#0d1624;border-color:#26394f}body[data-theme="dark"] .lab-file-panel strong{color:#f8fafc}body[data-theme="dark"] .lab-file-panel small{color:#94a3b8}
+@media(max-width:620px){.lab-file-panel{align-items:flex-start;flex-direction:column}.lab-file-actions{width:100%}.lab-file-actions .btn{flex:1}.lab-card .lab-file-badge{display:none}}
+
+/* V57 final UX: direct user download + admin update controls on every setup/equipment card. */
+.lab-card{display:block;padding:0;overflow:hidden;text-decoration:none}.lab-card-main{width:100%;display:flex;align-items:center;gap:12px;text-align:left;border:0;background:transparent;padding:15px 15px 10px;cursor:pointer;color:inherit}.lab-card-main:focus-visible{outline:2px solid #22d3ee;outline-offset:-2px}.lab-card-copy{min-width:0}.lab-card-actions{display:flex;align-items:center;gap:6px;min-height:34px;padding:0 15px 12px}.lab-card-actions .lab-file-badge{margin-left:0}.lab-mini-btn{border:1px solid #dbe3eb;background:#f8fafc;color:#334155;border-radius:7px;padding:5px 7px;font:800 8px/1 Inter,sans-serif;cursor:pointer;white-space:nowrap}.lab-mini-btn:hover{background:#ecfeff;border-color:#67e8f9;color:#0e7490;transform:translateY(-1px)}.lab-mini-btn.admin{background:#ecfeff;border-color:#67e8f9;color:#0e7490}.lab-mini-btn.admin:hover{background:#cffafe}.lab-card:hover .lab-card-main{background:rgba(14,116,144,.025)}@media(max-width:620px){.lab-card-actions{flex-wrap:wrap}.lab-mini-btn{flex:1;min-width:100px}.lab-card-main{padding:12px}.lab-card-actions{padding:0 12px 10px}}
+
+/* ================================================================
+   PORTAL MODULES
+   Sidebar feature navigation.
+   DOM order: Active Model -> Telemetry -> Actions -> Modules -> Footer.
+   ================================================================ */
+
+.model-sidebar {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.model-sidebar .sidebar-top { order: 1; }
+.model-sidebar .sidebar-telemetry { order: 2; }
+.model-sidebar .sidebar-actions { order: 3; }
+.model-sidebar .sidebar-modules { order: 4; }
+.model-sidebar .sidebar-footer { order: 5; margin-top: auto; }
+
+/* Feature group: deliberately distinct from telemetry/actions. */
+.sidebar-modules {
+  margin-top: 2px;
+  padding: 10px;
+  border: 1px solid rgba(34, 211, 238, .58);
+  border-radius: 10px;
+  background: linear-gradient(145deg, rgba(8, 47, 73, .92), rgba(15, 23, 42, .98));
+  box-shadow: 0 0 0 1px rgba(34, 211, 238, .08), 0 8px 20px rgba(2, 8, 23, .18);
+}
+
+.sidebar-module-title {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  margin: 0 4px 7px;
+  color: #67e8f9;
+  font: 800 9px/1.2 "JetBrains Mono", monospace;
+  letter-spacing: .14em;
+}
+
+.sidebar-module-title i { font-size: 11px; }
+
+.sidebar-module-btn {
+  width: 100%;
+  min-height: 40px;
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  margin: 3px 0;
+  padding: 8px 9px;
+  border: 1px solid transparent;
+  border-radius: 8px;
+  background: transparent;
+  color: #e2e8f0;
+  font: 700 11px/1.25 Inter, sans-serif;
+  text-align: left;
+  cursor: pointer;
+  transition: transform .16s ease, background .16s ease, border-color .16s ease, box-shadow .16s ease;
+}
+
+.sidebar-module-btn i {
+  width: 19px;
+  flex: 0 0 19px;
+  text-align: center;
+  color: #67e8f9;
+  font-size: 13px;
+}
+
+.sidebar-module-btn:hover {
+  transform: translateX(2px);
+  background: linear-gradient(90deg, rgba(34, 211, 238, .17), rgba(99, 102, 241, .10));
+  border-color: rgba(103, 232, 249, .55);
+  box-shadow: inset 2px 0 #22d3ee;
+  color: #fff;
+}
+
+.sidebar-module-btn:active { transform: translateX(1px) scale(.995); }
+.sidebar-module-btn:focus-visible { outline: 2px solid #22d3ee; outline-offset: 1px; }
+.sidebar-module-btn[hidden] { display: none !important; }
+
+@media (max-width: 900px) {
+  .sidebar-modules { margin-top: 8px; }
+  .sidebar-module-btn { min-height: 42px; }
+}
+
+@media (max-width: 620px) {
+  .sidebar-modules { padding: 9px; }
+  .sidebar-module-btn { font-size: 10.5px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .sidebar-module-btn { transition: none; }
+  .sidebar-module-btn:hover { transform: none; }
+}
+
+
+/* Model Comparison Module */
+.model-compare-modal{max-width:1500px;width:min(96vw,1500px);max-height:92vh;overflow:auto}
+.mc-hero{display:flex;justify-content:space-between;gap:18px;align-items:flex-start;margin-bottom:18px}
+.mc-hero-copy h2{margin:0;font-size:22px;font-weight:800;color:#0f172a}
+.mc-hero-copy p{margin:5px 0 0;color:#64748b;font-size:12px}
+.mc-badge{font:700 9px "JetBrains Mono";padding:6px 9px;border-radius:999px;border:1px solid #bae6fd;background:#ecfeff;color:#0e7490;white-space:nowrap}
+.mc-upload-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px}.mc-model-select{width:100%;height:36px;margin-bottom:8px;border:1px solid #dbe3ec;border-radius:8px;padding:0 10px;background:#fff;color:#0f172a;font-size:11px;font-weight:700;outline:none}.mc-model-select:focus{border-color:#0891b2;box-shadow:0 0 0 3px #ecfeff}
+.mc-drop{border:1.5px dashed #b8c7d9;border-radius:14px;background:#f8fafc;min-height:150px;padding:20px;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;cursor:pointer;transition:.18s ease}
+.mc-drop:hover,.mc-drop.dragover{border-color:#0891b2;background:#ecfeff;transform:translateY(-1px)}
+.mc-drop.loaded{border-style:solid;border-color:#10b981;background:#f0fdf4}
+.mc-drop i{font-size:28px;color:#0891b2;margin-bottom:10px}
+.mc-drop.loaded i{color:#059669}
+.mc-drop strong{font-size:13px;color:#0f172a}
+.mc-drop span{font-size:10px;color:#64748b;margin-top:5px}
+.mc-file-name{font-family:"JetBrains Mono";font-size:10px!important;color:#0f766e!important;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.mc-actions{display:flex;gap:8px;align-items:center;justify-content:flex-end;margin-top:14px;flex-wrap:wrap}
+.mc-status{margin-right:auto;font-size:11px;color:#64748b}
+.mc-summary{display:grid;grid-template-columns:repeat(6,minmax(110px,1fr));gap:9px;margin:18px 0}
+.mc-stat{border:1px solid #e2e8f0;border-radius:12px;background:#fff;padding:12px;min-width:0}
+.mc-stat small{display:block;color:#64748b;font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.05em}
+.mc-stat strong{display:block;margin-top:5px;font:800 22px "JetBrains Mono";color:#0f172a}
+.mc-stat.same strong{color:#059669}.mc-stat.new strong{color:#2563eb}.mc-stat.deleted strong{color:#dc2626}.mc-stat.changed strong{color:#d97706}.mc-stat.review strong{color:#c2410c}
+.mc-results{border:1px solid #e2e8f0;border-radius:14px;overflow:hidden;background:#fff}
+.mc-result-toolbar{padding:10px;border-bottom:1px solid #e2e8f0;display:flex;gap:8px;flex-wrap:wrap;background:#f8fafc}
+.mc-result-toolbar input,.mc-result-toolbar select{height:36px;border:1px solid #dbe3ec;border-radius:8px;padding:0 10px;background:#fff;font-size:11px;outline:none}
+.mc-result-toolbar input{min-width:240px;flex:1}
+.mc-table-wrap{max-height:430px;overflow:auto}
+.mc-table{width:100%;border-collapse:collapse;font-size:10px}
+.mc-table th{position:sticky;top:0;background:#f1f5f9;color:#475569;text-align:left;font-size:9px;text-transform:uppercase;letter-spacing:.04em;z-index:1}
+.mc-table th,.mc-table td{padding:9px 10px;border-bottom:1px solid #edf2f7;vertical-align:top}
+.mc-table tr:hover td{background:#f8fafc}
+.mc-parameter{font-weight:700;color:#0f172a}
+.mc-spec{font-family:"JetBrains Mono";font-size:9px;color:#334155;white-space:pre-wrap;word-break:break-word}
+.mc-status-pill{display:inline-flex;align-items:center;border-radius:999px;padding:4px 7px;font-size:8px;font-weight:800;white-space:nowrap}.mc-status-same{background:#ecfdf5;color:#047857}.mc-status-new{background:#eff6ff;color:#1d4ed8}.mc-status-deleted{background:#fef2f2;color:#b91c1c}.mc-status-changed{background:#fffbeb;color:#b45309}.mc-status-review{background:#fff7ed;color:#c2410c}
+.mc-status-unchanged{background:#ecfdf5;color:#047857}.mc-status-new{background:#eff6ff;color:#1d4ed8}.mc-status-removed{background:#fef2f2;color:#b91c1c}.mc-status-changed{background:#fffbeb;color:#b45309}.mc-status-similar{background:#f5f3ff;color:#6d28d9}.mc-status-review{background:#eff6ff;color:#1d4ed8}
+.mc-confidence{font-family:"JetBrains Mono";font-weight:700}
+.mc-empty{padding:36px;text-align:center;color:#64748b;font-size:11px}
+.mc-note{font-size:10px;color:#64748b;margin-top:9px}
+@media(max-width:900px){.mc-upload-grid{grid-template-columns:1fr}.mc-summary{grid-template-columns:repeat(3,1fr)}.mc-hero{flex-direction:column}}
+@media(max-width:560px){.mc-summary{grid-template-columns:repeat(2,1fr)}.mc-table{min-width:900px}.mc-result-toolbar input{min-width:160px}}
+</style><style>.flex{display:flex}.grid{display:grid}.hidden{display:none!important}.block{display:block}.items-center{align-items:center}.justify-between{justify-content:space-between}.gap-1{gap:.25rem}.gap-2{gap:.5rem}.gap-3{gap:.75rem}.mt-1{margin-top:.25rem}.mt-3{margin-top:.75rem}.font-bold{font-weight:700}.text-xs{font-size:.75rem}.w-full{width:100%}.flex-wrap{flex-wrap:wrap}.min-w-0{min-width:0}.text-center{text-align:center}.sticky{position:sticky}.top-0{top:0}.z-40{z-index:40}.min-h-screen{min-height:100vh}.bg-slate-100{background:#f1f5f9}.text-slate-800{color:#1e293b}.antialiased{-webkit-font-smoothing:antialiased}.fa-solid,.fa-regular{font-family:inherit}.fa-solid:before,.fa-regular:before{content:""}</style></head><body>
+  <div class="top-accent"></div>
+
+  <header class="app-header sticky top-0 z-40">
+    <div class="app-container header-inner">
+      <div class="brand">
+        <div class="brand-mark"><i class="fa-solid fa-microchip"></i></div>
+        <div class="min-w-0">
+          <div class="flex items-center gap-2">
+            <h1 class="brand-title">Mobile <span>R&D</span> Technical Hub</h1>
+            <span class="env-badge"><i class="fa-solid fa-circle"></i> ENGINEERING</span>
+          </div>
+          <p class="brand-subtitle">Engineering Records • Specifications • Lab Testing Setup • Model Comparison</p>
+        </div>
+      </div>
+
+      <div class="header-actions">
+        <button id="parameter360HeaderBtn" class="header-module-btn" data-module="parameter360" type="button" title="Open Parameter 360°" aria-label="Open Parameter 360°">
+          <i class="fa-solid fa-arrows-to-circle"></i><span>Parameter 360°</span>
+        </button>
+
+        <div class="model-picker-search" id="modelPickerWrap">
+          <span class="model-picker-caption">Select Model</span>
+          <i class="fa-solid fa-microchip"></i>
+          <input id="modelPickerInput" value="A576" placeholder="Select model..." autocomplete="off" aria-label="Select model" aria-expanded="false" aria-controls="modelPickerMenu">
+          <button id="modelPickerToggle" class="model-picker-toggle" type="button" aria-label="Open model list"><i class="fa-solid fa-chevron-down"></i></button>
+          <div id="modelPickerMenu" class="model-picker-menu hidden" role="listbox"></div>
+        </div>
+
+        <button id="themeBtn" class="header-icon-btn" title="Toggle light/dark theme" aria-label="Toggle light/dark theme">
+          <i id="themeIcon" class="fa-solid fa-moon"></i>
+        </button>
+        <button id="fullscreenBtn" class="header-icon-btn" title="Fullscreen" aria-label="Fullscreen">
+          <i class="fa-solid fa-expand"></i>
+        </button>
+        <button id="settingsBtn" class="header-icon-btn" title="Portal settings" aria-label="Portal settings">
+          <i class="fa-solid fa-gear"></i>
+        </button>
+        <div id="adminAuthSlot"></div>
+      </div>
+    </div>
+  </header>
+
+  <div class="workspace-shell">
+    <aside class="model-sidebar" aria-label="Active model and model navigation">
+      <div class="sidebar-top">
+        <div class="sidebar-kicker"><i class="fa-solid fa-star"></i> ACTIVE MODEL</div>
+        <div class="sidebar-model-identity"><span id="activeModelCode" class="sidebar-model-code">A576</span><span id="activeModelName" class="sidebar-model-name">Galaxy A576</span></div>
+        <div id="modelStatus" class="status-pill"><i class="fa-solid fa-circle"></i> Mass Production</div>
+      </div>
+
+      <div class="sidebar-telemetry">
+        <div class="sidebar-metric"><span><i class="fa-solid fa-microchip"></i> PROCESSOR</span><strong id="metaAp">—</strong></div>
+        <div class="sidebar-metric"><span><i class="fa-solid fa-calendar-days"></i> LAUNCH YEAR</span><strong id="metaModelYear">—</strong></div>
+        <div class="sidebar-metric"><span><i class="fa-solid fa-user-tie"></i> KOREA LEAD / SIEL HW PIC</span><strong id="metaSielHwPic">—</strong></div>
+        <div class="sidebar-metric"><span><i class="fa-solid fa-tower-broadcast"></i> RF / NETWORK</span><strong id="metaRfNetwork">—</strong></div>
+      </div>
+
+      <div class="sidebar-actions">
+        <button id="copySpecsBtn" class="sidebar-action"><i class="fa-regular fa-copy"></i><span>Copy Specs</span></button>
+      </div>
+
+      <div class="sidebar-modules" aria-label="Portal feature modules">
+        <div class="sidebar-module-title"><i class="fa-solid fa-grip"></i><span>PORTAL MODULES</span></div>
+        <button class="sidebar-module-btn" data-module="modelDocument" id="modelDocumentBtn"><i class="fa-solid fa-folder-open"></i><span>Model Documents</span></button>
+        <button class="sidebar-module-btn" data-module="excelComparison" id="modelComparisonBtnTop"><i class="fa-solid fa-code-compare"></i><span>Parameter / Spec Comparison</span></button>
+        <button class="sidebar-module-btn" data-module="labKnowledge" id="labKnowledgeBtn"><i class="fa-solid fa-flask-vial"></i><span>R&amp;D Lab Testing Setup</span></button>
+      </div>
+
+      <div class="sidebar-footer">
+        <span><i class="fa-solid fa-database"></i> Local repository</span>
+        <button id="sidebarCollapseBtn" class="sidebar-collapse-btn" title="Collapse sidebar" aria-label="Collapse sidebar"><i class="fa-solid fa-angles-left"></i></button>
+      </div>
+    </aside>
+
+  <main class="app-container py-5 flex-1">
+    <section id="engineeringRecordsSection" class="records-control-panel" aria-labelledby="engineeringRecordsTitle">
+      <div class="records-control-main">
+        <div class="engineering-records-heading-row">
+          <div class="section-heading">
+            <div class="section-icon"><i class="fa-solid fa-layer-group"></i></div>
+            <div>
+              <h2 id="engineeringRecordsTitle">Engineering Records</h2>
+              <p id="recordCount">21 records</p>
+            </div>
+          </div>
+          <button id="engineeringTabsToggle" class="records-tabs-toggle" type="button" aria-expanded="true" title="Hide Engineering Records category tabs">
+            <i class="fa-solid fa-eye-slash"></i><span>Hide Tabs</span>
+          </button>
+        </div>
+        <div class="engineering-records-tabs-row" id="engineeringRecordsTabsRow">
+          <div class="category-tabs" id="categoryTabs"></div>
+        </div>
+      </div>
+      <div class="records-control-tools data-tools">
+        <div class="tool-group">
+          <label class="tool-select"><span>Sort</span><select id="sortSelect"><option value="default">Record order</option><option value="title">Title</option><option value="category">Category</option><option value="favorite">Favorites first</option></select></label>
+          <button id="favoritesToggle" class="tool-btn" title="Show favorites only"><i class="fa-regular fa-star"></i> Favorites</button>
+          <button id="presentationBtn" class="tool-btn"><i class="fa-solid fa-display"></i> Presentation</button>
+          <button id="fileCenterBtn" class="tool-btn file-center-trigger"><i class="fa-solid fa-folder-tree"></i> File Command Center</button>
+          <button id="clearFiltersBtn" class="tool-btn">Clear filters</button>
+          <details class="records-more-tools">
+            <summary><i class="fa-solid fa-ellipsis"></i> More Tools</summary>
+            <div class="records-more-menu">
+              <button id="exportJsonBtn" class="tool-btn" title="Backup the current model data as JSON"><i class="fa-solid fa-database"></i> Backup Data</button>
+              <button id="exportReportBtn" class="tool-btn" title="Export the selected model's engineering record report"><i class="fa-solid fa-file-lines"></i> Engineering Report</button>
+            </div>
+          </details>
+        </div>
+      </div>
+    </section>
+
+
+
+    <div id="activeFilters" class="active-filters hidden"></div>
+    <section id="cardsGrid" class="records-grid" aria-live="polite"></section>
+    <section class="recent-panel">
+      <div class="recent-heading"><span><i class="fa-solid fa-clock-rotate-left"></i> Recently Viewed</span><small>Existing records only</small></div>
+      <div id="recentList" class="recent-list"></div>
+    </section>
+  </main>
+  </div>
+
+  <footer class="app-footer">
+    <div class="app-container footer-inner">
+      <div><span class="online-dot"></span> Mobile R&D Technical Hub</div>
+      <div class="mono">IndexedDB • Local Repository • <span id="appVersion">V65.2.9 • Visual QA Release Candidate</span></div>
+    </div>
+  </footer>
+
+  <!-- Login -->
+  <div id="loginModal" class="modal hidden">
+    <div class="modal-backdrop"></div>
+    <section class="modal-panel modal-sm" role="dialog" aria-modal="true" aria-labelledby="loginTitle">
+      <button class="modal-close" data-close="loginModal"><i class="fa-solid fa-xmark"></i></button>
+      <div class="modal-icon"><i class="fa-solid fa-lock"></i></div>
+      <h2 id="loginTitle">Admin Authentication — Shivam</h2>
+      <p class="modal-description">Demo/local authentication for upload management.</p>
+      <form id="loginForm">
+        <label class="form-label" for="passwordInput">Admin Password</label>
+        <div class="password-field">
+          <input id="passwordInput" class="form-input" type="password" placeholder="Enter admin password" autocomplete="current-password" required>
+          <button id="passwordToggle" class="password-toggle" type="button" aria-label="Show password" title="Show password"><i class="fa-solid fa-eye"></i></button>
+        </div>
+        <p class="help-text"><i class="fa-solid fa-shield-halved"></i> Admin access enables engineering document management and upload controls.</p>
+        <p id="loginError" class="error-text hidden">Incorrect password.</p>
+        <div class="modal-actions">
+          <button type="button" class="btn btn-light" data-close="loginModal">Cancel</button>
+          <button class="btn btn-dark" type="submit">Authenticate</button>
+        </div>
+      </form>
+    </section>
+  </div>
+
+  <!-- Admin: Add New Model -->
+  <div id="addModelModal" class="modal hidden">
+    <div class="modal-backdrop"></div>
+    <section class="modal-panel modal-md" role="dialog" aria-modal="true" aria-labelledby="addModelTitle">
+      <button class="modal-close" data-close="addModelModal" type="button"><i class="fa-solid fa-xmark"></i></button>
+      <div class="modal-heading"><div class="modal-icon"><i class="fa-solid fa-square-plus"></i></div><div><h2 id="addModelTitle">Add New Model</h2><p class="modal-description">Admin-only model registration. New models appear automatically in the model selector.</p></div></div>
+      <form id="addModelForm">
+        <div id="editModelSelectWrap" class="hidden mb-3"><label class="form-label" for="editModelSelect">Existing Model</label><select id="editModelSelect" class="form-input"></select><p class="help-text">Select any existing model to update its registered details. Existing engineering records and uploaded files are preserved.</p></div>
+        <div class="form-grid-2">
+          <div><label class="form-label" for="newModelCode">Model Code</label><input id="newModelCode" class="form-input" maxlength="24" placeholder="e.g. A900" required></div>
+          <div><label class="form-label" for="newModelName">Model Name</label><input id="newModelName" class="form-input" maxlength="80" placeholder="e.g. Galaxy A900" required></div>
+          <div><label class="form-label" for="newModelProcessor">Processor</label><input id="newModelProcessor" class="form-input" maxlength="100" required></div>
+          <div><label class="form-label" for="newModelYear">Launch Year</label><input id="newModelYear" class="form-input" maxlength="20" placeholder="e.g. 2027" required></div>
+          <div><label class="form-label" for="newModelPic">Korea Lead / SIEL HW PIC</label><input id="newModelPic" class="form-input" maxlength="100" required></div>
+          <div><label class="form-label" for="newModelRf">RF / Network</label><input id="newModelRf" class="form-input" maxlength="120" required></div>
+          <div><label class="form-label" for="newModelType">Model Type</label><select id="newModelType" class="form-input" required><option value="Development Model">Development Model</option><option value="Mass Production Model">Mass Production Model</option></select></div>
+        </div>
+        <p id="addModelError" class="error-text hidden"></p>
+        <p id="addModelHelp" class="help-text"><i class="fa-solid fa-database"></i> Model registration is stored locally in this browser and survives page reloads.</p>
+        <div class="modal-actions"><button type="button" class="btn btn-light" data-close="addModelModal">Cancel</button><button class="btn btn-cyan" type="submit" id="addModelSubmit"><i class="fa-solid fa-plus"></i> Add Model</button></div>
+      </form>
+    </section>
+  </div>
+
+  <!-- Upload -->
+  <div id="uploadModal" class="modal hidden">
+    <div class="modal-backdrop"></div>
+    <section class="modal-panel modal-lg" role="dialog" aria-modal="true" aria-labelledby="uploadTitle">
+      <button class="modal-close" data-close="uploadModal"><i class="fa-solid fa-xmark"></i></button>
+      <div class="modal-heading">
+        <div class="modal-icon cyan-bg"><i class="fa-solid fa-cloud-arrow-up"></i></div>
+        <div><h2 id="uploadTitle">Upload Engineering Document</h2><p class="modal-description">Store a binary file in browser IndexedDB and link it to a record.</p></div>
+      </div>
+
+      <form id="uploadForm">
+        <div class="form-grid-2">
+          <div><label class="form-label">Target Model</label><select id="uploadModel" class="form-input"></select></div>
+          <div><label class="form-label">Record</label><select id="uploadRecord" class="form-input"></select></div>
+        </div>
+        <div id="uploadSubPartWrap" class="hidden">
+          <label class="form-label">Document Entry</label>
+          <select id="uploadSubPart" class="form-input"></select>
+          <p class="help-text">Select a document entry. You can upload unlimited versions to the same entry; existing versions are preserved.</p>
+        </div>
+        <div class="form-grid-2">
+          <div><label class="form-label">Revision / Version</label><input id="uploadRevision" class="form-input" maxlength="80" placeholder="e.g. Rev 03 / V2.1"></div>
+          <div><label class="form-label">Engineering Note</label><input id="uploadNote" class="form-input" placeholder="e.g. matching network update"></div>
+        </div>
+        <div id="dropZone" class="drop-zone">
+          <i class="fa-solid fa-file-arrow-up"></i>
+          <strong id="fileName">Drop file here or click to browse</strong>
+          <span>PDF, XLSX, XLS, ZIP, BIN, DWG, CSV, DOCX, PPTX • Application limit 500 MB</span>
+          <input id="fileInput" type="file" hidden>
+        </div>
+        <div class="upload-progress hidden" id="uploadProgressWrap"><div id="uploadProgress"></div></div>
+        <div id="uploadStatus" class="help-text"></div>
+        <div class="modal-actions">
+          <button type="button" class="btn btn-light" data-close="uploadModal">Cancel</button>
+          <button id="saveUploadBtn" class="btn btn-cyan" type="submit"><i class="fa-solid fa-floppy-disk"></i> Save Document</button>
+        </div>
+      </form>
+    </section>
+  </div>
+
+
+  <!-- Model Comparison -->
+  <div id="modelComparisonModal" class="modal hidden">
+    <div class="modal-backdrop"></div>
+    <section class="modal-panel model-compare-modal" role="dialog" aria-modal="true" aria-labelledby="modelComparisonTitle">
+      <button class="modal-close" data-close-model-comparison="modelComparisonModal" type="button"><i class="fa-solid fa-xmark"></i></button>
+
+      <div class="mc-hero">
+        <div class="mc-hero-copy">
+          <h2 id="modelComparisonTitle"><i class="fa-solid fa-code-compare"></i> Parameter / Spec Comparison Tool</h2>
+          <p>Compare base and upcoming model specifications and generate a structured parameter delta report.</p>
+        </div>
+        <span class="mc-badge">LOCAL • EXCEL ANALYSIS</span>
+      </div>
+
+      <div class="mc-upload-grid">
+        <div>
+          <label class="form-label">Base Model Excel</label>
+          <select id="mcBaseModel" class="mc-model-select" aria-label="Base model name"></select>
+          <div id="mcBaseDrop" class="mc-drop" tabindex="0" role="button" aria-label="Upload base model Excel">
+            <i class="fa-solid fa-file-excel"></i>
+            <strong id="mcBaseTitle">Drop Base Model Excel Here</strong>
+            <span id="mcBaseMeta">XLSX / XLS • Multiple sheets supported</span>
+            <input id="mcBaseInput" type="file" accept=".xlsx,.xls,.csv" hidden>
+          </div>
+        </div>
+        <div>
+          <label class="form-label">Upcoming Model Excel</label>
+          <select id="mcUpcomingModel" class="mc-model-select" aria-label="Upcoming model name"></select>
+          <div id="mcUpcomingDrop" class="mc-drop" tabindex="0" role="button" aria-label="Upload upcoming model Excel">
+            <i class="fa-solid fa-file-excel"></i>
+            <strong id="mcUpcomingTitle">Drop Upcoming Model Excel Here</strong>
+            <span id="mcUpcomingMeta">XLSX / XLS • Multiple sheets supported</span>
+            <input id="mcUpcomingInput" type="file" accept=".xlsx,.xls,.csv" hidden>
+          </div>
+        </div>
+      </div>
+
+      <div class="mc-actions">
+        <span id="mcStatus" class="mc-status">Select both workbooks to start.</span>
+        <button id="mcResetBtn" class="btn btn-light" type="button"><i class="fa-solid fa-rotate-left"></i> Reset</button>
+        <button id="mcCompareBtn" class="btn btn-cyan" type="button" disabled><i class="fa-solid fa-wand-magic-sparkles"></i> Compare Models</button>
+        <button id="mcExportBtn" class="btn btn-dark" type="button" disabled><i class="fa-solid fa-file-export"></i> Export Comparison Excel</button>
+      </div>
+      <div id="mcProgressWrap" class="mc-progress-wrap hidden" aria-live="polite" aria-label="Excel comparison progress">
+        <div class="mc-progress-head"><span id="mcProgressLabel">Preparing…</span><strong id="mcProgressPercent">0%</strong></div>
+        <div class="mc-progress-track"><div id="mcProgressBar" class="mc-progress-bar" style="width:0%"></div></div>
+      </div>
+
+      <div id="mcSummary" class="mc-summary hidden"></div>
+
+      <div id="mcResults" class="mc-results hidden">
+        <div class="mc-result-toolbar">
+          <input id="mcSearch" type="search" placeholder="Search parameter, category, sheet or specification...">
+          <select id="mcStatusFilter">
+            <option value="">All results</option>
+            <option value="New Parameter">New Parameters</option>
+            <option value="Deleted Parameter">Deleted Parameters</option>
+            <option value="LSL Wide">LSL Wide</option>
+            <option value="LSL Tight">LSL Tight</option>
+            <option value="USL Wide">USL Wide</option>
+            <option value="USL Tight">USL Tight</option>
+            <option value="Review">Review</option>
+            <option value="Same">Same</option>
+          </select>
+          <select id="mcConfidenceFilter">
+            <option value="">Any confidence</option>
+            <option value="high">High ≥ 90%</option>
+            <option value="medium">Medium 70–89%</option>
+            <option value="low">Low &lt; 70%</option>
+          </select>
+        </div>
+        <div class="mc-table-wrap">
+          <table class="mc-table">
+            <thead>
+              <tr>
+                <th>S.No.</th><th>Upcoming Model Parameter</th><th>Upcoming LSL</th><th>Upcoming USL</th>
+                <th>Base Model Parameter</th><th>Base LSL</th><th>Base USL</th><th>LSL Difference</th><th>USL Difference</th><th>Remark</th>
+              </tr>
+            </thead>
+            <tbody id="mcTableBody"></tbody>
+          </table>
+        </div>
+      </div>
+      <p class="mc-note">Matching uses exact/normalized names first, then token/fuzzy similarity. Ambiguous matches are surfaced for manual review rather than silently treated as identical.</p>
+    </section>
+  </div>
+
+  <!-- R&D Lab Testing Setup -->
+  <div id="labKnowledgeModal" class="modal hidden">
+    <div class="modal-backdrop"></div>
+    <section class="modal-panel modal-xl lab-modal" role="dialog" aria-modal="true" aria-labelledby="labKnowledgeTitle">
+      <button class="modal-close" data-close-lab type="button"><i class="fa-solid fa-xmark"></i></button>
+      <div class="lab-hero"><div><span class="lab-kicker">R&D LAB TESTING SETUP</span><h2 id="labKnowledgeTitle">R&D Lab Testing Setup</h2><p>Test setups, equipment working knowledge, connections and troubleshooting in one model-aware location.</p></div><span class="lab-badge">LOCAL KNOWLEDGE BASE</span></div>
+      <div class="lab-tabs"><button class="lab-tab active" data-lab-tab="setups">Test Setups</button><button class="lab-tab" data-lab-tab="equipment">Equipment</button><button class="lab-tab" data-lab-tab="troubleshooting">Troubleshooting</button></div>
+      <div class="lab-search"><i class="fa-solid fa-magnifying-glass"></i><input id="labSearch" type="search" placeholder="Search setup, equipment, symptom or problem..."></div>
+      <div id="labKnowledgeBody"></div>
+    </section>
+  </div>
+
+  <!-- Parameter 360° -->
+  <div id="parameter360Modal" class="modal hidden">
+    <div class="modal-backdrop"></div>
+    <section class="modal-panel modal-xl" role="dialog" aria-modal="true" aria-labelledby="parameter360Title">
+      <button class="modal-close" data-close-360 type="button"><i class="fa-solid fa-xmark"></i></button>
+      <div class="modal-heading"><div class="modal-icon"><i class="fa-solid fa-arrows-to-circle"></i></div><div><h2 id="parameter360Title">Parameter 360°</h2><p class="modal-description">Search across model records, specifications, tags and linked document metadata.</p></div></div>
+      <div class="lab-search"><i class="fa-solid fa-magnifying-glass"></i><input id="parameter360Search" type="search" placeholder="Search parameter, record, tag, specification..."></div>
+      <div id="parameter360Results" class="p360-results"><div class="p360-empty"><i class="fa-solid fa-magnifying-glass"></i><p>Search a parameter, specification, tag, document or record.</p></div></div>
+    </section>
+  </div>
+
+  <!-- Settings -->
+  <div id="settingsModal" class="modal hidden">
+    <div class="modal-backdrop"></div>
+    <section class="modal-panel modal-md" role="dialog" aria-modal="true">
+      <button class="modal-close" data-close="settingsModal"><i class="fa-solid fa-xmark"></i></button>
+      <div class="modal-heading"><div class="modal-icon"><i class="fa-solid fa-sliders"></i></div><div><h2>Portal Settings</h2><p class="modal-description">Local preferences and data management.</p></div></div>
+
+      <div class="settings-list">
+        <div class="settings-section-title">APPEARANCE</div>
+        <label class="setting-row"><span><strong>Theme</strong><small>Switch between light, dark, or system appearance.</small></span><select id="themeSelect" class="settings-select"><option value="light">Light</option><option value="dark">Dark</option><option value="system">System</option></select></label>
+        <label class="setting-row"><span><strong>Accent color</strong><small>Change the portal highlight color.</small></span><select id="accentSelect" class="settings-select"><option value="cyan">Cyan</option><option value="blue">Blue</option><option value="violet">Violet</option><option value="emerald">Emerald</option><option value="amber">Amber</option><option value="rose">Rose</option><option value="orange">Orange</option><option value="indigo">Indigo</option><option value="teal">Teal</option><option value="fuchsia">Fuchsia</option><option value="sky">Sky</option></select></label>
+        <label class="setting-row"><span><strong>Card density</strong><small>Choose comfortable or compact record spacing.</small></span><select id="densitySelect" class="settings-select"><option value="comfortable">Comfortable</option><option value="compact">Compact</option></select></label>
+        <label class="setting-row"><span><strong>Animations</strong><small>Enable card and interface motion.</small></span><input id="motionToggle" type="checkbox" checked></label>
+        <div class="settings-section-title">WORKSPACE</div>
+        <div class="setting-info"><i class="fa-solid fa-star"></i><span>Favorites and last-viewed model are saved locally in this browser.</span></div>
+        <div class="shortcut-grid"><span><kbd>Ctrl K</kbd> Focus search</span><span><kbd>/</kbd> Focus search</span><span><kbd>F</kbd> Fullscreen</span><span><kbd>Esc</kbd> Close panels</span></div>
+      </div>
+
+      <div class="settings-actions">
+        <button id="settingsApplyBtn" class="btn btn-cyan" type="button">Apply</button>
+        <button id="settingsOkBtn" class="btn btn-dark" type="button">OK</button>
+      </div>
+
+      <div class="settings-danger">
+        <div><strong>Local data</strong><small>Create or restore a complete local repository backup, including uploaded engineering files, versions and metadata.</small></div>
+        <div class="flex gap-2">
+          <button id="backupBtn" class="btn btn-light">Full Backup</button><button id="restoreBtn" class="btn btn-light">Restore Backup</button><input id="restoreInput" type="file" accept=".mrdbackup,application/octet-stream" hidden>
+          <button id="resetBtn" class="btn btn-danger">Reset Local Data</button>
+        </div>
+      </div>
+    </section>
+  </div>
+
+
+  <!-- Isolated File Command Center -->
+  <div id="fileCenterModal" class="modal hidden">
+    <div class="modal-backdrop"></div>
+    <section class="modal-panel modal-xl file-center-panel" role="dialog" aria-modal="true" aria-labelledby="fileCenterTitle">
+      <button class="modal-close" data-close-file-center="fileCenterModal" type="button"><i class="fa-solid fa-xmark"></i></button>
+      <div class="modal-heading">
+        <div class="modal-icon cyan-bg"><i class="fa-solid fa-folder-tree"></i></div>
+        <div><h2 id="fileCenterTitle">Engineering File Command Center</h2><p class="modal-description">Search, preview and download files already stored in this browser repository.</p></div>
+      </div>
+      <div class="file-center-toolbar">
+        <div class="file-center-search"><i class="fa-solid fa-magnifying-glass"></i><input id="fileCenterSearch" type="search" placeholder="Search filename, model, record or category..."></div>
+        <select id="fileCenterModel" class="form-input"><option value="">All models</option></select>
+        <button id="fileCenterRefresh" class="btn btn-light" type="button"><i class="fa-solid fa-rotate"></i> Refresh</button>
+        <span id="fileCenterCount" class="file-center-count">0 files</span>
+      </div>
+      <div class="file-center-layout">
+        <div id="fileCenterList" class="file-center-list"></div>
+        <aside class="file-center-recent">
+          <div class="file-center-side-title"><i class="fa-solid fa-clock-rotate-left"></i> Recent Uploads</div>
+          <div id="fileCenterRecent"></div>
+        </aside>
+      </div>
+    </section>
+  </div>
+
+  <div id="filePreviewModal" class="modal hidden">
+    <div class="modal-backdrop"></div>
+    <section class="modal-panel modal-xl file-preview-panel" role="dialog" aria-modal="true" aria-labelledby="filePreviewTitle">
+      <button class="modal-close" type="button" onclick="document.getElementById('filePreviewModal').classList.add('hidden')"><i class="fa-solid fa-xmark"></i></button>
+      <div class="modal-heading"><div class="modal-icon"><i class="fa-solid fa-eye"></i></div><div><h2 id="filePreviewTitle">File Preview</h2><p id="filePreviewMeta" class="modal-description"></p></div></div>
+      <div id="filePreviewBody" class="file-preview-body"></div>
+    </section>
+  </div>
+
+  <!-- Presentation -->
+  <div id="presentationModal" class="modal hidden">
+    <div class="modal-backdrop"></div>
+    <section class="modal-panel presentation-panel" role="dialog" aria-modal="true">
+      <button class="modal-close" data-close="presentationModal"><i class="fa-solid fa-xmark"></i></button>
+      <div id="presentationContent" class="presentation-content"></div>
+      <div class="presentation-nav"><button id="prevRecordBtn" class="btn btn-light">← Previous</button><button id="nextRecordBtn" class="btn btn-dark">Next →</button></div>
+    </section>
+  </div>
+
+  
+  
+  
+  
+<div id="allTemplate" style="display:none"><article class="record-card " style="--record-accent:#2563eb" data-record="A" data-cat="Schematics" tabindex="0" aria-expanded="false"><div class="record-stripe" style="background:#2563eb"></div><div class="record-collapsed-face"><div class="record-icon" style="background:#2563eb"><i></i></div><div class="record-title-only">Block Diagram</div><span class="record-status all-missing"><span class="status-dot missing"></span><span>NO DOCUMENT</span></span><button class="favorite-btn"><i></i></button><span class="expand-cue"><i>⌄</i></span></div></article><article class="record-card " style="--record-accent:#2563eb" data-record="B" data-cat="Schematics" tabindex="0" aria-expanded="false"><div class="record-stripe" style="background:#2563eb"></div><div class="record-collapsed-face"><div class="record-icon" style="background:#2563eb"><i></i></div><div class="record-title-only">Circuit Diagram</div><span class="record-status all-missing"><span class="status-dot missing"></span><span>NO DOCUMENT</span></span><button class="favorite-btn"><i></i></button><span class="expand-cue"><i>⌄</i></span></div></article><article class="record-card " style="--record-accent:#2563eb" data-record="C" data-cat="Schematics" tabindex="0" aria-expanded="false"><div class="record-stripe" style="background:#2563eb"></div><div class="record-collapsed-face"><div class="record-icon" style="background:#2563eb"><i></i></div><div class="record-title-only">SOC Table</div><span class="record-status all-missing"><span class="status-dot missing"></span><span>NO DOCUMENT</span></span><button class="favorite-btn"><i></i></button><span class="expand-cue"><i>⌄</i></span></div></article><article class="record-card " style="--record-accent:#2563eb" data-record="D" data-cat="Schematics" tabindex="0" aria-expanded="false"><div class="record-stripe" style="background:#2563eb"></div><div class="record-collapsed-face"><div class="record-icon" style="background:#2563eb"><i></i></div><div class="record-title-only">MIPI Table</div><span class="record-status all-missing"><span class="status-dot missing"></span><span>NO DOCUMENT</span></span><button class="favorite-btn"><i></i></button><span class="expand-cue"><i>⌄</i></span></div></article><article class="record-card " style="--record-accent:#059669" data-record="E" data-cat="RF & Wireless" tabindex="0" aria-expanded="false"><div class="record-stripe" style="background:#059669"></div><div class="record-collapsed-face"><div class="record-icon" style="background:#059669"><i></i></div><div class="record-title-only">RF Port Map</div><span class="record-status all-missing"><span class="status-dot missing"></span><span>NO DOCUMENT</span></span><button class="favorite-btn"><i></i></button><span class="expand-cue"><i>⌄</i></span></div></article><article class="record-card " style="--record-accent:#059669" data-record="F" data-cat="RF & Wireless" tabindex="0" aria-expanded="false"><div class="record-stripe" style="background:#059669"></div><div class="record-collapsed-face"><div class="record-icon" style="background:#059669"><i></i></div><div class="record-title-only">Antenna Structure</div><span class="record-status all-missing"><span class="status-dot missing"></span><span>NO DOCUMENT</span></span><button class="favorite-btn"><i></i></button><span class="expand-cue"><i>⌄</i></span></div></article><article class="record-card " style="--record-accent:#059669" data-record="G" data-cat="RF & Wireless" tabindex="0" aria-expanded="false"><div class="record-stripe" style="background:#059669"></div><div class="record-collapsed-face"><div class="record-icon" style="background:#059669"><i></i></div><div class="record-title-only">Main and Roaming Bands Details</div><span class="record-status all-missing"><span class="status-dot missing"></span><span>NO DOCUMENT</span></span><button class="favorite-btn"><i></i></button><span class="expand-cue"><i>⌄</i></span></div></article><article class="record-card " style="--record-accent:#059669" data-record="H" data-cat="RF & Wireless" tabindex="0" aria-expanded="false"><div class="record-stripe" style="background:#059669"></div><div class="record-collapsed-face"><div class="record-icon" style="background:#059669"><i></i></div><div class="record-title-only">VSWR Graph</div><span class="record-status all-missing"><span class="status-dot missing"></span><span>NO DOCUMENT</span></span><button class="favorite-btn"><i></i></button><span class="expand-cue"><i>⌄</i></span></div></article><article class="record-card " style="--record-accent:#059669" data-record="I" data-cat="RF & Wireless" tabindex="0" aria-expanded="false"><div class="record-stripe" style="background:#059669"></div><div class="record-collapsed-face"><div class="record-icon" style="background:#059669"><i></i></div><div class="record-title-only">TRP/TIS/SAR Offset Table</div><span class="record-status all-missing"><span class="status-dot missing"></span><span>NO DOCUMENT</span></span><button class="favorite-btn"><i></i></button><span class="expand-cue"><i>⌄</i></span></div></article><article class="record-card " style="--record-accent:#d97706" data-record="J" data-cat="Process & Tech" tabindex="0" aria-expanded="false"><div class="record-stripe" style="background:#d97706"></div><div class="record-collapsed-face"><div class="record-icon" style="background:#d97706"><i></i></div><div class="record-title-only">Process Flow Chart</div><span class="record-status all-missing"><span class="status-dot missing"></span><span>NO DOCUMENT</span></span><button class="favorite-btn"><i></i></button><span class="expand-cue"><i>⌄</i></span></div></article><article class="record-card " style="--record-accent:#d97706" data-record="K" data-cat="Process & Tech" tabindex="0" aria-expanded="false"><div class="record-stripe" style="background:#d97706"></div><div class="record-collapsed-face"><div class="record-icon" style="background:#d97706"><i></i></div><div class="record-title-only">New Technology Introduced</div><span class="record-status all-missing"><span class="status-dot missing"></span><span>NO DOCUMENT</span></span><button class="favorite-btn"><i></i></button><span class="expand-cue"><i>⌄</i></span></div></article><article class="record-card " style="--record-accent:#d97706" data-record="L" data-cat="Process & Tech" tabindex="0" aria-expanded="false"><div class="record-stripe" style="background:#d97706"></div><div class="record-collapsed-face"><div class="record-icon" style="background:#d97706"><i></i></div><div class="record-title-only">OPST Sheet</div><span class="record-status all-missing"><span class="status-dot missing"></span><span>NO DOCUMENT</span></span><button class="favorite-btn"><i></i></button><span class="expand-cue"><i>⌄</i></span></div></article><article class="record-card " style="--record-accent:#4f46e5" data-record="N" data-cat="Defect summary & SW process" tabindex="0" aria-expanded="false"><div class="record-stripe" style="background:#4f46e5"></div><div class="record-collapsed-face"><div class="record-icon" style="background:#4f46e5"><i></i></div><div class="record-title-only">Base Model / LPR / Development Stage Defect Summary</div><span class="record-status all-missing"><span class="status-dot missing"></span><span>NO DOCUMENT</span></span><button class="favorite-btn"><i></i></button><span class="expand-cue"><i>⌄</i></span></div></article><article class="record-card " style="--record-accent:#4f46e5" data-record="P" data-cat="Defect summary & SW process" tabindex="0" aria-expanded="false"><div class="record-stripe" style="background:#4f46e5"></div><div class="record-collapsed-face"><div class="record-icon" style="background:#4f46e5"><i></i></div><div class="record-title-only">SW Log Process</div><span class="record-status all-missing"><span class="status-dot missing"></span><span>NO DOCUMENT</span></span><button class="favorite-btn"><i></i></button><span class="expand-cue"><i>⌄</i></span></div></article><article class="record-card " style="--record-accent:#db2777" data-record="Q" data-cat="Specification" tabindex="0" aria-expanded="false"><div class="record-stripe" style="background:#db2777"></div><div class="record-collapsed-face"><div class="record-icon" style="background:#db2777"><i></i></div><div class="record-title-only">Basic Model Details</div><span class="record-status all-missing"><span class="status-dot missing"></span><span>NO DOCUMENT</span></span><button class="favorite-btn"><i></i></button><span class="expand-cue"><i>⌄</i></span></div></article><article class="record-card " style="--record-accent:#db2777" data-record="R" data-cat="Specification" tabindex="0" aria-expanded="false"><div class="record-stripe" style="background:#db2777"></div><div class="record-collapsed-face"><div class="record-icon" style="background:#db2777"><i></i></div><div class="record-title-only">Common and Exclusive Part Details</div><span class="record-status all-missing"><span class="status-dot missing"></span><span>NO DOCUMENT</span></span><button class="favorite-btn"><i></i></button><span class="expand-cue"><i>⌄</i></span></div></article><article class="record-card " style="--record-accent:#db2777" data-record="T" data-cat="Specification" tabindex="0" aria-expanded="false"><div class="record-stripe" style="background:#db2777"></div><div class="record-collapsed-face"><div class="record-icon" style="background:#db2777"><i></i></div><div class="record-title-only">Hardware Checklist</div><span class="record-status all-missing"><span class="status-dot missing"></span><span>NO DOCUMENT</span></span><button class="favorite-btn"><i></i></button><span class="expand-cue"><i>⌄</i></span></div></article><article class="record-card " style="--record-accent:#db2777" data-record="U" data-cat="Specification" tabindex="0" aria-expanded="false"><div class="record-stripe" style="background:#db2777"></div><div class="record-collapsed-face"><div class="record-icon" style="background:#db2777"><i></i></div><div class="record-title-only">Korea Member Details</div><span class="record-status all-missing"><span class="status-dot missing"></span><span>NO DOCUMENT</span></span><button class="favorite-btn"><i></i></button><span class="expand-cue"><i>⌄</i></span></div></article><article class="record-card " style="--record-accent:#db2777" data-record="V" data-cat="Specification" tabindex="0" aria-expanded="false"><div class="record-stripe" style="background:#db2777"></div><div class="record-collapsed-face"><div class="record-icon" style="background:#db2777"><i></i></div><div class="record-title-only">Common</div><span class="record-status all-missing"><span class="status-dot missing"></span><span>NO DOCUMENT</span></span><button class="favorite-btn"><i></i></button><span class="expand-cue"><i>⌄</i></span></div></article></div><div id="expandedTemplates" style="display:none"><article class="record-card is-expanded is-group-view" style="--record-accent:#2563eb" data-record="A" data-cat="Schematics" tabindex="0" aria-expanded="true"><div class="record-stripe" style="background:#2563eb"></div><div class="record-collapsed-face"><div class="record-icon" style="background:#2563eb"><i></i></div><div class="record-title-only">Block Diagram</div><span class="record-status all-missing"><span class="status-dot missing"></span><span>NO DOCUMENT</span></span><button class="favorite-btn"><i></i></button><span class="expand-cue"><i>⌄</i></span></div><div class="record-expanded-panel"><div class="expanded-summary"><span>0 uploaded versions • unlimited history</span><span>Document details</span></div><div class="inline-preview"><div class="inline-preview-empty">Select Preview on a document below to load the binary without preloading large engineering files.</div></div><div class="expanded-file-list"><div class="expanded-file-row is-missing"><div class="expanded-file-main"><div class="expanded-file-title"><i></i><span>AP Block Diagram</span><span class="expanded-status missing">MISSING</span></div><div class="expanded-file-meta"><span>A576_AP_Block_Diagram.pdf</span><span>0 B</span></div><div class="slot-missing-note">No document uploaded yet.</div></div></div><div class="expanded-file-row is-missing"><div class="expanded-file-main"><div class="expanded-file-title"><i></i><span>RF Block Diagram</span><span class="expanded-status missing">MISSING</span></div><div class="expanded-file-meta"><span>A576_RF_Block_Diagram.pdf</span><span>0 B</span></div><div class="slot-missing-note">No document uploaded yet.</div></div></div></div><div class="expanded-footer"><button class="text-action">Copy details</button><button class="text-action">Copy link</button><button class="text-action">Open details</button></div></div></article><article class="record-card is-expanded is-group-view" style="--record-accent:#2563eb" data-record="B" data-cat="Schematics" tabindex="0" aria-expanded="true"><div class="record-stripe" style="background:#2563eb"></div><div class="record-collapsed-face"><div class="record-icon" style="background:#2563eb"><i></i></div><div class="record-title-only">Circuit Diagram</div><span class="record-status all-missing"><span class="status-dot missing"></span><span>NO DOCUMENT</span></span><button class="favorite-btn"><i></i></button><span class="expand-cue"><i>⌄</i></span></div><div class="record-expanded-panel"><div class="expanded-summary"><span>0 uploaded versions • unlimited history</span><span>Document details</span></div><div class="inline-preview"><div class="inline-preview-empty">Select Preview on a document below to load the binary without preloading large engineering files.</div></div><div class="expanded-file-list"><div class="expanded-file-row is-missing"><div class="expanded-file-main"><div class="expanded-file-title"><i></i><span>Main PBA</span><span class="expanded-status missing">MISSING</span></div><div class="expanded-file-meta"><span>A576_Main_PBA_Schematic.pdf</span><span>0 B</span></div><div class="slot-missing-note">No document uploaded yet.</div></div></div><div class="expanded-file-row is-missing"><div class="expanded-file-main"><div class="expanded-file-title"><i></i><span>Sub PBA</span><span class="expanded-status missing">MISSING</span></div><div class="expanded-file-meta"><span>A576_Sub_PBA_Schematic.pdf</span><span>0 B</span></div><div class="slot-missing-note">No document uploaded yet.</div></div></div></div><div class="expanded-footer"><button class="text-action">Copy details</button><button class="text-action">Copy link</button><button class="text-action">Open details</button></div></div></article><article class="record-card is-expanded is-group-view" style="--record-accent:#2563eb" data-record="C" data-cat="Schematics" tabindex="0" aria-expanded="true"><div class="record-stripe" style="background:#2563eb"></div><div class="record-collapsed-face"><div class="record-icon" style="background:#2563eb"><i></i></div><div class="record-title-only">SOC Table</div><span class="record-status all-missing"><span class="status-dot missing"></span><span>NO DOCUMENT</span></span><button class="favorite-btn"><i></i></button><span class="expand-cue"><i>⌄</i></span></div><div class="record-expanded-panel"><div class="expanded-summary"><span>0 uploaded versions • unlimited history</span><span>Document details</span></div><div class="inline-preview"><div class="inline-preview-empty">Select Preview on a document below to load the binary without preloading large engineering files.</div></div><div class="expanded-file-list"><div class="expanded-file-row is-missing"><div class="expanded-file-main"><div class="expanded-file-title"><i></i><span>SOC Table</span><span class="expanded-status missing">MISSING</span></div><div class="expanded-file-meta"><span>A576_SOC_Pin_Table.xlsx</span><span>0 B</span></div><div class="slot-missing-note">No document uploaded yet.</div></div></div></div><div class="expanded-footer"><button class="text-action">Copy details</button><button class="text-action">Copy link</button><button class="text-action">Open details</button></div></div></article><article class="record-card is-expanded is-group-view" style="--record-accent:#2563eb" data-record="D" data-cat="Schematics" tabindex="0" aria-expanded="true"><div class="record-stripe" style="background:#2563eb"></div><div class="record-collapsed-face"><div class="record-icon" style="background:#2563eb"><i></i></div><div class="record-title-only">MIPI Table</div><span class="record-status all-missing"><span class="status-dot missing"></span><span>NO DOCUMENT</span></span><button class="favorite-btn"><i></i></button><span class="expand-cue"><i>⌄</i></span></div><div class="record-expanded-panel"><div class="expanded-summary"><span>0 uploaded versions • unlimited history</span><span>Document details</span></div><div class="inline-preview"><div class="inline-preview-empty">Select Preview on a document below to load the binary without preloading large engineering files.</div></div><div class="expanded-file-list"><div class="expanded-file-row is-missing"><div class="expanded-file-main"><div class="expanded-file-title"><i></i><span>MIPI Table</span><span class="expanded-status missing">MISSING</span></div><div class="expanded-file-meta"><span>A576_MIPI_Config.xlsx</span><span>0 B</span></div><div class="slot-missing-note">No document uploaded yet.</div></div></div></div><div class="expanded-footer"><button class="text-action">Copy details</button><button class="text-action">Copy link</button><button class="text-action">Open details</button></div></div></article><article class="record-card is-expanded is-group-view" style="--record-accent:#059669" data-record="E" data-cat="RF & Wireless" tabindex="0" aria-expanded="true"><div class="record-stripe" style="background:#059669"></div><div class="record-collapsed-face"><div class="record-icon" style="background:#059669"><i></i></div><div class="record-title-only">RF Port Map</div><span class="record-status all-missing"><span class="status-dot missing"></span><span>NO DOCUMENT</span></span><button class="favorite-btn"><i></i></button><span class="expand-cue"><i>⌄</i></span></div><div class="record-expanded-panel"><div class="expanded-summary"><span>0 uploaded versions • unlimited history</span><span>Document details</span></div><div class="inline-preview"><div class="inline-preview-empty">Select Preview on a document below to load the binary without preloading large engineering files.</div></div><div class="expanded-file-list"><div class="expanded-file-row is-missing"><div class="expanded-file-main"><div class="expanded-file-title"><i></i><span>RF Port Map</span><span class="expanded-status missing">MISSING</span></div><div class="expanded-file-meta"><span>A576_RF_Port_Mapping.pdf</span><span>0 B</span></div><div class="slot-missing-note">No document uploaded yet.</div></div></div></div><div class="expanded-footer"><button class="text-action">Copy details</button><button class="text-action">Copy link</button><button class="text-action">Open details</button></div></div></article><article class="record-card is-expanded is-group-view" style="--record-accent:#059669" data-record="F" data-cat="RF & Wireless" tabindex="0" aria-expanded="true"><div class="record-stripe" style="background:#059669"></div><div class="record-collapsed-face"><div class="record-icon" style="background:#059669"><i></i></div><div class="record-title-only">Antenna Structure</div><span class="record-status all-missing"><span class="status-dot missing"></span><span>NO DOCUMENT</span></span><button class="favorite-btn"><i></i></button><span class="expand-cue"><i>⌄</i></span></div><div class="record-expanded-panel"><div class="expanded-summary"><span>0 uploaded versions • unlimited history</span><span>Document details</span></div><div class="inline-preview"><div class="inline-preview-empty">Select Preview on a document below to load the binary without preloading large engineering files.</div></div><div class="expanded-file-list"><div class="expanded-file-row is-missing"><div class="expanded-file-main"><div class="expanded-file-title"><i></i><span>Antenna Structure</span><span class="expanded-status missing">MISSING</span></div><div class="expanded-file-meta"><span>A576_Antenna_3D_Layout.dwg</span><span>0 B</span></div><div class="slot-missing-note">No document uploaded yet.</div></div></div></div><div class="expanded-footer"><button class="text-action">Copy details</button><button class="text-action">Copy link</button><button class="text-action">Open details</button></div></div></article><article class="record-card is-expanded is-group-view" style="--record-accent:#059669" data-record="G" data-cat="RF & Wireless" tabindex="0" aria-expanded="true"><div class="record-stripe" style="background:#059669"></div><div class="record-collapsed-face"><div class="record-icon" style="background:#059669"><i></i></div><div class="record-title-only">Main and Roaming Bands Details</div><span class="record-status all-missing"><span class="status-dot missing"></span><span>NO DOCUMENT</span></span><button class="favorite-btn"><i></i></button><span class="expand-cue"><i>⌄</i></span></div><div class="record-expanded-panel"><div class="expanded-summary"><span>0 uploaded versions • unlimited history</span><span>Document details</span></div><div class="inline-preview"><div class="inline-preview-empty">Select Preview on a document below to load the binary without preloading large engineering files.</div></div><div class="expanded-file-list"><div class="expanded-file-row is-missing"><div class="expanded-file-main"><div class="expanded-file-title"><i></i><span>Main and Roaming Bands Details</span><span class="expanded-status missing">MISSING</span></div><div class="expanded-file-meta"><span>A576_Bands_Master.xlsx</span><span>0 B</span></div><div class="slot-missing-note">No document uploaded yet.</div></div></div></div><div class="expanded-footer"><button class="text-action">Copy details</button><button class="text-action">Copy link</button><button class="text-action">Open details</button></div></div></article><article class="record-card is-expanded is-group-view" style="--record-accent:#059669" data-record="H" data-cat="RF & Wireless" tabindex="0" aria-expanded="true"><div class="record-stripe" style="background:#059669"></div><div class="record-collapsed-face"><div class="record-icon" style="background:#059669"><i></i></div><div class="record-title-only">VSWR Graph</div><span class="record-status all-missing"><span class="status-dot missing"></span><span>NO DOCUMENT</span></span><button class="favorite-btn"><i></i></button><span class="expand-cue"><i>⌄</i></span></div><div class="record-expanded-panel"><div class="expanded-summary"><span>0 uploaded versions • unlimited history</span><span>Document details</span></div><div class="inline-preview"><div class="inline-preview-empty">Select Preview on a document below to load the binary without preloading large engineering files.</div></div><div class="expanded-file-list"><div class="expanded-file-row is-missing"><div class="expanded-file-main"><div class="expanded-file-title"><i></i><span>VSWR Graph</span><span class="expanded-status missing">MISSING</span></div><div class="expanded-file-meta"><span>VSWR_Graph.pdf</span><span>0 B</span></div><div class="slot-missing-note">No document uploaded yet.</div></div></div></div><div class="expanded-footer"><button class="text-action">Copy details</button><button class="text-action">Copy link</button><button class="text-action">Open details</button></div></div></article><article class="record-card is-expanded is-group-view" style="--record-accent:#059669" data-record="I" data-cat="RF & Wireless" tabindex="0" aria-expanded="true"><div class="record-stripe" style="background:#059669"></div><div class="record-collapsed-face"><div class="record-icon" style="background:#059669"><i></i></div><div class="record-title-only">TRP/TIS/SAR Offset Table</div><span class="record-status all-missing"><span class="status-dot missing"></span><span>NO DOCUMENT</span></span><button class="favorite-btn"><i></i></button><span class="expand-cue"><i>⌄</i></span></div><div class="record-expanded-panel"><div class="expanded-summary"><span>0 uploaded versions • unlimited history</span><span>Document details</span></div><div class="inline-preview"><div class="inline-preview-empty">Select Preview on a document below to load the binary without preloading large engineering files.</div></div><div class="expanded-file-list"><div class="expanded-file-row is-missing"><div class="expanded-file-main"><div class="expanded-file-title"><i></i><span>TRP/TIS/SAR Offset Table</span><span class="expanded-status missing">MISSING</span></div><div class="expanded-file-meta"><span>A576_TRP_TIS_SAR_Offset_Table.xlsx</span><span>0 B</span></div><div class="slot-missing-note">No document uploaded yet.</div></div></div></div><div class="expanded-footer"><button class="text-action">Copy details</button><button class="text-action">Copy link</button><button class="text-action">Open details</button></div></div></article><article class="record-card is-expanded is-group-view" style="--record-accent:#d97706" data-record="J" data-cat="Process & Tech" tabindex="0" aria-expanded="true"><div class="record-stripe" style="background:#d97706"></div><div class="record-collapsed-face"><div class="record-icon" style="background:#d97706"><i></i></div><div class="record-title-only">Process Flow Chart</div><span class="record-status all-missing"><span class="status-dot missing"></span><span>NO DOCUMENT</span></span><button class="favorite-btn"><i></i></button><span class="expand-cue"><i>⌄</i></span></div><div class="record-expanded-panel"><div class="expanded-summary"><span>0 uploaded versions • unlimited history</span><span>Document details</span></div><div class="inline-preview"><div class="inline-preview-empty">Select Preview on a document below to load the binary without preloading large engineering files.</div></div><div class="expanded-file-list"><div class="expanded-file-row is-missing"><div class="expanded-file-main"><div class="expanded-file-title"><i></i><span>Sub Assembly</span><span class="expanded-status missing">MISSING</span></div><div class="expanded-file-meta"><span>A576_Sub_Assembly_Flow.xlsx</span><span>0 B</span></div><div class="slot-missing-note">No document uploaded yet.</div></div></div><div class="expanded-file-row is-missing"><div class="expanded-file-main"><div class="expanded-file-title"><i></i><span>Main Line</span><span class="expanded-status missing">MISSING</span></div><div class="expanded-file-meta"><span>A576_Main_Line_SOP.xlsx</span><span>0 B</span></div><div class="slot-missing-note">No document uploaded yet.</div></div></div></div><div class="expanded-footer"><button class="text-action">Copy details</button><button class="text-action">Copy link</button><button class="text-action">Open details</button></div></div></article><article class="record-card is-expanded is-group-view" style="--record-accent:#d97706" data-record="K" data-cat="Process & Tech" tabindex="0" aria-expanded="true"><div class="record-stripe" style="background:#d97706"></div><div class="record-collapsed-face"><div class="record-icon" style="background:#d97706"><i></i></div><div class="record-title-only">New Technology Introduced</div><span class="record-status all-missing"><span class="status-dot missing"></span><span>NO DOCUMENT</span></span><button class="favorite-btn"><i></i></button><span class="expand-cue"><i>⌄</i></span></div><div class="record-expanded-panel"><div class="expanded-summary"><span>0 uploaded versions • unlimited history</span><span>Document details</span></div><div class="inline-preview"><div class="inline-preview-empty">Select Preview on a document below to load the binary without preloading large engineering files.</div></div><div class="expanded-file-list"><div class="expanded-file-row is-missing"><div class="expanded-file-main"><div class="expanded-file-title"><i></i><span>New Technology Introduced</span><span class="expanded-status missing">MISSING</span></div><div class="expanded-file-meta"><span>A576_New_Tech_Brief.pdf</span><span>0 B</span></div><div class="slot-missing-note">No document uploaded yet.</div></div></div></div><div class="expanded-footer"><button class="text-action">Copy details</button><button class="text-action">Copy link</button><button class="text-action">Open details</button></div></div></article><article class="record-card is-expanded is-group-view" style="--record-accent:#d97706" data-record="L" data-cat="Process & Tech" tabindex="0" aria-expanded="true"><div class="record-stripe" style="background:#d97706"></div><div class="record-collapsed-face"><div class="record-icon" style="background:#d97706"><i></i></div><div class="record-title-only">OPST Sheet</div><span class="record-status all-missing"><span class="status-dot missing"></span><span>NO DOCUMENT</span></span><button class="favorite-btn"><i></i></button><span class="expand-cue"><i>⌄</i></span></div><div class="record-expanded-panel"><div class="expanded-summary"><span>0 uploaded versions • unlimited history</span><span>Document details</span></div><div class="inline-preview"><div class="inline-preview-empty">Select Preview on a document below to load the binary without preloading large engineering files.</div></div><div class="expanded-file-list"><div class="expanded-file-row is-missing"><div class="expanded-file-main"><div class="expanded-file-title"><i></i><span>OPST Sheet</span><span class="expanded-status missing">MISSING</span></div><div class="expanded-file-meta"><span>A576_OPST_Master.xlsx</span><span>0 B</span></div><div class="slot-missing-note">No document uploaded yet.</div></div></div></div><div class="expanded-footer"><button class="text-action">Copy details</button><button class="text-action">Copy link</button><button class="text-action">Open details</button></div></div></article><article class="record-card is-expanded is-group-view" style="--record-accent:#4f46e5" data-record="N" data-cat="Defect summary & SW process" tabindex="0" aria-expanded="true"><div class="record-stripe" style="background:#4f46e5"></div><div class="record-collapsed-face"><div class="record-icon" style="background:#4f46e5"><i></i></div><div class="record-title-only">Base Model / LPR / Development Stage Defect Summary</div><span class="record-status all-missing"><span class="status-dot missing"></span><span>NO DOCUMENT</span></span><button class="favorite-btn"><i></i></button><span class="expand-cue"><i>⌄</i></span></div><div class="record-expanded-panel"><div class="expanded-summary"><span>0 uploaded versions • unlimited history</span><span>Document details</span></div><div class="inline-preview"><div class="inline-preview-empty">Select Preview on a document below to load the binary without preloading large engineering files.</div></div><div class="expanded-file-list"><div class="expanded-file-row is-missing"><div class="expanded-file-main"><div class="expanded-file-title"><i></i><span>Base Model Defect History</span><span class="expanded-status missing">MISSING</span></div><div class="expanded-file-meta"><span>A576_Base_Defects_RCA.xlsx</span><span>0 B</span></div><div class="slot-missing-note">No document uploaded yet.</div></div></div><div class="expanded-file-row is-missing"><div class="expanded-file-main"><div class="expanded-file-title"><i></i><span>LPR / Development Stage Defect Summary</span><span class="expanded-status missing">MISSING</span></div><div class="expanded-file-meta"><span>A576_Subsidiary_Defects.xlsx</span><span>0 B</span></div><div class="slot-missing-note">No document uploaded yet.</div></div></div></div><div class="expanded-footer"><button class="text-action">Copy details</button><button class="text-action">Copy link</button><button class="text-action">Open details</button></div></div></article><article class="record-card is-expanded is-group-view" style="--record-accent:#4f46e5" data-record="P" data-cat="Defect summary & SW process" tabindex="0" aria-expanded="true"><div class="record-stripe" style="background:#4f46e5"></div><div class="record-collapsed-face"><div class="record-icon" style="background:#4f46e5"><i></i></div><div class="record-title-only">SW Log Process</div><span class="record-status all-missing"><span class="status-dot missing"></span><span>NO DOCUMENT</span></span><button class="favorite-btn"><i></i></button><span class="expand-cue"><i>⌄</i></span></div><div class="record-expanded-panel"><div class="expanded-summary"><span>0 uploaded versions • unlimited history</span><span>Document details</span></div><div class="inline-preview"><div class="inline-preview-empty">Select Preview on a document below to load the binary without preloading large engineering files.</div></div><div class="expanded-file-list"><div class="expanded-file-row is-missing"><div class="expanded-file-main"><div class="expanded-file-title"><i></i><span>SW Log Process</span><span class="expanded-status missing">MISSING</span></div><div class="expanded-file-meta"><span>A576_SW_Log_Guide.pdf</span><span>0 B</span></div><div class="slot-missing-note">No document uploaded yet.</div></div></div></div><div class="expanded-footer"><button class="text-action">Copy details</button><button class="text-action">Copy link</button><button class="text-action">Open details</button></div></div></article><article class="record-card is-expanded is-group-view" style="--record-accent:#db2777" data-record="Q" data-cat="Specification" tabindex="0" aria-expanded="true"><div class="record-stripe" style="background:#db2777"></div><div class="record-collapsed-face"><div class="record-icon" style="background:#db2777"><i></i></div><div class="record-title-only">Basic Model Details</div><span class="record-status all-missing"><span class="status-dot missing"></span><span>NO DOCUMENT</span></span><button class="favorite-btn"><i></i></button><span class="expand-cue"><i>⌄</i></span></div><div class="record-expanded-panel"><div class="expanded-summary"><span>0 uploaded versions • unlimited history</span><span>Document details</span></div><div class="inline-preview"><div class="inline-preview-empty">Select Preview on a document below to load the binary without preloading large engineering files.</div></div><div class="expanded-file-list"><div class="expanded-file-row is-missing"><div class="expanded-file-main"><div class="expanded-file-title"><i></i><span>Basic Model Details</span><span class="expanded-status missing">MISSING</span></div><div class="expanded-file-meta"><span>A576_Basic_Spec.pdf</span><span>0 B</span></div><div class="slot-missing-note">No document uploaded yet.</div></div></div></div><div class="expanded-footer"><button class="text-action">Copy details</button><button class="text-action">Copy link</button><button class="text-action">Open details</button></div></div></article><article class="record-card is-expanded is-group-view" style="--record-accent:#db2777" data-record="R" data-cat="Specification" tabindex="0" aria-expanded="true"><div class="record-stripe" style="background:#db2777"></div><div class="record-collapsed-face"><div class="record-icon" style="background:#db2777"><i></i></div><div class="record-title-only">Common and Exclusive Part Details</div><span class="record-status all-missing"><span class="status-dot missing"></span><span>NO DOCUMENT</span></span><button class="favorite-btn"><i></i></button><span class="expand-cue"><i>⌄</i></span></div><div class="record-expanded-panel"><div class="expanded-summary"><span>0 uploaded versions • unlimited history</span><span>Document details</span></div><div class="inline-preview"><div class="inline-preview-empty">Select Preview on a document below to load the binary without preloading large engineering files.</div></div><div class="expanded-file-list"><div class="expanded-file-row is-missing"><div class="expanded-file-main"><div class="expanded-file-title"><i></i><span>Common and Exclusive Part Details</span><span class="expanded-status missing">MISSING</span></div><div class="expanded-file-meta"><span>A576_Part_Matrix.xlsx</span><span>0 B</span></div><div class="slot-missing-note">No document uploaded yet.</div></div></div></div><div class="expanded-footer"><button class="text-action">Copy details</button><button class="text-action">Copy link</button><button class="text-action">Open details</button></div></div></article><article class="record-card is-expanded is-group-view" style="--record-accent:#db2777" data-record="T" data-cat="Specification" tabindex="0" aria-expanded="true"><div class="record-stripe" style="background:#db2777"></div><div class="record-collapsed-face"><div class="record-icon" style="background:#db2777"><i></i></div><div class="record-title-only">Hardware Checklist</div><span class="record-status all-missing"><span class="status-dot missing"></span><span>NO DOCUMENT</span></span><button class="favorite-btn"><i></i></button><span class="expand-cue"><i>⌄</i></span></div><div class="record-expanded-panel"><div class="expanded-summary"><span>0 uploaded versions • unlimited history</span><span>Document details</span></div><div class="inline-preview"><div class="inline-preview-empty">Select Preview on a document below to load the binary without preloading large engineering files.</div></div><div class="expanded-file-list"><div class="expanded-file-row is-missing"><div class="expanded-file-main"><div class="expanded-file-title"><i></i><span>Hardware Checklist</span><span class="expanded-status missing">MISSING</span></div><div class="expanded-file-meta"><span>Engineering document</span><span>0 B</span></div><div class="slot-missing-note">No document uploaded yet.</div></div></div></div><div class="expanded-footer"><button class="text-action">Copy details</button><button class="text-action">Copy link</button><button class="text-action">Open details</button></div></div></article><article class="record-card is-expanded is-group-view" style="--record-accent:#db2777" data-record="U" data-cat="Specification" tabindex="0" aria-expanded="true"><div class="record-stripe" style="background:#db2777"></div><div class="record-collapsed-face"><div class="record-icon" style="background:#db2777"><i></i></div><div class="record-title-only">Korea Member Details</div><span class="record-status all-missing"><span class="status-dot missing"></span><span>NO DOCUMENT</span></span><button class="favorite-btn"><i></i></button><span class="expand-cue"><i>⌄</i></span></div><div class="record-expanded-panel"><div class="expanded-summary"><span>0 uploaded versions • unlimited history</span><span>Document details</span></div><div class="inline-preview"><div class="inline-preview-empty">Select Preview on a document below to load the binary without preloading large engineering files.</div></div><div class="expanded-file-list"><div class="expanded-file-row is-missing"><div class="expanded-file-main"><div class="expanded-file-title"><i></i><span>Korea Member Details</span><span class="expanded-status missing">MISSING</span></div><div class="expanded-file-meta"><span>A576_Korea_HQ_Roster.xlsx</span><span>0 B</span></div><div class="slot-missing-note">No document uploaded yet.</div></div></div></div><div class="expanded-footer"><button class="text-action">Copy details</button><button class="text-action">Copy link</button><button class="text-action">Open details</button></div></div></article><article class="record-card is-expanded is-group-view" style="--record-accent:#db2777" data-record="V" data-cat="Specification" tabindex="0" aria-expanded="true"><div class="record-stripe" style="background:#db2777"></div><div class="record-collapsed-face"><div class="record-icon" style="background:#db2777"><i></i></div><div class="record-title-only">Common</div><span class="record-status all-missing"><span class="status-dot missing"></span><span>NO DOCUMENT</span></span><button class="favorite-btn"><i></i></button><span class="expand-cue"><i>⌄</i></span></div><div class="record-expanded-panel"><div class="expanded-summary"><span>0 uploaded versions • unlimited history</span><span>Document details</span></div><div class="inline-preview"><div class="inline-preview-empty">Select Preview on a document below to load the binary without preloading large engineering files.</div></div><div class="expanded-file-list"><div class="expanded-file-row is-missing"><div class="expanded-file-main"><div class="expanded-file-title"><i></i><span>Common</span><span class="expanded-status missing">MISSING</span></div><div class="expanded-file-meta"><span>A576_Common_Archive.zip</span><span>0 B</span></div><div class="slot-missing-note">No document uploaded yet.</div></div></div></div><div class="expanded-footer"><button class="text-action">Copy details</button><button class="text-action">Copy link</button><button class="text-action">Open details</button></div></div></article></div><script>
+const catDefs=[['all','All'],['Schematics','Schematics'],['RF & Wireless','RF & Antenna'],['Process & Tech','Process & OPST'],['Defect summary & SW process','Defects & SW'],['Specification','Specification']]; document.getElementById('categoryTabs').innerHTML=catDefs.map(x=>`<button class="cat-btn" data-cat="${x[0]}">${x[1]}<b class="cat-count"></b></button>`).join('');
+const cats=[...document.querySelectorAll('.cat-btn')];
+function render(mode){document.body.dataset.recordView=mode==='all'?'all':'group'; const grid=document.getElementById('cardsGrid'); const all=[...document.querySelectorAll('#allTemplate .record-card')]; const expanded=[...document.querySelectorAll('#expandedTemplates .record-card')]; grid.innerHTML=''; const src=mode==='all'?all:expanded.filter(c=>c.dataset.cat===mode); src.forEach(c=>grid.appendChild(c.cloneNode(true))); if(mode!=='all') grid.querySelectorAll('.record-card').forEach(c=>{c.classList.add('is-expanded','is-group-view');c.setAttribute('aria-expanded','true');}); document.getElementById('recordCount').textContent=mode==='all'?`${all.length} of ${all.length} records • Compact view`:`${src.length} records • Full detail view`; }
+cats.forEach((b,i)=>b.addEventListener('click',()=>render(b.dataset.cat==='all'?'all':b.dataset.cat)));
+document.addEventListener('click',e=>{const c=e.target.closest('#cardsGrid .record-card'); if(c && !e.target.closest('button')){const ex=c.classList.toggle('is-expanded');c.setAttribute('aria-expanded',String(ex)); if(ex){const t=document.getElementById('allTemplate').querySelector(`[data-record="${c.dataset.record}"]`); if(t?.querySelector('.record-expanded-panel') && !c.querySelector('.record-expanded-panel')) c.insertAdjacentHTML('beforeend',t.querySelector('.record-expanded-panel').outerHTML);}}}); render('all');
+</script></body></html>

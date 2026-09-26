@@ -1,0 +1,129 @@
+{
+  "project": "Mobile R&D Technical Hub",
+  "version": "V65.0",
+  "fileCount": 24,
+  "duplicateHtmlIds": [],
+  "missingLocalReferences": [],
+  "files": [
+    {
+      "path": "ARCHITECTURE.md",
+      "bytes": 1761,
+      "sha256": "343a86e0c4360e6c2e494792b6cfbbdc38b49bd28ea7799ef14f1614ec2104c3"
+    },
+    {
+      "path": "FILE_STRUCTURE_MANIFEST.json",
+      "bytes": 3606,
+      "sha256": "8c3b9233e9ba22d43c9eac3da812ea1e12fba11af5974787f754dec5d570e855"
+    },
+    {
+      "path": "PROJECT_MANIFEST.json",
+      "bytes": 1094,
+      "sha256": "e8a3827080ac426e40fccb2de10afc604532bd2ab8b036266f5c5d2a9546775e"
+    },
+    {
+      "path": "REBUILD_README.md",
+      "bytes": 925,
+      "sha256": "ea59116497edecf6cd6bdc382e2827c9e8c8f6617e7ec599ea1b00e353a7716d"
+    },
+    {
+      "path": "STRUCTURE_VERIFICATION.md",
+      "bytes": 2237,
+      "sha256": "d21ab777520d0a3aacd4919b4299b464706e22cf74bf5317392cade0f435b5cd"
+    },
+    {
+      "path": "css/dashboard-legacy-reference.css",
+      "bytes": 188390,
+      "sha256": "29888efe73a922644d68c47bc71cf9595123d9b7a02568866c16c76763d9077e"
+    },
+    {
+      "path": "css/dashboard.css",
+      "bytes": 22489,
+      "sha256": "6f0255ed860e0333686aac72ef3068c43ab5199dfe2232824c1e64f0c4c66d47"
+    },
+    {
+      "path": "css/lab-knowledge.css",
+      "bytes": 6331,
+      "sha256": "95bf296633caaae811276945f063f7aa34ec10444d5897b885c1fc81fca8f85c"
+    },
+    {
+      "path": "css/model-comparison.css",
+      "bytes": 4536,
+      "sha256": "9944e4b3a9605db0a879b741ac170576f5579216378140fcb426541de37ea308"
+    },
+    {
+      "path": "css/modular-features.css",
+      "bytes": 2554,
+      "sha256": "2e9fa04595295c285bfdb6053775a48c3ec6efd497b3c045ab69e14c64e76221"
+    },
+    {
+      "path": "data/models.js",
+      "bytes": 7417,
+      "sha256": "298fe38e4ed462df236ed50a3ea9c08fe562224f14ca7784cda8833533f69b87"
+    },
+    {
+      "path": "index.html",
+      "bytes": 29674,
+      "sha256": "b6410f8ed606e06d77ebf9cf85fc9fdc25a9d9624f19d07a86c007bee84b6255"
+    },
+    {
+      "path": "js/app.js",
+      "bytes": 74682,
+      "sha256": "5b02f6cbff7b2c84f9647084871af2e1bfb66311750afcab634d6dbe604e9ced"
+    },
+    {
+      "path": "js/database.js",
+      "bytes": 11356,
+      "sha256": "9de1f91ea98c33fef752f3f9c5fd0f5fee01360544fbe4e4bfc6fa503907884f"
+    },
+    {
+      "path": "js/file-command-center.js",
+      "bytes": 11404,
+      "sha256": "e78f79dda1a8f93be6f080c77980123390ae9990355dcbf2448890116b2be5d1"
+    },
+    {
+      "path": "js/model-comparison/comparison-worker.js",
+      "bytes": 10928,
+      "sha256": "7bbc87dd7f1a61218feae8645ca19c8830ce6366ee38461d7e40f71995048504"
+    },
+    {
+      "path": "js/model-comparison/comparison.js",
+      "bytes": 14184,
+      "sha256": "bdd731891010050c634378d1939f54dd291a68c7ac8e3b48079293968c9eaf96"
+    },
+    {
+      "path": "js/modules/lab-knowledge/data.js",
+      "bytes": 2869,
+      "sha256": "5491e0d8cc62cc4e64746c2cc0c11b4a1ca59eec0299135fb4de0e6d95dd7f0d"
+    },
+    {
+      "path": "js/modules/lab-knowledge/module.js",
+      "bytes": 8536,
+      "sha256": "a9e35bd8deb9b08f10a36c49836dc5a42a0654767d2d1c889bcf181a9e732588"
+    },
+    {
+      "path": "js/modules/model-comparison/module.js",
+      "bytes": 102,
+      "sha256": "36d0cb3e17789778a436de9ab50259f5d6c1731c65de37beeda97896f6eef33d"
+    },
+    {
+      "path": "js/modules/model-document/module.js",
+      "bytes": 80,
+      "sha256": "7683152c7ce248f7efcdbad8c19cb05976d806924db584bab967033c5786cefc"
+    },
+    {
+      "path": "js/modules/module-manager.js",
+      "bytes": 327,
+      "sha256": "1d8a3ed0ddc202fea5fa409d154922ed9783203ec89bbc9a161466a8e8d6a1bc"
+    },
+    {
+      "path": "js/modules/parameter-360/module.js",
+      "bytes": 6254,
+      "sha256": "28134793c2f7d613e476dc4c6a0070c3f9463e2813568a921f25047f24207123"
+    },
+    {
+      "path": "js/ui.js",
+      "bytes": 1563,
+      "sha256": "8501d08866917f43e9422fd2ef45f507c1be4fa1ce8090e5873213fb2ce98a39"
+    }
+  ]
+}
