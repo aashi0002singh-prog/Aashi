@@ -3463,3 +3463,19 @@ body[data-record-view="group"] .expanded-summary{
 body[data-record-view="group"] .expanded-footer{
   margin-top:10px !important;
 }
+
+
+/* V64.2 FIX PACK — stable expanded cards and visible tab/content regions */
+.records-grid{grid-auto-rows:max-content !important;align-items:start !important;overflow:visible !important;}
+.records-grid .record-card{height:60px !important;min-height:60px !important;overflow:hidden !important;align-self:start !important;}
+.records-grid .record-card.is-expanded{height:auto !important;min-height:60px !important;max-height:none !important;overflow:visible !important;}
+.records-grid .record-card.is-expanded .record-expanded-panel{height:auto !important;min-height:0 !important;max-height:none !important;overflow:visible !important;}
+.records-grid .record-card.is-expanded .expanded-file-list{height:auto !important;min-height:0 !important;max-height:none !important;overflow:visible !important;}
+.records-grid .record-card.is-expanded .inline-preview{height:auto !important;min-height:0 !important;max-height:360px !important;overflow:hidden !important;}
+body[data-record-view="group"] .records-grid .record-card.is-expanded{height:auto !important;min-height:60px !important;max-height:none !important;overflow:visible !important;}
+body[data-record-view="group"] .records-grid .record-card.is-expanded .record-expanded-panel{height:auto !important;min-height:0 !important;max-height:none !important;overflow:visible !important;}
+body[data-record-view="group"] .records-grid .expanded-file-list{height:auto !important;min-height:0 !important;max-height:none !important;overflow:visible !important;}
+body[data-record-view="group"] .records-grid .inline-preview{height:auto !important;min-height:94px !important;max-height:360px !important;overflow:hidden !important;}
+.workspace-shell>.app-container{min-height:0;overflow:visible;}
+.dashboard-toolbar,.records-control-panel{overflow:visible !important;}
+@media(max-width:900px){.workspace-shell>.app-container{overflow:visible;min-width:0;}.records-grid{overflow:visible !important;}}
