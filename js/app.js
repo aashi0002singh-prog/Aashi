@@ -243,8 +243,6 @@ async function refreshUploadedFlags(model=currentModel){
     }else{
       slots.push({baseKey:`${model}_${key}`,sourceKey:key,selectorValue:"",name:item.title,detail:"",filename:key==="T"?"No checklist uploaded":item.filename||"No document uploaded",size:item.size||"—"});
     }
-    const extras=Array.isArray(item.extraDocuments)?item.extraDocuments:[];
-    extras.forEach(doc=>slots.push({baseKey:`${model}_${key}__extra__${doc.id}`,sourceKey:key,selectorValue:`extra:${doc.id}`,extraId:doc.id,name:doc.name||"Additional document",detail:doc.detail||"",filename:doc.filename||"No document uploaded",size:doc.size||"—"}));
     slotDescriptors.set(key,slots);
     slots.forEach(slot=>baseKeys.push(slot.baseKey));
   }
@@ -349,9 +347,9 @@ function renderExpandedFiles(key,item){
   return entries.map(entry=>{
     const actions=entry.present
       ? `<div class="expanded-file-actions"><button class="download-btn" style="background:${color}" data-preview-file="${escapeHtml(entry.storageKey)}" data-filename="${escapeHtml(entry.filename)}"><i class="fa-solid fa-eye"></i> PREVIEW LATEST</button><button class="download-btn" style="background:${color}" data-download="${escapeHtml(entry.storageKey)}" data-filename="${escapeHtml(entry.filename)}"><i class="fa-solid fa-download"></i> DOWNLOAD</button>${isAdmin?`<button class="download-btn hw-upload-btn" style="background:${color}" data-open-upload="${escapeHtml(key)}" data-subpart-index="${escapeHtml(entry.selectorValue??entry.sourceKey??"")}"><i class="fa-solid fa-plus"></i> NEW VERSION</button>`:""}</div>`
-      : `<div class="expanded-file-actions missing-doc-actions"><span class="missing-label">NO DOCUMENT</span>${isAdmin?`<button class="download-btn hw-upload-btn" style="background:${color}" data-open-upload="${escapeHtml(key)}" data-subpart-index="${escapeHtml(entry.selectorValue??entry.sourceKey??"")}"><i class="fa-solid fa-cloud-arrow-up"></i> UPLOAD</button>`:`<span class="slot-missing-note">No document uploaded yet.</span>`}</div>`;
+      : (isAdmin?`<button class="download-btn hw-upload-btn" style="background:${color}" data-open-upload="${escapeHtml(key)}" data-subpart-index="${escapeHtml(entry.selectorValue??entry.sourceKey??"")}"><i class="fa-solid fa-cloud-arrow-up"></i> UPLOAD</button>`:`<span class="missing-label">ADMIN UPLOAD REQUIRED</span>`);
     const versionSummary=entry.present?`<span class="version-count">${entry.versionCount} version${entry.versionCount===1?"":"s"}</span>`:"";
-    return `<div class="expanded-file-row ${entry.present?"is-present":"is-missing"}"><div class="expanded-file-main"><div class="expanded-file-title"><i class="fa-solid ${escapeHtml(entry.present?"fa-file-circle-check":"fa-file-circle-xmark")}"></i><span>${escapeHtml(entry.name)}</span><span class="expanded-status ${entry.present?"present":"missing"}">${entry.present?"PRESENT":"MISSING"}</span>${versionSummary}</div><div class="expanded-file-meta">${entry.present?`<span>${escapeHtml(entry.filename)}</span><span>${escapeHtml(entry.size)}</span>`:""}${entry.detail?`<span>${escapeHtml(entry.detail)}</span>`:""}</div>${entry.present?renderVersionHistory(entry,color):""}</div>${actions}</div>`;
+    return `<div class="expanded-file-row ${entry.present?"is-present":"is-missing"}"><div class="expanded-file-main"><div class="expanded-file-title"><i class="fa-solid ${escapeHtml(entry.present?"fa-file-circle-check":"fa-file-circle-xmark")}"></i><span>${escapeHtml(entry.name)}</span><span class="expanded-status ${entry.present?"present":"missing"}">${entry.present?"PRESENT":"MISSING"}</span>${versionSummary}</div><div class="expanded-file-meta"><span>${escapeHtml(entry.filename)}</span><span>${escapeHtml(entry.size)}</span>${entry.detail?`<span>${escapeHtml(entry.detail)}</span>`:""}</div>${entry.present?renderVersionHistory(entry,color):`<div class="slot-missing-note">No uploaded version for this required document slot.</div>`}</div>${actions}</div>`;
   }).join("");
 }
 
@@ -406,7 +404,7 @@ function renderCard(key,item){
   const expanded=groupView||expandedCards.has(key);
   const statusClass=presentCount===totalSlots?"all-present":presentCount>0?"partial":"all-missing";
   const statusText=totalSlots===1?(presentCount?"FILE PRESENT":"FILE MISSING"):(presentCount===totalSlots?`${totalSlots}/${totalSlots} REQUIRED PRESENT`:presentCount?`${presentCount}/${totalSlots} REQUIRED PRESENT`:`0/${totalSlots} REQUIRED MISSING`);
-  const detail=expanded?`<div class="record-expanded-panel"><div class="expanded-summary"><span><i class="fa-solid fa-database"></i> ${presentCount} document${presentCount===1?"":"s"} present</span><span><i class="fa-solid fa-layer-group"></i> ${versionTotal} uploaded version${versionTotal===1?"":"s"}</span><span><i class="fa-solid fa-circle-info"></i> Document details</span></div><div class="inline-preview" data-inline-preview><div class="inline-preview-loading"><i class="fa-solid fa-spinner"></i><span>Loading document preview…</span></div></div><div class="expanded-file-list">${renderExpandedFiles(key,item)}</div><div class="expanded-footer"><button class="text-action" data-add-document="${escapeHtml(key)}"><i class="fa-solid fa-file-circle-plus"></i> Add document</button><button class="text-action" data-copy-record="${escapeHtml(key)}"><i class="fa-regular fa-copy"></i> Copy details</button><button class="text-action" data-link-record="${escapeHtml(key)}"><i class="fa-solid fa-link"></i> Copy link</button><button class="text-action" data-open-record="${escapeHtml(key)}"><i class="fa-solid fa-up-right-and-down-left-from-center"></i> Open details</button></div></div>`:"";
+  const detail=expanded?`<div class="record-expanded-panel"><div class="expanded-summary"><span><i class="fa-solid fa-database"></i> ${presentCount}/${totalSlots} required document${totalSlots===1?"":"s"} present</span><span><i class="fa-solid fa-layer-group"></i> ${versionTotal} uploaded version${versionTotal===1?"":"s"}</span><span><i class="fa-solid fa-circle-info"></i> Document details</span></div><div class="inline-preview" data-inline-preview><div class="inline-preview-loading"><i class="fa-solid fa-spinner"></i><span>Loading document preview…</span></div></div><div class="expanded-file-list">${renderExpandedFiles(key,item)}</div><div class="expanded-footer"><button class="text-action" data-copy-record="${escapeHtml(key)}"><i class="fa-regular fa-copy"></i> Copy details</button><button class="text-action" data-link-record="${escapeHtml(key)}"><i class="fa-solid fa-link"></i> Copy link</button><button class="text-action" data-open-record="${escapeHtml(key)}"><i class="fa-solid fa-up-right-and-down-left-from-center"></i> Open details</button></div></div>`:"";
   return `<article id="record-${escapeHtml(key)}" class="record-card ${expanded?"is-expanded":""} ${groupView?"is-group-view":""} ${isFav?"is-favorite":""}" style="--record-accent:${color}" data-record="${escapeHtml(key)}" tabindex="0" aria-expanded="${expanded}"><div class="record-stripe" style="background:${color}"></div><div class="record-collapsed-face"><div class="record-icon" style="background:${color}"><i class="fa-solid ${escapeHtml(item.icon)}"></i></div><div class="record-title-only">${escapeHtml(item.title)}</div><div class="record-status ${statusClass}"><span class="status-dot ${presentCount?"present":"missing"}"></span><span>${escapeHtml(statusText)}</span></div><button class="favorite-btn ${isFav?"active":""}" data-favorite="${escapeHtml(favKey)}" title="Favorite"><i class="fa-${isFav?"solid":"regular"} fa-star"></i></button><span class="expand-cue"><i class="fa-solid fa-chevron-down"></i></span></div>${detail}</article>`;
 }
 
@@ -431,26 +429,18 @@ function populateUploadRecords(model=document.getElementById("uploadModel")?.val
   updateSubpartSelector();
 }
 function updateSubpartSelector(preferredIndex=""){
-  const model=document.getElementById("uploadModel")?.value||currentModel,key=document.getElementById("uploadRecord")?.value,wrap=document.getElementById("uploadSubPartWrap"),el=document.getElementById("uploadSubPart"),newWrap=document.getElementById("uploadNewDocumentWrap"),newName=document.getElementById("uploadNewDocumentName");
+  const model=document.getElementById("uploadModel")?.value||currentModel,key=document.getElementById("uploadRecord")?.value,wrap=document.getElementById("uploadSubPartWrap"),el=document.getElementById("uploadSubPart");
   if(!wrap||!el)return;
-  const item=data[model]?.items?.[key],sources=Array.isArray(item?.mergedSources)?item.mergedSources:[],subs=Array.isArray(item?.subItems)?item.subItems:[],extras=Array.isArray(item?.extraDocuments)?item.extraDocuments:[];
-  const options=[];
-  if(sources.length) sources.forEach(x=>options.push({value:x.key,label:x.name,filename:x.filename}));
-  else if(subs.length) subs.forEach((x,i)=>options.push({value:String(i),label:x.name||`File ${i+1}`,filename:x.filename}));
-  extras.forEach(x=>options.push({value:`extra:${x.id}`,label:x.name||"Additional document",filename:x.filename}));
-  options.push({value:"__new__",label:"＋ Add new document",filename:""});
+  const item=data[model]?.items?.[key],sources=Array.isArray(item?.mergedSources)?item.mergedSources:[],subs=Array.isArray(item?.subItems)?item.subItems:[];
+  if(!sources.length&&!subs.length){wrap.classList.add("hidden");el.innerHTML="";return}
+  const options=sources.length?sources.map(s=>({value:s.key,label:s.name,filename:s.filename})):subs.map((s,i)=>({value:String(i),label:s.name||`File ${i+1}`,filename:s.filename}));
   wrap.classList.remove("hidden");
   el.innerHTML=options.map(o=>`<option value="${escapeHtml(o.value)}">${escapeHtml(o.label)}${o.filename?` • ${escapeHtml(o.filename)}`:""}</option>`).join("");
-  const wanted=preferredIndex!==""?String(preferredIndex):(options[0]?.value||"__new__");
-  el.value=options.some(o=>String(o.value)===wanted)?wanted:(options[0]?.value||"__new__");
-  const isNew=el.value==="__new__";
-  newWrap?.classList.toggle("hidden",!isNew);
-  if(!isNew&&newName)newName.value="";
+  if(preferredIndex!==""&&options.some(o=>String(o.value)===String(preferredIndex)))el.value=String(preferredIndex);
 }
-
 function openUploadModal(recordKey="",subpartIndex=""){if(!isAdmin){toast("Admin authentication is required to upload documents.","error");return}const model=currentModel;populateUploadModels(model);populateUploadRecords(model,recordKey);updateSubpartSelector(subpartIndex);resetSelectedFile();openModal("uploadModal")}
 
-function resetSelectedFile(){selectedFile=null;const newName=document.getElementById("uploadNewDocumentName");if(newName)newName.value="";const input=document.getElementById("fileInput");if(input)input.value="";const name=document.getElementById("fileName");if(name)name.textContent="Drop file here or click to browse";const status=document.getElementById("uploadStatus");if(status)status.textContent="";const rev=document.getElementById("uploadRevision");if(rev)rev.value="";const note=document.getElementById("uploadNote");if(note)note.value=""}
+function resetSelectedFile(){selectedFile=null;const input=document.getElementById("fileInput");if(input)input.value="";const name=document.getElementById("fileName");if(name)name.textContent="Drop file here or click to browse";const status=document.getElementById("uploadStatus");if(status)status.textContent="";const rev=document.getElementById("uploadRevision");if(rev)rev.value="";const note=document.getElementById("uploadNote");if(note)note.value=""}
 function openModal(id){document.getElementById(id)?.classList.remove("hidden")}
 function closeModal(id){document.getElementById(id)?.classList.add("hidden");if(id==="uploadModal")resetSelectedFile()}
 function findModel(value){const v=String(value||"").trim().toUpperCase();return modelList().find(m=>m===v)||modelList().find(m=>m.toUpperCase()===v)||null}
@@ -497,7 +487,6 @@ function bindEvents(){
     const fav=e.target.closest("[data-favorite]");if(fav){toggleFavorite(fav.dataset.favorite);return}
     const preview=e.target.closest("[data-preview-file]");if(preview){previewStoredFile(preview.dataset.previewFile,preview.dataset.filename);return}
     const d=e.target.closest("[data-download]");if(d){downloadRecord(d.dataset.download,d.dataset.filename);return}
-    const add=e.target.closest("[data-add-document]");if(add){openUploadModal(add.dataset.addDocument,"__new__");return}
     const o=e.target.closest("[data-open-record]");if(o){openRecord(o.dataset.openRecord);openPresentation(o.dataset.openRecord);return}
     const c=e.target.closest("[data-copy-record]");if(c){copyRecord(c.dataset.copyRecord);return}
     const l=e.target.closest("[data-link-record]");if(l){copyLink(l.dataset.linkRecord);return}
@@ -516,7 +505,7 @@ function bindEvents(){
   document.getElementById("loginForm").addEventListener("submit",login);document.getElementById("addModelForm")?.addEventListener("submit",addModel);document.getElementById("editModelSelect")?.addEventListener("change",e=>loadEditModelFields(e.target.value));
   const passwordToggle=document.getElementById("passwordToggle");
   passwordToggle?.addEventListener("click",()=>{const input=document.getElementById("passwordInput"); const showing=input.type==="text"; input.type=showing?"password":"text"; passwordToggle.innerHTML=showing?'<i class="fa-solid fa-eye"></i>':'<i class="fa-solid fa-eye-slash"></i>'; passwordToggle.setAttribute("aria-label",showing?"Show password":"Hide password"); passwordToggle.title=showing?"Show password":"Hide password"});
-  document.getElementById("uploadModel").addEventListener("change",e=>{populateUploadRecords(e.target.value);const first=document.getElementById("uploadRecord")?.value;if(first)document.getElementById("uploadRecord").value=first;updateSubpartSelector()});document.getElementById("uploadRecord").addEventListener("change",()=>updateSubpartSelector());document.getElementById("uploadSubPart")?.addEventListener("change",()=>updateSubpartSelector(document.getElementById("uploadSubPart").value));
+  document.getElementById("uploadModel").addEventListener("change",e=>{populateUploadRecords(e.target.value);const first=document.getElementById("uploadRecord")?.value;if(first)document.getElementById("uploadRecord").value=first;updateSubpartSelector()});document.getElementById("uploadRecord").addEventListener("change",()=>updateSubpartSelector());
   document.getElementById("dropZone").addEventListener("click",()=>document.getElementById("fileInput").click());document.getElementById("dropZone").addEventListener("dragover",e=>{e.preventDefault();document.getElementById("dropZone").classList.add("drag-active")});document.getElementById("dropZone").addEventListener("dragleave",()=>document.getElementById("dropZone").classList.remove("drag-active"));document.getElementById("dropZone").addEventListener("drop",e=>{e.preventDefault();document.getElementById("dropZone").classList.remove("drag-active");selectFile(e.dataTransfer.files[0])});document.getElementById("fileInput").addEventListener("change",e=>selectFile(e.target.files[0]));document.getElementById("uploadForm").addEventListener("submit",upload);
   document.getElementById("backupBtn").addEventListener("click",()=>downloadText(JSON.stringify(data,null,2),`MobileRD_Backup_${dateStamp()}.json`));document.getElementById("resetBtn").addEventListener("click",resetData);
   document.addEventListener("keydown",e=>{const tag=document.activeElement?.tagName||"",typing=/INPUT|TEXTAREA|SELECT/.test(tag);if(e.key==="Escape")document.querySelectorAll(".modal:not(.hidden)").forEach(m=>m.classList.add("hidden"));if((e.ctrlKey||e.metaKey)&&e.key.toLowerCase()==="k"){e.preventDefault();document.getElementById("parameter360HeaderBtn")?.click()}if(e.key==="/"&&!typing){e.preventDefault();document.getElementById("parameter360HeaderBtn")?.click()}if(e.key.toLowerCase()==="f"&&!typing)toggleFullscreen();if(e.key.toLowerCase()==="p"&&!typing){e.preventDefault();document.getElementById("presentationBtn").click()}if((e.key==="ArrowLeft"||e.key==="ArrowRight")&&!typing&&!document.querySelector(".modal:not(.hidden)")){navigateRecord(e.key==="ArrowLeft"?-1:1)}});
@@ -560,19 +549,9 @@ async function upload(e){
   e.preventDefault();if(!selectedFile){toast("Please select a file first.","error");return}
   const model=document.getElementById("uploadModel").value,key=document.getElementById("uploadRecord").value,note=document.getElementById("uploadNote").value.trim(),revision=document.getElementById("uploadRevision")?.value.trim()||"",item=data[model]?.items?.[key];
   if(!item){toast("Upload target is not available.","error");return}
-  const selector=document.getElementById("uploadSubPart"),sourceValue=selector?.value||"",newName=document.getElementById("uploadNewDocumentName")?.value.trim()||"";
-  let storageKey=`${model}_${key}`,targetLabel=item.title,source=null,extraDoc=null;
-  if(sourceValue==="__new__"){
-    if(!newName){toast("Enter a document name first.","error");document.getElementById("uploadNewDocumentName")?.focus();return}
-    item.extraDocuments=Array.isArray(item.extraDocuments)?item.extraDocuments:[];
-    const id=`doc-${Date.now().toString(36)}-${Math.random().toString(36).slice(2,8)}`;
-    extraDoc={id,name:newName,filename:"No document uploaded",size:"—"}; item.extraDocuments.push(extraDoc);
-    storageKey=`${model}_${key}__extra__${id}`;targetLabel=`${item.title} / ${newName}`;
-  }else if(String(sourceValue).startsWith("extra:")){
-    const id=String(sourceValue).slice(6);extraDoc=(item.extraDocuments||[]).find(x=>String(x.id)===id);
-    if(!extraDoc){toast("Document entry is no longer available.","error");return}
-    storageKey=`${model}_${key}__extra__${id}`;targetLabel=`${item.title} / ${extraDoc.name}`;
-  }else if(Array.isArray(item.mergedSources)&&item.mergedSources.length){
+  const selector=document.getElementById("uploadSubPart"),sourceValue=selector?.value||"";
+  let storageKey=`${model}_${key}`,targetLabel=item.title,source=null;
+  if(Array.isArray(item.mergedSources)&&item.mergedSources.length){
     source=item.mergedSources.find(x=>String(x.key)===String(sourceValue))||item.mergedSources[0];
     storageKey=`${model}_${source.key}`;targetLabel=`${item.title} / ${source.name}`;
   }else if(Array.isArray(item.subItems)&&item.subItems.length){
@@ -585,7 +564,6 @@ async function upload(e){
     const saved=await saveFileVersion(baseStorageKey,selectedFile,{revision,note},(pct,part,total)=>{progress.style.width=`${pct}%`;if(status)status.textContent=`Saving large file in secure browser storage… ${pct}% (${part}/${total} chunks)`});
     storageKey=saved.key;
     if(source){source.uploadedFilename=selectedFile.name;source.uploadedSize=formatBytes(selectedFile.size);source.updatedAt=new Date().toISOString();if(note)source.detail=note;}
-    else if(extraDoc){extraDoc.uploadedFilename=selectedFile.name;extraDoc.uploadedSize=formatBytes(selectedFile.size);extraDoc.filename=selectedFile.name;extraDoc.size=formatBytes(selectedFile.size);extraDoc.updatedAt=new Date().toISOString();if(note)extraDoc.detail=note;}
     else {item.filename=selectedFile.name;item.size=formatBytes(selectedFile.size);item.uploadedFilename=selectedFile.name;item.uploadedSize=formatBytes(selectedFile.size);if(note)item.tags=[note];}
     saveData();await addAudit("UPLOAD",{model,key,subpart:source?.name||"",filename:selectedFile.name,size:selectedFile.size});
     if(status)status.textContent="Upload completed successfully.";
