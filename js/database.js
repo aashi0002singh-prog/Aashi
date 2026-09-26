@@ -171,28 +171,6 @@ export async function saveFileVersion(baseKey,file,options={},onProgress){
   }finally{db.close()}
 }
 
-
-export async function renameModelFiles(oldModel,newModel){
-  if(!oldModel||!newModel||oldModel===newModel)return;
-  const db=await openDB();
-  try{
-    const keys=await new Promise((resolve,reject)=>{const tx=db.transaction(FILE_STORE,"readonly"),req=tx.objectStore(FILE_STORE).getAllKeys();req.onsuccess=()=>resolve(req.result||[]);req.onerror=()=>reject(req.error||new Error("Model file lookup failed"));tx.onerror=()=>reject(tx.error||new Error("Model file lookup failed"));});
-    const prefix=`${oldModel}_`,targets=keys.filter(k=>typeof k==="string"&&k.startsWith(prefix));
-    for(const oldKey of targets){
-      const newKey=`${newModel}_${oldKey.slice(prefix.length)}`;
-      const record=await new Promise((resolve,reject)=>{const tx=db.transaction(FILE_STORE,"readonly"),req=tx.objectStore(FILE_STORE).get(oldKey);req.onsuccess=()=>resolve(req.result||null);req.onerror=()=>reject(req.error||new Error("Model file read failed"));});
-      if(!record)continue;
-      await new Promise((resolve,reject)=>{const tx=db.transaction(FILE_STORE,"readwrite");tx.objectStore(FILE_STORE).put(record,newKey);tx.objectStore(FILE_STORE).delete(oldKey);tx.oncomplete=resolve;tx.onerror=()=>reject(tx.error||new Error("Model file rename failed"));tx.onabort=()=>reject(tx.error||new Error("Model file rename aborted"));});
-      if(record.chunked&&record.chunkCount){
-        for(let i=0;i<record.chunkCount;i++){
-          const chunk=await new Promise((resolve,reject)=>{const tx=db.transaction(CHUNK_STORE,"readonly"),req=tx.objectStore(CHUNK_STORE).get([oldKey,i]);req.onsuccess=()=>resolve(req.result||null);req.onerror=()=>reject(req.error||new Error("Model file chunk read failed"));});
-          if(chunk)await new Promise((resolve,reject)=>{const tx=db.transaction(CHUNK_STORE,"readwrite");tx.objectStore(CHUNK_STORE).put(chunk,[newKey,i]);tx.objectStore(CHUNK_STORE).delete([oldKey,i]);tx.oncomplete=resolve;tx.onerror=()=>reject(tx.error||new Error("Model file chunk rename failed"));});
-        }
-      }
-    }
-  }finally{db.close()}
-}
-
 export async function deleteAllFiles(){
   const db=await openDB();
   return new Promise((resolve,reject)=>{
