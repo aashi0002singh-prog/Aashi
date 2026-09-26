@@ -1,1 +1,553 @@
+:root{--navy:#0b1220;--navy2:#14233d;--accent:#2f64c8;--accent-soft:#eef5ff;--bg:#edf1f6;--card:#fff;--border:#d3dbe7;--text:#1d2939;--muted:#64748b;--good:#16a34a;--warn:#d97706;--bad:#dc2626;--shadow:0 8px 24px rgba(15,23,42,.07);--radius:12px;--collapsed-card:65px}
+*{box-sizing:border-box}html{scroll-behavior:smooth}body{margin:0;font-family:Inter,system-ui,sans-serif;background:var(--bg);color:var(--text)}button,input,select,textarea{font:inherit}.hidden{display:none!important}.top-accent{height:3px;background:linear-gradient(90deg,#f59e0b,#06b6d4,#6366f1,#f59e0b);background-size:300% 100%;animation:flow 7s ease infinite}@keyframes flow{50%{background-position:100% 50%}}
+.app-container{width:100%;max-width:2400px;margin:auto;padding-left:24px;padding-right:24px}.app-header{background:linear-gradient(180deg,#0d192d,#142642);color:#fff;position:sticky;top:0;z-index:40;border-bottom:2px solid #2f64c8;box-shadow:0 7px 24px rgba(2,8,23,.18)}.header-inner{min-height:76px;display:flex;align-items:center;justify-content:space-between;gap:18px}.brand{display:flex;align-items:center;gap:11px;min-width:0}.brand-mark{width:42px;height:42px;border-radius:11px;display:grid;place-items:center;background:#071326;border:1px solid #405b86;color:#67e8f9;flex:none}.brand-title{margin:0;font-size:17px;font-weight:800;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.brand-title span{color:#fbbf24}.brand-subtitle{margin:3px 0 0;font-size:11px;color:#a9c7ff}.env-badge{font:700 8px "JetBrains Mono";color:#67e8f9;border:1px solid rgba(34,211,238,.3);padding:4px 7px;border-radius:999px;white-space:nowrap}.header-actions{display:flex;align-items:center;gap:7px;min-width:0}.header-module-btn,.header-icon-btn{height:40px;border:1px solid #405b86;border-radius:9px;background:#10223e;color:#dbeafe;cursor:pointer}.header-module-btn{padding:0 11px;display:inline-flex;align-items:center;gap:7px;font-size:10px;font-weight:800}.header-icon-btn{width:40px}.model-picker-search{position:relative;height:40px;min-width:190px;display:flex;align-items:center;gap:7px;padding:0 9px;background:#10223e;border:1px solid #405b86;border-radius:9px}.model-picker-caption{position:absolute;top:3px;left:31px;font:700 6px "JetBrains Mono";color:#7f9bc5;letter-spacing:.08em}.model-picker-search>i{color:#67e8f9;font-size:11px}.model-picker-search input{width:100%;height:34px;padding:9px 28px 0 2px;border:0;outline:0;background:transparent;color:#fff;font:800 11px "JetBrains Mono"}.model-picker-toggle{position:absolute;right:4px;border:0;background:transparent;color:#94a3b8;cursor:pointer}.model-picker-menu{position:absolute;top:45px;right:0;width:290px;max-height:360px;overflow:auto;background:#fff;border:1px solid var(--border);border-radius:10px;box-shadow:0 20px 45px rgba(2,8,23,.2);z-index:80;padding:6px}.model-picker-menu.hidden{display:none}.model-picker-label{padding:7px 9px;font:800 8px "JetBrains Mono";color:#64748b}.model-picker-option{width:100%;display:grid;grid-template-columns:65px 1fr;text-align:left;gap:8px;padding:9px;border:0;background:#fff;border-radius:7px;cursor:pointer}.model-picker-option:hover,.model-picker-option.active{background:#eef5ff}.model-picker-code{font:800 10px "JetBrains Mono";color:#2f64c8}.model-picker-name{font-size:10px;color:#334155}.model-picker-empty{padding:14px;color:#64748b;font-size:10px}
+.workspace-shell{display:flex;min-height:calc(100vh - 125px)}.model-sidebar{width:255px;flex:0 0 255px;background:linear-gradient(180deg,#0d192d,#14243d);color:#e2e8f0;padding:18px 14px;display:flex;flex-direction:column;gap:14px;border-right:1px solid #253a5b}.sidebar-kicker{font:800 8px "JetBrains Mono";color:#8db5ff;letter-spacing:.12em}.sidebar-model-identity{display:flex;align-items:baseline;gap:9px;margin-top:5px;flex-wrap:wrap}.sidebar-model-code{font:800 31px "JetBrains Mono";color:#fff}.sidebar-model-name{font-size:12px;font-weight:700;color:#cbd5e1}.status-pill{display:inline-flex;align-items:center;gap:5px;width:max-content;margin-top:7px;padding:4px 7px;border-radius:999px;color:#86efac;background:rgba(16,185,129,.08);border:1px solid rgba(16,185,129,.3);font:700 8px "JetBrains Mono"}.status-pill i{font-size:5px}.sidebar-telemetry{display:grid;gap:7px}.sidebar-metric{padding:9px;border:1px solid rgba(148,163,184,.15);background:rgba(2,8,23,.18);border-radius:8px;min-width:0}.sidebar-metric span{display:block;font:700 7px "JetBrains Mono";color:#8fa3ba}.sidebar-metric strong{display:block;margin-top:4px;font:700 10px "JetBrains Mono";color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.sidebar-actions{padding-top:2px}.sidebar-action,.sidebar-module-btn{width:100%;min-height:34px;border:1px solid #314a70;background:#10223e;color:#dbeafe;border-radius:8px;cursor:pointer;text-align:left;padding:0 9px;display:flex;align-items:center;gap:8px;font-size:9px;font-weight:800}.sidebar-module-btn{margin-top:5px}.sidebar-action:hover,.sidebar-module-btn:hover{border-color:#5f8bd0;background:#18345d}.sidebar-module-title{font:800 7px "JetBrains Mono";color:#7f9bc5;letter-spacing:.1em}.sidebar-footer{margin-top:auto;display:flex;justify-content:space-between;align-items:center;color:#7f9bc5;font-size:8px;border-top:1px solid rgba(148,163,184,.13);padding-top:12px}.sidebar-collapse-btn{border:0;background:transparent;color:#8db5ff;cursor:pointer}.sidebar-collapsed .model-sidebar{width:64px;flex-basis:64px;padding:18px 8px}.sidebar-collapsed .model-sidebar .sidebar-model-name,.sidebar-collapsed .model-sidebar .sidebar-kicker,.sidebar-collapsed .model-sidebar .status-pill,.sidebar-collapsed .model-sidebar .sidebar-metric span,.sidebar-collapsed .model-sidebar .sidebar-metric strong,.sidebar-collapsed .model-sidebar .sidebar-action span,.sidebar-collapsed .model-sidebar .sidebar-module-title,.sidebar-collapsed .model-sidebar .sidebar-module-btn span,.sidebar-collapsed .model-sidebar .sidebar-footer span{display:none}.sidebar-collapsed .sidebar-metric,.sidebar-collapsed .sidebar-action,.sidebar-collapsed .sidebar-module-btn{justify-content:center}.sidebar-collapsed .sidebar-model-code{font-size:16px}
+.records-control-panel{background:#fff;border:1px solid var(--border);border-radius:14px;box-shadow:var(--shadow);overflow:visible}.records-control-main{padding:13px 14px 8px}.engineering-records-heading-row{display:flex;align-items:center;justify-content:space-between;gap:10px}.section-heading{display:flex;align-items:center;gap:9px}.section-icon{width:33px;height:33px;border-radius:8px;background:#101c33;color:#fff;display:grid;place-items:center;font-size:11px}.section-heading h2{margin:0;font-size:12px;font-weight:800}.section-heading p{margin:2px 0 0;font:600 8px "JetBrains Mono";color:#94a3b8}.records-tabs-toggle{border:1px solid var(--border);background:#f8fafc;border-radius:7px;height:29px;padding:0 8px;font-size:8px;font-weight:800;color:#64748b;cursor:pointer}.engineering-records-tabs-row{margin-top:9px}.engineering-records-tabs-row.tabs-hidden{display:none}.category-tabs{display:flex;gap:5px;overflow:auto;padding-bottom:2px}.cat-btn{white-space:nowrap;border:1px solid var(--border);background:#fff;color:#475569;border-radius:8px;padding:7px 10px;font-size:9px;font-weight:800;cursor:pointer}.cat-btn.active{background:#101c33;color:#fff;border-color:#101c33}.records-control-tools{border-top:1px solid #edf1f5;padding:8px 12px}.data-tools{display:flex;justify-content:flex-end;gap:8px;align-items:center}.tool-group{display:flex;gap:7px;align-items:center;flex-wrap:wrap}.tool-btn{height:29px;border:1px solid #cbd5e1;background:#fff;border-radius:7px;color:#334155;padding:0 9px;font-size:8px;font-weight:800;cursor:pointer}.tool-btn:hover,.tool-btn.active{border-color:var(--accent);color:var(--accent);background:var(--accent-soft)}.tool-select{display:flex;align-items:center;gap:5px;font-size:8px;font-weight:800;color:#64748b}.tool-select select{height:29px;border:1px solid #cbd5e1;border-radius:7px;background:#fff;padding:0 7px;font-size:8px}.records-more-tools{position:relative}.records-more-tools summary{list-style:none;height:29px;border:1px solid #cbd5e1;border-radius:7px;padding:7px 9px;font-size:8px;font-weight:800;color:#475569;cursor:pointer}.records-more-menu{position:absolute;right:0;top:34px;background:#fff;border:1px solid var(--border);border-radius:8px;padding:6px;box-shadow:0 15px 35px rgba(2,8,23,.15);z-index:20;display:grid;gap:5px;min-width:160px}.active-filters{display:flex;gap:6px;align-items:center;flex-wrap:wrap;margin:9px 0}.filter-chip{padding:5px 8px;border-radius:7px;background:#e0f2fe;color:#075985;font-size:8px;font-weight:800}
+.records-grid{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:12px;margin-top:12px;align-items:start}.record-card{position:relative;min-width:0;background:var(--card);border:1px solid var(--border);border-radius:10px;box-shadow:0 2px 8px rgba(15,23,42,.04);overflow:hidden;align-self:start;transition:box-shadow .16s ease,border-color .16s ease,transform .16s ease}.record-card:hover{box-shadow:0 10px 24px rgba(15,23,42,.1);border-color:#b9c7da}.record-card:focus-visible{outline:3px solid rgba(47,100,200,.18)}.record-stripe{height:3px}.record-collapsed-face{min-height:var(--collapsed-card);height:auto;display:grid;grid-template-columns:31px minmax(0,1fr) auto 22px 16px;align-items:center;gap:7px;padding:5px 8px}.record-icon{width:31px;height:31px;border-radius:7px;color:#fff;display:grid;place-items:center;font-size:10px}.record-title-only{min-width:0;font-size:10px;font-weight:800;line-height:1.15;display:block;overflow-wrap:anywhere;overflow:hidden}.record-status{display:inline-flex;align-items:center;gap:4px;max-width:115px;padding:4px 5px;border-radius:999px;background:#f8fafc;color:#64748b;font:700 7px "JetBrains Mono";white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.record-status.all-present{color:#15803d;background:#f0fdf4}.record-status.partial{color:#b45309;background:#fffbeb}.record-status.all-missing{color:#b91c1c;background:#fff1f2}.status-dot{width:5px;height:5px;border-radius:50%;background:var(--bad);flex:none}.status-dot.present{background:var(--good)}.favorite-btn{border:0;background:transparent;color:#94a3b8;cursor:pointer;padding:2px}.favorite-btn.active{color:#f59e0b}.expand-cue{color:#94a3b8;font-size:9px;display:grid;place-items:center}.record-card.is-expanded .expand-cue{transform:rotate(180deg)}.record-expanded-panel{border-top:1px solid #e5eaf0;padding:10px;display:flex;flex-direction:column;gap:9px;background:#fbfcfe}.expanded-summary{display:flex;flex-wrap:wrap;gap:5px 10px;font:700 8px "JetBrains Mono";color:#64748b}.inline-preview{min-height:0;width:100%;overflow:hidden;border:1px solid #e1e7ef;border-radius:8px;background:#fff}.inline-preview:empty{display:none}.inline-preview-toolbar{display:flex;justify-content:space-between;gap:8px;padding:6px 8px;background:#f8fafc;border-bottom:1px solid #e5e7eb;font-size:7px;color:#64748b}.inline-preview-frame{display:block;width:100%;height:280px;border:0}.inline-preview-text{max-height:220px;overflow:auto;margin:0;padding:10px;white-space:pre-wrap;font:8px/1.45 "JetBrains Mono"}.inline-preview-empty,.inline-preview-loading,.inline-preview-unsupported{display:flex;align-items:center;gap:8px;padding:12px;font-size:8px;color:#64748b}.expanded-file-list{display:flex;flex-direction:column;gap:7px}.expanded-file-entry{border:1px solid #dfe7ef;border-radius:8px;background:#fff;padding:8px;min-width:0}.expanded-file-header{display:flex;justify-content:space-between;gap:8px;align-items:flex-start}.expanded-file-title{font-size:9px;font-weight:800;overflow-wrap:anywhere}.expanded-file-meta{margin-top:3px;font-size:7px;color:#64748b}.expanded-file-actions{display:flex;gap:5px;flex-wrap:wrap;margin-top:7px}.mini-file-action,.expanded-upload-action{height:25px;padding:0 7px;border:1px solid #cbd5e1;background:#fff;border-radius:6px;font-size:7px;font-weight:800;color:#475569;cursor:pointer}.mini-file-action:hover,.expanded-upload-action:hover{border-color:var(--record-accent);color:var(--record-accent)}.version-history{margin-top:7px;border-top:1px dashed #cbd5e1;padding-top:7px;display:flex;flex-direction:column;gap:5px}.version-history-head{display:flex;justify-content:space-between;gap:8px;font:800 7px "JetBrains Mono";color:#64748b}.version-row{display:grid;grid-template-columns:auto minmax(0,1fr) auto auto;gap:6px;align-items:center;border:1px solid #e3e8ef;border-radius:7px;padding:6px;background:#f8fafc;min-width:0}.version-badge{font:800 7px "JetBrains Mono";padding:3px 5px;border-radius:5px;background:#e2e8f0;color:#334155}.version-name{min-width:0;font-size:8px;font-weight:800;overflow-wrap:anywhere}.version-size,.version-note{font-size:7px;color:#64748b;overflow-wrap:anywhere}.version-actions{display:flex;gap:4px}.expanded-footer{display:flex;flex-wrap:wrap;gap:7px;padding-top:2px}.text-action{border:0;background:transparent;color:#64748b;font-size:8px;font-weight:800;cursor:pointer}.text-action:hover{color:var(--accent)}.empty-state{grid-column:1/-1;text-align:center;padding:60px 20px;color:#64748b}.recent-panel{margin:16px 0;padding:12px;background:#fff;border:1px solid var(--border);border-radius:10px}.recent-heading{display:flex;justify-content:space-between;gap:8px;font-size:9px;font-weight:800;color:#334155;margin-bottom:8px}.recent-heading small{color:#94a3b8;font-size:7px}.recent-list{display:flex;gap:7px;overflow:auto}.recent-item{min-width:190px;text-align:left;border:1px solid #e2e8f0;background:#f8fafc;border-radius:8px;padding:8px;cursor:pointer}.recent-item span{display:block;font:700 7px "JetBrains Mono";color:var(--accent)}.recent-item strong{display:block;margin-top:3px;font-size:8px;color:#334155}.app-footer{background:#fff;border-top:1px solid var(--border);margin-top:20px}.footer-inner{height:48px;display:flex;justify-content:space-between;align-items:center;color:#64748b;font-size:8px}.online-dot{display:inline-block;width:6px;height:6px;border-radius:50%;background:#10b981}
+.modal{position:fixed;inset:0;z-index:100;display:grid;place-items:center;padding:18px}.modal.hidden{display:none}.modal-backdrop{position:absolute;inset:0;background:rgba(2,8,23,.67);backdrop-filter:blur(5px)}.modal-panel{position:relative;width:100%;max-height:calc(100vh - 36px);overflow:auto;background:#fff;border:1px solid var(--border);border-radius:15px;box-shadow:0 25px 70px rgba(2,8,23,.28);padding:22px}.modal-sm{max-width:390px}.modal-md{max-width:620px}.modal-lg{max-width:760px}.modal-xl{max-width:1100px}.modal-close{position:absolute;right:14px;top:13px;border:0;background:transparent;color:#94a3b8;cursor:pointer;font-size:15px;z-index:2}.modal-heading{display:flex;gap:10px;align-items:center;margin-bottom:18px}.modal-icon{width:38px;height:38px;border-radius:10px;background:#0f172a;color:#22d3ee;display:grid;place-items:center}.modal-panel h2{margin:0;font-size:14px;font-weight:800}.modal-description{margin:3px 0 0;font-size:9px;color:#64748b}.form-label{display:block;margin:12px 0 5px;font-size:9px;font-weight:800;color:#334155}.form-input{width:100%;height:37px;border:1px solid #cbd5e1;border-radius:8px;background:#f8fafc;padding:0 10px;font-size:10px;outline:0}.form-input:focus{background:#fff;border-color:var(--accent);box-shadow:0 0 0 3px rgba(47,100,200,.1)}.form-grid-2{display:grid;grid-template-columns:1fr 1fr;gap:10px}.modal-actions{display:flex;justify-content:flex-end;gap:7px;margin-top:18px;padding-top:14px;border-top:1px solid #edf1f5}.btn{height:34px;border-radius:8px;padding:0 11px;display:inline-flex;align-items:center;justify-content:center;gap:7px;border:0;cursor:pointer;font-size:9px;font-weight:800}.btn-dark{background:#1e293b;color:#e2e8f0}.btn-cyan{background:#2f64c8;color:#fff}.btn-light{background:#f8fafc;color:#334155;border:1px solid #cbd5e1}.btn-danger{background:#fff1f2;color:#be123c;border:1px solid #fecdd3}.drop-zone{border:1.5px dashed #cbd5e1;background:#f8fafc;border-radius:11px;min-height:135px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:5px;margin-top:12px;cursor:pointer;text-align:center}.drop-zone>i{font-size:25px;color:#2f64c8}.upload-progress{height:6px;background:#e2e8f0;border-radius:999px;margin-top:10px;overflow:hidden}.upload-progress>div{height:100%;width:0;background:#2f64c8}.settings-list{border:1px solid #e2e8f0;border-radius:10px;overflow:hidden}.setting-row{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:13px;border-bottom:1px solid #e2e8f0}.setting-row:last-child{border-bottom:0}.setting-row strong,.setting-row small{display:block}.setting-row strong{font-size:10px}.setting-row small{font-size:8px;color:#94a3b8;margin-top:2px}.settings-select{height:32px;border:1px solid #cbd5e1;border-radius:7px;background:#fff;padding:0 8px;font-size:9px;font-weight:700}.settings-danger{margin-top:14px;padding:13px;border:1px solid #fecdd3;background:#fff7f7;border-radius:10px;display:flex;align-items:center;justify-content:space-between;gap:10px}.settings-danger strong{display:block;font-size:9px}.settings-danger small{display:block;font-size:8px;color:#9f1239;margin-top:3px}.settings-section-title{font:800 7px "JetBrains Mono";letter-spacing:.12em;color:#94a3b8;padding:8px 13px 4px}.setting-info{display:flex;gap:8px;align-items:center;background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;padding:9px;font-size:8px;color:#64748b}.shortcut-grid{display:grid;grid-template-columns:1fr 1fr;gap:6px;padding:10px 13px;font-size:8px;color:#64748b}.shortcut-grid span{display:flex;gap:5px;align-items:center}.shortcut-grid kbd{padding:3px 5px;border:1px solid #cbd5e1;border-radius:4px;background:#f8fafc}.toast-container{position:fixed;right:18px;bottom:18px;z-index:200;display:flex;flex-direction:column;gap:8px}.toast{min-width:260px;max-width:420px;background:#0f172a;color:#fff;border-radius:9px;padding:10px 12px;font-size:9px;box-shadow:0 15px 35px rgba(2,8,23,.2)}
+.file-center-toolbar{display:grid;grid-template-columns:minmax(0,1fr) 170px auto auto;gap:7px;align-items:center;margin-bottom:10px}.file-center-search{position:relative}.file-center-search i{position:absolute;left:9px;top:10px;color:#94a3b8;font-size:10px}.file-center-search input{width:100%;height:35px;border:1px solid #cbd5e1;border-radius:8px;padding:0 10px 0 28px}.file-center-layout{display:grid;grid-template-columns:minmax(0,1fr) 230px;gap:12px}.file-center-list{display:flex;flex-direction:column;gap:7px}.file-center-row{border:1px solid #dfe7ef;border-radius:8px;padding:9px;background:#fff}.file-center-recent{border-left:1px solid #e2e8f0;padding-left:12px}.file-center-side-title{font-size:9px;font-weight:800;margin-bottom:8px}.file-preview-body{min-height:420px;background:#f8fafc;border:1px solid #e2e8f0;border-radius:9px;overflow:auto}.file-preview-body iframe{width:100%;height:65vh;border:0}.file-preview-body img{display:block;max-width:100%;max-height:65vh;margin:auto}.file-preview-body pre{padding:12px;white-space:pre-wrap;font:9px/1.45 "JetBrains Mono"}.presentation-panel{max-width:900px;width:min(900px,calc(100vw - 32px));min-height:420px;display:flex;flex-direction:column;justify-content:space-between}.presentation-content h2{font-size:32px;line-height:1.1;margin:15px 0 8px}.presentation-code{font:800 10px "JetBrains Mono";color:var(--accent)}.presentation-category{font-size:10px;font-weight:800;color:#64748b;text-transform:uppercase}.presentation-tags{display:flex;gap:6px;flex-wrap:wrap;margin:20px 0}.presentation-file{display:grid;grid-template-columns:1fr auto;gap:8px;padding:14px;border:1px solid #e2e8f0;background:#f8fafc;border-radius:9px;font-size:9px}.presentation-nav{display:flex;justify-content:space-between;border-top:1px solid #e2e8f0;padding-top:12px}
+body[data-theme="dark"]{--bg:#0b1120;--card:#111827;--text:#e2e8f0;--border:#26364b;--muted:#94a3b8;background:var(--bg);color:var(--text)}body[data-theme="dark"] .records-control-panel,body[data-theme="dark"] .recent-panel,body[data-theme="dark"] .app-footer,body[data-theme="dark"] .record-card{background:#111827;border-color:#26364b}body[data-theme="dark"] .section-heading h2,body[data-theme="dark"] .record-title-only,body[data-theme="dark"] .expanded-file-title{color:#f8fafc}body[data-theme="dark"] .cat-btn,body[data-theme="dark"] .tool-btn,body[data-theme="dark"] .records-tabs-toggle,body[data-theme="dark"] .file-center-row,body[data-theme="dark"] .expanded-file-entry,body[data-theme="dark"] .version-row{background:#172033;color:#cbd5e1;border-color:#334155}body[data-theme="dark"] .modal-panel{background:#111827;color:#e2e8f0;border-color:#334155}body[data-theme="dark"] .form-input,body[data-theme="dark"] .settings-select{background:#172033;color:#f8fafc;border-color:#334155}
+body[data-density="compact"] .records-grid{gap:8px}body[data-density="compact"] .record-collapsed-face{--collapsed-card:58px;min-height:58px;height:auto}.no-motion *{animation:none!important;transition:none!important}
+@media(max-width:1500px){.records-grid{grid-template-columns:repeat(4,minmax(0,1fr))}}@media(max-width:1150px){.records-grid{grid-template-columns:repeat(3,minmax(0,1fr))}.model-sidebar{width:220px;flex-basis:220px}.header-module-btn span{display:none}.model-picker-search{min-width:160px}}@media(max-width:850px){.workspace-shell{display:block}.model-sidebar{width:auto;display:grid;grid-template-columns:1fr 1fr;gap:10px}.sidebar-footer{grid-column:1/-1}.records-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.header-inner{flex-wrap:wrap;padding-top:9px;padding-bottom:9px}.brand{width:100%}.header-actions{width:100%;overflow:auto}.file-center-layout{grid-template-columns:1fr}.file-center-recent{border-left:0;border-top:1px solid #e2e8f0;padding:10px 0}.file-center-toolbar{grid-template-columns:1fr 1fr}.file-center-toolbar .file-center-search{grid-column:1/-1}}@media(max-width:560px){.app-container{padding-left:12px;padding-right:12px}.records-grid{grid-template-columns:1fr}.model-sidebar{grid-template-columns:1fr}.form-grid-2{grid-template-columns:1fr}.shortcut-grid{grid-template-columns:1fr}.file-center-toolbar{grid-template-columns:1fr}.record-collapsed-face{grid-template-columns:30px minmax(0,1fr) 16px 15px}.record-status{display:none}.version-row{grid-template-columns:auto minmax(0,1fr) auto}.version-note{grid-column:2}.version-actions{grid-column:3;grid-row:1 / span 2}.presentation-content h2{font-size:25px}}
 
+/* V65.2.4 FINAL VISUAL/UX: balanced compact ALL cards.
+   Status is secondary information and never consumes half of the title lane. */
+body[data-record-view="all"] .records-grid .record-card:not(.is-expanded) .record-collapsed-face{
+  grid-template-columns:34px minmax(0,1fr) 22px 18px !important;
+  grid-template-rows:minmax(0,1fr) auto !important;
+  column-gap:8px !important; row-gap:2px !important;
+  min-height:65px !important; height:auto !important; padding:6px 9px !important;
+}
+body[data-record-view="all"] .records-grid .record-card:not(.is-expanded) .record-icon{grid-column:1 !important;grid-row:1 / span 2 !important;}
+body[data-record-view="all"] .records-grid .record-card:not(.is-expanded) .record-title-only{
+  grid-column:2 !important; grid-row:1 !important; align-self:end !important;
+  display:block !important; overflow-wrap:anywhere !important; white-space:normal !important;
+  overflow:visible !important; text-overflow:clip !important;
+  font-size:11px !important; line-height:1.12 !important;
+  padding-right:2px !important;
+}
+body[data-record-view="all"] .records-grid .record-card:not(.is-expanded) .record-status{
+  grid-column:2 !important; grid-row:2 !important; justify-self:start !important; align-self:start !important;
+  width:max-content !important; max-width:100% !important;
+  font-size:6.7px !important; line-height:1 !important; padding:2px 5px !important;
+}
+body[data-record-view="all"] .records-grid .record-card:not(.is-expanded) .favorite-btn{grid-column:3 !important;grid-row:1 / span 2 !important;align-self:center !important;}
+body[data-record-view="all"] .records-grid .record-card:not(.is-expanded) .expand-cue{grid-column:4 !important;grid-row:1 / span 2 !important;align-self:center !important;}
+
+/* Explicit version actions: icon + readable text. */
+.version-actions{display:flex !important;gap:4px !important;flex-wrap:wrap !important;justify-content:flex-end !important;}
+.mini-file-action{width:auto !important;min-width:68px !important;height:23px !important;padding:0 7px !important;gap:4px !important;font-size:7px !important;font-weight:850 !important;white-space:nowrap !important;}
+.mini-file-action span{display:inline !important;}
+@media(max-width:900px){.mini-file-action{min-width:64px !important;padding:0 6px !important;font-size:6.7px !important;}}
+/* V65.2.4 FINAL MOBILE VISUAL FIX: keep document status readable on phones. */
+@media(max-width:500px){
+  body[data-record-view="all"] .records-grid .record-card:not(.is-expanded) .record-collapsed-face{
+    grid-template-columns:32px minmax(0,1fr) 20px 16px !important;
+    grid-template-rows:minmax(0,1fr) auto !important;
+    min-height:70px !important;
+    height:auto !important;
+    padding:6px 8px !important;
+    row-gap:3px !important;
+  }
+  body[data-record-view="all"] .records-grid .record-card:not(.is-expanded) .record-title-only{
+    grid-column:2 !important;grid-row:1 !important;
+    font-size:10px !important;line-height:1.12 !important;
+    display:block !important;overflow:visible !important;
+  }
+  body[data-record-view="all"] .records-grid .record-card:not(.is-expanded) .record-status{
+    grid-column:2 !important;grid-row:2 !important;
+    display:inline-flex !important;justify-self:start !important;
+    max-width:100% !important;font-size:6.4px !important;
+  }
+  body[data-record-view="all"] .records-grid .record-card:not(.is-expanded) .record-status span:last-child{display:inline !important;}
+}
+.expanded-file-title .expanded-status{margin-left:6px !important;}
+.expanded-file-title .version-count{margin-left:3px !important;}
+
+/* V65.2.5 VISUAL BALANCE PATCH
+   Equal card rows + aligned internal content + remove vertical workspace centering. */
+.workspace-shell > .app-container{
+  margin:0 !important;
+  align-self:stretch !important;
+  padding-top:18px !important;
+  padding-bottom:26px !important;
+}
+
+.records-grid{
+  align-items:stretch !important;
+  grid-auto-rows:1fr;
+}
+
+.record-card{
+  height:100% !important;
+  display:flex !important;
+  flex-direction:column !important;
+}
+
+.record-collapsed-face{
+  flex:0 0 auto !important;
+}
+
+.record-card.is-expanded .record-expanded-panel{
+  flex:1 1 auto !important;
+  min-height:0 !important;
+}
+
+.record-card.is-expanded .expanded-footer{
+  margin-top:auto !important;
+}
+
+/* Group cards: each grid row shares one visual baseline. */
+body[data-record-view="group"] .records-grid{
+  align-items:stretch !important;
+}
+body[data-record-view="group"] .records-grid .record-card.is-group-view{
+  height:100% !important;
+}
+body[data-record-view="group"] .records-grid .record-card.is-group-view .record-expanded-panel{
+  flex:1 1 auto !important;
+}
+body[data-record-view="group"] .records-grid .record-card.is-group-view .expanded-footer{
+  margin-top:auto !important;
+  padding-top:12px !important;
+}
+
+/* Keep the card header geometry identical across records. */
+.record-collapsed-face{
+  min-height:65px !important;
+  grid-template-columns:34px minmax(0,1fr) auto 22px 16px !important;
+  align-items:center !important;
+}
+.record-title-only{
+  min-width:0 !important;
+  overflow-wrap:anywhere !important;
+}
+.record-status{
+  flex:none !important;
+}
+
+.recent-panel{
+  margin-top:14px !important;
+}
+
+@media(max-width:850px){
+  .workspace-shell > .app-container{
+    margin:0 !important;
+    padding-top:14px !important;
+  }
+  .records-grid{
+    grid-auto-rows:auto !important;
+  }
+  .record-card{
+    height:auto !important;
+  }
+}
+
+/* V65.2.7 CARD TITLE / STATUS BALANCE
+   Give record titles the primary horizontal lane. Missing-document status stays
+   on the far-right edge and never squeezes the title into awkward word breaks. */
+body[data-record-view="group"] .records-grid .record-card.is-group-view .record-collapsed-face{
+  position:relative !important;
+  grid-template-columns:34px minmax(0,1fr) 22px 16px !important;
+  grid-template-rows:minmax(0,1fr) !important;
+  column-gap:9px !important;
+  min-height:68px !important;
+  padding:7px 9px !important;
+  align-items:center !important;
+}
+body[data-record-view="group"] .records-grid .record-card.is-group-view .record-icon{
+  grid-column:1 !important;
+  grid-row:1 !important;
+  align-self:center !important;
+}
+body[data-record-view="group"] .records-grid .record-card.is-group-view .record-title-only{
+  grid-column:2 !important;
+  grid-row:1 !important;
+  min-width:0 !important;
+  max-width:none !important;
+  padding-right:2px !important;
+  white-space:normal !important;
+  overflow:hidden !important;
+  overflow-wrap:normal !important;
+  word-break:normal !important;
+  text-overflow:clip !important;
+  display:-webkit-box !important;
+  -webkit-box-orient:vertical !important;
+  -webkit-line-clamp:2 !important;
+  line-clamp:2 !important;
+  font-size:10px !important;
+  line-height:1.12 !important;
+  align-self:center !important;
+}
+body[data-record-view="group"] .records-grid .record-card.is-group-view .record-status{
+  position:absolute !important;
+  right:34px !important;
+  top:50% !important;
+  transform:translateY(-50%) !important;
+  width:auto !important;
+  max-width:70px !important;
+  padding:3px 5px !important;
+  font-size:6px !important;
+  line-height:1 !important;
+  z-index:2 !important;
+}
+body[data-record-view="group"] .records-grid .record-card.is-group-view .record-title-only{
+  padding-right:74px !important;
+}
+body[data-record-view="group"] .records-grid .record-card.is-group-view .favorite-btn{
+  grid-column:3 !important;
+  grid-row:1 !important;
+  z-index:3 !important;
+  align-self:center !important;
+}
+body[data-record-view="group"] .records-grid .record-card.is-group-view .expand-cue{
+  grid-column:4 !important;
+  grid-row:1 !important;
+  z-index:3 !important;
+  align-self:center !important;
+}
+
+/* In the expanded group area, keep the human-readable missing state secondary
+   and right aligned instead of consuming the main content width. */
+body[data-record-view="group"] .records-grid .record-card.is-group-view .slot-missing-note{
+  display:flex !important;
+  justify-content:flex-end !important;
+  align-items:center !important;
+  width:100% !important;
+  margin-top:6px !important;
+  padding:4px 0 !important;
+  background:transparent !important;
+  color:#991b1b !important;
+  font-size:7.5px !important;
+  font-weight:800 !important;
+  text-align:right !important;
+}
+
+/* The expanded file title is always given the full content lane; its status
+   badge is the right-most element. */
+body[data-record-view="group"] .records-grid .record-card.is-group-view .expanded-file-title{
+  display:grid !important;
+  grid-template-columns:16px minmax(0,1fr) auto !important;
+  align-items:center !important;
+  column-gap:6px !important;
+}
+body[data-record-view="group"] .records-grid .record-card.is-group-view .expanded-file-title > span:first-of-type{
+  min-width:0 !important;
+  overflow-wrap:normal !important;
+  word-break:normal !important;
+  white-space:normal !important;
+}
+body[data-record-view="group"] .records-grid .record-card.is-group-view .expanded-file-title .expanded-status{
+  margin-left:0 !important;
+  justify-self:end !important;
+}
+
+@media(max-width:560px){
+  body[data-record-view="group"] .records-grid .record-card.is-group-view .record-collapsed-face{
+    min-height:66px !important;
+    grid-template-columns:32px minmax(0,1fr) 18px 15px !important;
+    padding:6px 8px !important;
+  }
+  body[data-record-view="group"] .records-grid .record-card.is-group-view .record-title-only{
+    font-size:9.5px !important;
+    padding-right:66px !important;
+  }
+  body[data-record-view="group"] .records-grid .record-card.is-group-view .record-status{
+    right:30px !important;
+    max-width:64px !important;
+  }
+}
+
+/* V65.2.7.1 FINAL GROUP TITLE READABILITY
+   Long group titles may use up to four natural lines; no ellipsis or forced word splitting. */
+body[data-record-view="group"] .records-grid .record-card.is-group-view .record-title-only{
+  -webkit-line-clamp:unset !important;
+  line-clamp:unset !important;
+  display:block !important;
+  max-height:4.6em !important;
+  overflow:hidden !important;
+  overflow-wrap:normal !important;
+  word-break:normal !important;
+  white-space:normal !important;
+  text-overflow:clip !important;
+  line-height:1.12 !important;
+}
+
+/* V65.2.8 BASE-REFERENCE CARD STRUCTURE
+   Preserve the approved All Records compact-card geometry. For group/detail cards,
+   give the title a real content lane; status remains right-most without forcing
+   words to break. Favorite/expand controls remain available as compact overlays. */
+body[data-record-view="group"] .records-grid .record-card.is-group-view .record-collapsed-face{
+  position:relative !important;
+  display:grid !important;
+  grid-template-columns:34px minmax(0,1fr) !important;
+  grid-template-rows:auto !important;
+  column-gap:10px !important;
+  min-height:72px !important;
+  padding:8px 9px !important;
+  align-items:center !important;
+}
+body[data-record-view="group"] .records-grid .record-card.is-group-view .record-icon{
+  grid-column:1 !important;
+  grid-row:1 !important;
+  align-self:center !important;
+}
+body[data-record-view="group"] .records-grid .record-card.is-group-view .record-title-only{
+  grid-column:2 !important;
+  grid-row:1 !important;
+  min-width:0 !important;
+  width:100% !important;
+  max-width:none !important;
+  padding:0 86px 0 0 !important;
+  margin:0 !important;
+  display:block !important;
+  overflow:visible !important;
+  white-space:normal !important;
+  word-break:normal !important;
+  overflow-wrap:normal !important;
+  hyphens:none !important;
+  text-overflow:clip !important;
+  font-size:10px !important;
+  line-height:1.18 !important;
+  font-weight:800 !important;
+}
+body[data-record-view="group"] .records-grid .record-card.is-group-view .record-status{
+  position:absolute !important;
+  top:50% !important;
+  right:34px !important;
+  transform:translateY(-50%) !important;
+  width:auto !important;
+  max-width:76px !important;
+  margin:0 !important;
+  padding:3px 5px !important;
+  font-size:6px !important;
+  line-height:1 !important;
+  white-space:nowrap !important;
+  overflow:visible !important;
+  text-overflow:clip !important;
+  z-index:4 !important;
+}
+body[data-record-view="group"] .records-grid .record-card.is-group-view .favorite-btn{
+  position:absolute !important;
+  top:8px !important;
+  right:8px !important;
+  width:18px !important;
+  height:18px !important;
+  padding:0 !important;
+  z-index:5 !important;
+}
+body[data-record-view="group"] .records-grid .record-card.is-group-view .expand-cue{
+  display:none !important;
+}
+body[data-record-view="group"] .records-grid .record-card.is-group-view .slot-missing-note{
+  display:flex !important;
+  justify-content:flex-end !important;
+  align-items:center !important;
+  width:100% !important;
+  margin-top:5px !important;
+  padding:3px 0 !important;
+  background:transparent !important;
+  color:#991b1b !important;
+  font-size:7.5px !important;
+  font-weight:800 !important;
+  text-align:right !important;
+  white-space:nowrap !important;
+}
+body[data-record-view="group"] .records-grid .record-card.is-group-view .expanded-file-title{
+  display:grid !important;
+  grid-template-columns:16px minmax(0,1fr) auto !important;
+  align-items:center !important;
+  column-gap:6px !important;
+}
+body[data-record-view="group"] .records-grid .record-card.is-group-view .expanded-file-title > span:first-of-type{
+  min-width:0 !important;
+  overflow:visible !important;
+  white-space:normal !important;
+  word-break:normal !important;
+  overflow-wrap:normal !important;
+}
+body[data-record-view="group"] .records-grid .record-card.is-group-view .expanded-file-title .expanded-status{
+  margin-left:0 !important;
+  justify-self:end !important;
+  white-space:nowrap !important;
+}
+@media(max-width:560px){
+  body[data-record-view="group"] .records-grid .record-card.is-group-view .record-collapsed-face{
+    min-height:70px !important;
+    grid-template-columns:32px minmax(0,1fr) !important;
+    column-gap:8px !important;
+    padding:7px 8px !important;
+  }
+  body[data-record-view="group"] .records-grid .record-card.is-group-view .record-title-only{
+    font-size:9.5px !important;
+    padding-right:72px !important;
+  }
+  body[data-record-view="group"] .records-grid .record-card.is-group-view .record-status{
+    right:30px !important;
+    max-width:64px !important;
+  }
+}
+
+/* V65.2.9 FINAL APPROVED CARD GEOMETRY
+   Based on the user's approved compact-card reference.
+   Group/detail cards: title gets the real content lane, status is a small
+   intrinsic-width right-side badge, and missing-document copy sits at the
+   right of the document row instead of consuming the card body. */
+body[data-record-view="group"] .records-grid .record-card.is-group-view .record-collapsed-face{
+  position:relative !important;
+  display:grid !important;
+  grid-template-columns:34px minmax(0,1fr) auto !important;
+  grid-template-rows:auto !important;
+  column-gap:10px !important;
+  row-gap:0 !important;
+  min-height:76px !important;
+  height:auto !important;
+  padding:8px 9px !important;
+  align-items:center !important;
+}
+body[data-record-view="group"] .records-grid .record-card.is-group-view .record-icon{
+  grid-column:1 !important;
+  grid-row:1 !important;
+  align-self:center !important;
+}
+body[data-record-view="group"] .records-grid .record-card.is-group-view .record-title-only{
+  grid-column:2 !important;
+  grid-row:1 !important;
+  min-width:0 !important;
+  width:auto !important;
+  max-width:none !important;
+  padding:0 !important;
+  margin:0 !important;
+  display:block !important;
+  overflow:visible !important;
+  white-space:normal !important;
+  word-break:normal !important;
+  overflow-wrap:normal !important;
+  hyphens:none !important;
+  text-overflow:clip !important;
+  font-size:10px !important;
+  line-height:1.16 !important;
+  font-weight:800 !important;
+  align-self:center !important;
+}
+body[data-record-view="group"] .records-grid .record-card.is-group-view .record-status{
+  grid-column:3 !important;
+  grid-row:1 !important;
+  position:static !important;
+  transform:none !important;
+  justify-self:end !important;
+  align-self:center !important;
+  width:max-content !important;
+  max-width:78px !important;
+  margin:0 !important;
+  padding:3px 5px !important;
+  font-size:6px !important;
+  line-height:1 !important;
+  white-space:nowrap !important;
+  overflow:hidden !important;
+  text-overflow:ellipsis !important;
+  z-index:auto !important;
+}
+body[data-record-view="group"] .records-grid .record-card.is-group-view .favorite-btn{
+  position:absolute !important;
+  top:8px !important;
+  right:6px !important;
+  width:18px !important;
+  height:18px !important;
+  padding:0 !important;
+  z-index:5 !important;
+}
+body[data-record-view="group"] .records-grid .record-card.is-group-view .expand-cue{
+  display:none !important;
+}
+
+/* Group/detail document rows: the empty-state message is secondary and
+   occupies only the right-most content lane. */
+body[data-record-view="group"] .records-grid .record-card.is-group-view .expanded-file-main{
+  min-width:0 !important;
+  display:grid !important;
+  grid-template-columns:minmax(0,1fr) auto !important;
+  grid-template-rows:auto auto !important;
+  column-gap:10px !important;
+  row-gap:3px !important;
+  align-items:center !important;
+}
+body[data-record-view="group"] .records-grid .record-card.is-group-view .expanded-file-title{
+  grid-column:1 !important;
+  grid-row:1 !important;
+  display:grid !important;
+  grid-template-columns:16px minmax(0,1fr) auto !important;
+  align-items:center !important;
+  min-width:0 !important;
+  column-gap:6px !important;
+  font-size:9px !important;
+  line-height:1.15 !important;
+  font-weight:800 !important;
+}
+body[data-record-view="group"] .records-grid .record-card.is-group-view .expanded-file-title > span:first-of-type{
+  min-width:0 !important;
+  overflow:visible !important;
+  white-space:normal !important;
+  word-break:normal !important;
+  overflow-wrap:normal !important;
+  text-overflow:clip !important;
+}
+body[data-record-view="group"] .records-grid .record-card.is-group-view .expanded-file-meta{
+  grid-column:1 !important;
+  grid-row:2 !important;
+  min-width:0 !important;
+  margin-top:0 !important;
+}
+body[data-record-view="group"] .records-grid .record-card.is-group-view .slot-missing-note{
+  grid-column:2 !important;
+  grid-row:1 / span 2 !important;
+  justify-self:end !important;
+  align-self:center !important;
+  width:max-content !important;
+  max-width:150px !important;
+  margin:0 !important;
+  padding:5px 8px !important;
+  background:#fff1f2 !important;
+  border:1px solid #fecdd3 !important;
+  border-radius:7px !important;
+  color:#991b1b !important;
+  font-size:7px !important;
+  line-height:1.2 !important;
+  font-weight:800 !important;
+  text-align:right !important;
+  white-space:normal !important;
+}
+
+@media(max-width:560px){
+  body[data-record-view="group"] .records-grid .record-card.is-group-view .record-collapsed-face{
+    grid-template-columns:32px minmax(0,1fr) auto !important;
+    min-height:72px !important;
+    padding:7px 8px !important;
+    column-gap:8px !important;
+  }
+  body[data-record-view="group"] .records-grid .record-card.is-group-view .record-title-only{
+    font-size:9.5px !important;
+    line-height:1.15 !important;
+  }
+  body[data-record-view="group"] .records-grid .record-card.is-group-view .record-status{
+    max-width:66px !important;
+  }
+  body[data-record-view="group"] .records-grid .record-card.is-group-view .expanded-file-main{
+    grid-template-columns:minmax(0,1fr) !important;
+    grid-template-rows:auto auto auto !important;
+  }
+  body[data-record-view="group"] .records-grid .record-card.is-group-view .slot-missing-note{
+    grid-column:1 !important;
+    grid-row:3 !important;
+    justify-self:end !important;
+  }
+}
+
+/* V65.2.9.1: missing-state label is represented once, by the right-side
+   "No document uploaded yet." message. Do not duplicate it beside the title. */
+body[data-record-view="group"] .records-grid .record-card.is-group-view .expanded-file-title .expanded-status.missing{
+  display:none !important;
+}
+body[data-record-view="group"] .records-grid .record-card.is-group-view .expanded-file-title{
+  grid-template-columns:16px minmax(0,1fr) !important;
+}
