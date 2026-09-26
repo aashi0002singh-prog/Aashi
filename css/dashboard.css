@@ -3463,20 +3463,3 @@ body[data-record-view="group"] .expanded-summary{
 body[data-record-view="group"] .expanded-footer{
   margin-top:10px !important;
 }
-
-
-/* V64.2 AGREED FINAL CARD REFINEMENT — authoritative visual override. */
-body[data-record-view="all"] .records-grid .record-card:not(.is-expanded) .record-collapsed-face{grid-template-columns:30px minmax(0,1fr) 22px !important;grid-template-rows:minmax(0,1fr) auto !important;column-gap:9px !important;row-gap:2px !important;padding:4px 10px 4px 12px !important}
-body[data-record-view="all"] .records-grid .record-card:not(.is-expanded) .record-title-only{grid-column:2 !important;grid-row:1 !important;display:-webkit-box !important;-webkit-box-orient:vertical !important;-webkit-line-clamp:2 !important;overflow:hidden !important;text-overflow:clip !important;white-space:normal !important;word-break:normal !important;overflow-wrap:normal !important;hyphens:none !important}
-body[data-record-view="all"] .records-grid .record-card:not(.is-expanded) .record-status{grid-column:2 !important;grid-row:2 !important;justify-self:start !important;width:max-content !important;max-width:100% !important;padding:2px 6px !important;font-size:7.6px !important}
-body[data-record-view="all"] .records-grid .record-card:not(.is-expanded) .favorite-btn{display:none !important}
-body[data-record-view="all"] .records-grid .record-card:not(.is-expanded) .expand-cue{grid-column:3 !important;grid-row:1 / span 2 !important;align-self:center !important}
-body[data-record-view="group"] .records-grid .record-card.is-group-view .record-collapsed-face{grid-template-columns:34px minmax(0,1fr) 22px !important;grid-template-rows:minmax(0,1fr) auto !important;column-gap:10px !important;row-gap:3px !important;padding:7px 11px !important}
-body[data-record-view="group"] .records-grid .record-card.is-group-view .record-title-only{grid-column:2 !important;grid-row:1 !important;display:-webkit-box !important;-webkit-box-orient:vertical !important;-webkit-line-clamp:3 !important;overflow:hidden !important;text-overflow:clip !important;white-space:normal !important;word-break:normal !important;overflow-wrap:normal !important;hyphens:none !important}
-body[data-record-view="group"] .records-grid .record-card.is-group-view .record-status{grid-column:2 !important;grid-row:2 !important;justify-self:start !important;width:max-content !important;max-width:100% !important;padding:3px 7px !important}
-body[data-record-view="group"] .records-grid .record-card.is-group-view .favorite-btn{display:none !important}
-body[data-record-view="group"] .records-grid .record-card.is-group-view .expand-cue{grid-column:3 !important;grid-row:1 / span 2 !important;align-self:center !important}
-.records-grid .expanded-file-row.is-missing .expanded-file-main{min-width:0 !important;flex:1 1 auto !important}
-.records-grid .expanded-file-row.is-missing .slot-missing-note{margin-top:3px !important;text-align:right !important;color:#94a3b8 !important;font-size:7px !important;line-height:1.1 !important;white-space:nowrap !important;overflow:hidden !important;text-overflow:ellipsis !important}
-.records-grid .expanded-file-row.is-missing .expanded-file-actions{margin-left:auto !important;align-self:center !important;justify-content:flex-end !important}
-.records-grid .missing-label{font-size:7px !important;font-weight:850 !important;white-space:nowrap !important}
