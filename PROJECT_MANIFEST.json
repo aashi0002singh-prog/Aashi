@@ -1,0 +1,42 @@
+{
+  "project": "Mobile R&D Technical Hub",
+  "version": "V65.0-FINAL-CLEAN-MIGRATION",
+  "reference": "Mobile_RD_V64_2_FINAL_MULTI_SLOT_VERSIONED_ENGINEERING_WORKSPACE_CORRECTED.zip",
+  "architecture": {
+    "identity": "immutable modelId / recordId / slotId / versionId",
+    "modelCode": "editable and unique",
+    "uploads": "unlimited versions per document slot",
+    "binaryStorage": "4 MB chunks, 500 MB per-file application limit",
+    "documentStatus": "document entries are informational; uploads support unlimited versions per entry",
+    "allView": "65px compact cards with natural-flow expansion",
+    "groupView": "all cards expanded with natural document flow",
+    "recordOrdering": "dynamic A, B ... Z, AA, AB ...; no fixed A-V ceiling"
+  },
+  "stores": [
+    "models",
+    "records",
+    "slots",
+    "versions",
+    "version_chunks",
+    "refs",
+    "audit",
+    "files",
+    "file_chunks",
+    "heavy_files"
+  ],
+  "modules": [
+    "engineering-records",
+    "file-command-center",
+    "parameter-360",
+    "lab-knowledge",
+    "excel-comparison"
+  ],
+  "validation": [
+    "javascript syntax",
+    "HTML IDs/scripts",
+    "module imports",
+    "file inventory",
+    "duplicate active CSS override scan"
+  ],
+  "verification": "FINAL_VERIFICATION.md"
+}
