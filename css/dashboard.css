@@ -64,490 +64,162 @@ body[data-record-view="all"] .records-grid .record-card:not(.is-expanded) .expan
 .expanded-file-title .expanded-status{margin-left:6px !important;}
 .expanded-file-title .version-count{margin-left:3px !important;}
 
-/* V65.2.5 VISUAL BALANCE PATCH
-   Equal card rows + aligned internal content + remove vertical workspace centering. */
-.workspace-shell > .app-container{
-  margin:0 !important;
-  align-self:stretch !important;
-  padding-top:18px !important;
-  padding-bottom:26px !important;
-}
-
-.records-grid{
-  align-items:stretch !important;
-  grid-auto-rows:1fr;
-}
-
-.record-card{
-  height:100% !important;
-  display:flex !important;
-  flex-direction:column !important;
-}
-
-.record-collapsed-face{
-  flex:0 0 auto !important;
-}
-
-.record-card.is-expanded .record-expanded-panel{
-  flex:1 1 auto !important;
-  min-height:0 !important;
-}
-
-.record-card.is-expanded .expanded-footer{
-  margin-top:auto !important;
-}
-
-/* Group cards: each grid row shares one visual baseline. */
+/* V65.3 approved visual correction — based on the original V65.2.4 base. */
 body[data-record-view="group"] .records-grid{
-  align-items:stretch !important;
+  grid-template-columns:repeat(3,minmax(0,1fr));
+  align-items:start;
 }
-body[data-record-view="group"] .records-grid .record-card.is-group-view{
-  height:100% !important;
+body[data-record-view="group"] .record-collapsed-face{
+  position:relative;
+  grid-template-columns:31px minmax(0,1fr) 22px 16px;
+  align-items:start;
+  min-height:72px;
+  padding:10px 9px;
+  gap:8px;
 }
-body[data-record-view="group"] .records-grid .record-card.is-group-view .record-expanded-panel{
-  flex:1 1 auto !important;
+body[data-record-view="group"] .record-title-only{
+  min-width:0;
+  max-width:100%;
+  padding-right:76px;
+  font-size:10px;
+  line-height:1.18;
+  overflow:visible;
+  white-space:normal;
+  overflow-wrap:normal;
+  word-break:normal;
+  hyphens:none;
 }
-body[data-record-view="group"] .records-grid .record-card.is-group-view .expanded-footer{
-  margin-top:auto !important;
-  padding-top:12px !important;
+body[data-record-view="group"] .record-status{
+  position:absolute;
+  top:12px;
+  right:42px;
+  max-width:70px;
+  padding:3px 5px;
+  font-size:6px;
+  line-height:1;
+  z-index:2;
 }
-
-/* Keep the card header geometry identical across records. */
-.record-collapsed-face{
-  min-height:65px !important;
-  grid-template-columns:34px minmax(0,1fr) auto 22px 16px !important;
-  align-items:center !important;
+body[data-record-view="group"] .record-status span:last-child{
+  overflow:hidden;
+  text-overflow:ellipsis;
 }
-.record-title-only{
-  min-width:0 !important;
-  overflow-wrap:anywhere !important;
+body[data-record-view="group"] .favorite-btn,
+body[data-record-view="group"] .expand-cue{
+  margin-top:1px;
 }
-.record-status{
-  flex:none !important;
+body[data-record-view="group"] .record-expanded-panel{
+  padding:10px;
+  gap:8px;
 }
-
-.recent-panel{
-  margin-top:14px !important;
+body[data-record-view="group"] .expanded-file-row{
+  display:grid;
+  grid-template-columns:minmax(0,1fr) auto;
+  align-items:center;
+  gap:10px;
+  min-width:0;
+  padding:8px;
+  border:1px solid #dce4ed;
+  border-radius:7px;
+  background:#f8fafc;
 }
-
-@media(max-width:850px){
-  .workspace-shell > .app-container{
-    margin:0 !important;
-    padding-top:14px !important;
-  }
-  .records-grid{
-    grid-auto-rows:auto !important;
-  }
-  .record-card{
-    height:auto !important;
-  }
+body[data-record-view="group"] .expanded-file-main{
+  min-width:0;
 }
-
-/* V65.2.7 CARD TITLE / STATUS BALANCE
-   Give record titles the primary horizontal lane. Missing-document status stays
-   on the far-right edge and never squeezes the title into awkward word breaks. */
-body[data-record-view="group"] .records-grid .record-card.is-group-view .record-collapsed-face{
-  position:relative !important;
-  grid-template-columns:34px minmax(0,1fr) 22px 16px !important;
-  grid-template-rows:minmax(0,1fr) !important;
-  column-gap:9px !important;
-  min-height:68px !important;
-  padding:7px 9px !important;
-  align-items:center !important;
+body[data-record-view="group"] .expanded-file-title{
+  min-width:0;
+  display:flex;
+  align-items:flex-start;
+  gap:5px;
+  font-size:9px;
+  font-weight:800;
+  line-height:1.15;
+  overflow-wrap:normal;
+  word-break:normal;
 }
-body[data-record-view="group"] .records-grid .record-card.is-group-view .record-icon{
-  grid-column:1 !important;
-  grid-row:1 !important;
-  align-self:center !important;
+body[data-record-view="group"] .expanded-file-title>span:first-of-type{
+  min-width:0;
+  overflow-wrap:normal;
+  word-break:normal;
 }
-body[data-record-view="group"] .records-grid .record-card.is-group-view .record-title-only{
-  grid-column:2 !important;
-  grid-row:1 !important;
-  min-width:0 !important;
-  max-width:none !important;
-  padding-right:2px !important;
-  white-space:normal !important;
-  overflow:hidden !important;
-  overflow-wrap:normal !important;
-  word-break:normal !important;
-  text-overflow:clip !important;
-  display:-webkit-box !important;
-  -webkit-box-orient:vertical !important;
-  -webkit-line-clamp:2 !important;
-  line-clamp:2 !important;
-  font-size:10px !important;
-  line-height:1.12 !important;
-  align-self:center !important;
+body[data-record-view="group"] .expanded-file-meta{
+  display:flex;
+  flex-wrap:wrap;
+  gap:4px 8px;
+  margin-top:3px;
+  font-size:7px;
+  color:#64748b;
 }
-body[data-record-view="group"] .records-grid .record-card.is-group-view .record-status{
-  position:absolute !important;
-  right:34px !important;
-  top:50% !important;
-  transform:translateY(-50%) !important;
-  width:auto !important;
-  max-width:70px !important;
-  padding:3px 5px !important;
-  font-size:6px !important;
-  line-height:1 !important;
-  z-index:2 !important;
+body[data-record-view="group"] .slot-missing-note{
+  margin-top:5px;
+  margin-left:auto;
+  width:max-content;
+  max-width:72%;
+  padding:4px 6px;
+  border:1px solid #fecaca;
+  border-radius:5px;
+  background:#fff1f2;
+  color:#b91c1c;
+  font-size:7px;
+  line-height:1.2;
+  text-align:right;
 }
-body[data-record-view="group"] .records-grid .record-card.is-group-view .record-title-only{
-  padding-right:74px !important;
-}
-body[data-record-view="group"] .records-grid .record-card.is-group-view .favorite-btn{
-  grid-column:3 !important;
-  grid-row:1 !important;
-  z-index:3 !important;
-  align-self:center !important;
-}
-body[data-record-view="group"] .records-grid .record-card.is-group-view .expand-cue{
-  grid-column:4 !important;
-  grid-row:1 !important;
-  z-index:3 !important;
-  align-self:center !important;
+body[data-record-view="group"] .expanded-file-row>.download-btn,
+body[data-record-view="group"] .missing-label{
+  justify-self:end;
+  white-space:nowrap;
 }
 
-/* In the expanded group area, keep the human-readable missing state secondary
-   and right aligned instead of consuming the main content width. */
-body[data-record-view="group"] .records-grid .record-card.is-group-view .slot-missing-note{
-  display:flex !important;
-  justify-content:flex-end !important;
-  align-items:center !important;
-  width:100% !important;
-  margin-top:6px !important;
-  padding:4px 0 !important;
-  background:transparent !important;
-  color:#991b1b !important;
-  font-size:7.5px !important;
-  font-weight:800 !important;
-  text-align:right !important;
+@media (max-width:1100px){
+  body[data-record-view="group"] .records-grid{grid-template-columns:repeat(2,minmax(0,1fr));}
 }
-
-/* The expanded file title is always given the full content lane; its status
-   badge is the right-most element. */
-body[data-record-view="group"] .records-grid .record-card.is-group-view .expanded-file-title{
-  display:grid !important;
-  grid-template-columns:16px minmax(0,1fr) auto !important;
-  align-items:center !important;
-  column-gap:6px !important;
+@media (max-width:720px){
+  body[data-record-view="group"] .records-grid{grid-template-columns:1fr;}
 }
-body[data-record-view="group"] .records-grid .record-card.is-group-view .expanded-file-title > span:first-of-type{
-  min-width:0 !important;
-  overflow-wrap:normal !important;
-  word-break:normal !important;
-  white-space:normal !important;
+/* V65.3 group-file row balance: title left, missing-document notice in the right-side lane. */
+body[data-record-view="group"] .expanded-file-row{
+  grid-template-columns:minmax(0,1fr) minmax(145px,auto);
 }
-body[data-record-view="group"] .records-grid .record-card.is-group-view .expanded-file-title .expanded-status{
-  margin-left:0 !important;
-  justify-self:end !important;
+body[data-record-view="group"] .expanded-file-main{
+  display:grid;
+  grid-template-columns:minmax(0,1fr) minmax(145px,auto);
+  column-gap:10px;
+  align-items:center;
 }
-
-@media(max-width:560px){
-  body[data-record-view="group"] .records-grid .record-card.is-group-view .record-collapsed-face{
-    min-height:66px !important;
-    grid-template-columns:32px minmax(0,1fr) 18px 15px !important;
-    padding:6px 8px !important;
-  }
-  body[data-record-view="group"] .records-grid .record-card.is-group-view .record-title-only{
-    font-size:9.5px !important;
-    padding-right:66px !important;
-  }
-  body[data-record-view="group"] .records-grid .record-card.is-group-view .record-status{
-    right:30px !important;
-    max-width:64px !important;
-  }
+body[data-record-view="group"] .expanded-file-title,
+body[data-record-view="group"] .expanded-file-meta,
+body[data-record-view="group"] .version-history{
+  grid-column:1;
 }
-
-/* V65.2.7.1 FINAL GROUP TITLE READABILITY
-   Long group titles may use up to four natural lines; no ellipsis or forced word splitting. */
-body[data-record-view="group"] .records-grid .record-card.is-group-view .record-title-only{
-  -webkit-line-clamp:unset !important;
-  line-clamp:unset !important;
-  display:block !important;
-  max-height:4.6em !important;
-  overflow:hidden !important;
-  overflow-wrap:normal !important;
-  word-break:normal !important;
-  white-space:normal !important;
-  text-overflow:clip !important;
-  line-height:1.12 !important;
+body[data-record-view="group"] .slot-missing-note{
+  grid-column:2;
+  grid-row:1 / span 3;
+  align-self:center;
+  justify-self:end;
+  width:auto;
+  max-width:145px;
+  margin:0;
+  padding:0;
+  border:0;
+  background:transparent;
+  color:#1d2939;
+  font-size:16px;
+  line-height:1.15;
+  font-weight:400;
+  text-align:right;
 }
-
-/* V65.2.8 BASE-REFERENCE CARD STRUCTURE
-   Preserve the approved All Records compact-card geometry. For group/detail cards,
-   give the title a real content lane; status remains right-most without forcing
-   words to break. Favorite/expand controls remain available as compact overlays. */
-body[data-record-view="group"] .records-grid .record-card.is-group-view .record-collapsed-face{
-  position:relative !important;
-  display:grid !important;
-  grid-template-columns:34px minmax(0,1fr) !important;
-  grid-template-rows:auto !important;
-  column-gap:10px !important;
-  min-height:72px !important;
-  padding:8px 9px !important;
-  align-items:center !important;
+body[data-record-view="group"] .expanded-file-row.is-missing .expanded-file-main{
+  min-height:58px;
 }
-body[data-record-view="group"] .records-grid .record-card.is-group-view .record-icon{
-  grid-column:1 !important;
-  grid-row:1 !important;
-  align-self:center !important;
+body[data-record-view="group"] .expanded-file-title>span:first-of-type{
+  flex:1 1 auto;
+  min-width:0;
+  overflow-wrap:normal;
+  word-break:normal;
 }
-body[data-record-view="group"] .records-grid .record-card.is-group-view .record-title-only{
-  grid-column:2 !important;
-  grid-row:1 !important;
-  min-width:0 !important;
-  width:100% !important;
-  max-width:none !important;
-  padding:0 86px 0 0 !important;
-  margin:0 !important;
-  display:block !important;
-  overflow:visible !important;
-  white-space:normal !important;
-  word-break:normal !important;
-  overflow-wrap:normal !important;
-  hyphens:none !important;
-  text-overflow:clip !important;
-  font-size:10px !important;
-  line-height:1.18 !important;
-  font-weight:800 !important;
+body[data-record-view="group"] .expanded-file-title .expanded-status{
+  flex:none;
+  margin-left:auto;
 }
-body[data-record-view="group"] .records-grid .record-card.is-group-view .record-status{
-  position:absolute !important;
-  top:50% !important;
-  right:34px !important;
-  transform:translateY(-50%) !important;
-  width:auto !important;
-  max-width:76px !important;
-  margin:0 !important;
-  padding:3px 5px !important;
-  font-size:6px !important;
-  line-height:1 !important;
-  white-space:nowrap !important;
-  overflow:visible !important;
-  text-overflow:clip !important;
-  z-index:4 !important;
-}
-body[data-record-view="group"] .records-grid .record-card.is-group-view .favorite-btn{
-  position:absolute !important;
-  top:8px !important;
-  right:8px !important;
-  width:18px !important;
-  height:18px !important;
-  padding:0 !important;
-  z-index:5 !important;
-}
-body[data-record-view="group"] .records-grid .record-card.is-group-view .expand-cue{
+body[data-record-view="group"] .expanded-file-row.is-missing .expanded-status{
   display:none !important;
-}
-body[data-record-view="group"] .records-grid .record-card.is-group-view .slot-missing-note{
-  display:flex !important;
-  justify-content:flex-end !important;
-  align-items:center !important;
-  width:100% !important;
-  margin-top:5px !important;
-  padding:3px 0 !important;
-  background:transparent !important;
-  color:#991b1b !important;
-  font-size:7.5px !important;
-  font-weight:800 !important;
-  text-align:right !important;
-  white-space:nowrap !important;
-}
-body[data-record-view="group"] .records-grid .record-card.is-group-view .expanded-file-title{
-  display:grid !important;
-  grid-template-columns:16px minmax(0,1fr) auto !important;
-  align-items:center !important;
-  column-gap:6px !important;
-}
-body[data-record-view="group"] .records-grid .record-card.is-group-view .expanded-file-title > span:first-of-type{
-  min-width:0 !important;
-  overflow:visible !important;
-  white-space:normal !important;
-  word-break:normal !important;
-  overflow-wrap:normal !important;
-}
-body[data-record-view="group"] .records-grid .record-card.is-group-view .expanded-file-title .expanded-status{
-  margin-left:0 !important;
-  justify-self:end !important;
-  white-space:nowrap !important;
-}
-@media(max-width:560px){
-  body[data-record-view="group"] .records-grid .record-card.is-group-view .record-collapsed-face{
-    min-height:70px !important;
-    grid-template-columns:32px minmax(0,1fr) !important;
-    column-gap:8px !important;
-    padding:7px 8px !important;
-  }
-  body[data-record-view="group"] .records-grid .record-card.is-group-view .record-title-only{
-    font-size:9.5px !important;
-    padding-right:72px !important;
-  }
-  body[data-record-view="group"] .records-grid .record-card.is-group-view .record-status{
-    right:30px !important;
-    max-width:64px !important;
-  }
-}
-
-/* V65.2.9 FINAL APPROVED CARD GEOMETRY
-   Based on the user's approved compact-card reference.
-   Group/detail cards: title gets the real content lane, status is a small
-   intrinsic-width right-side badge, and missing-document copy sits at the
-   right of the document row instead of consuming the card body. */
-body[data-record-view="group"] .records-grid .record-card.is-group-view .record-collapsed-face{
-  position:relative !important;
-  display:grid !important;
-  grid-template-columns:34px minmax(0,1fr) auto !important;
-  grid-template-rows:auto !important;
-  column-gap:10px !important;
-  row-gap:0 !important;
-  min-height:76px !important;
-  height:auto !important;
-  padding:8px 9px !important;
-  align-items:center !important;
-}
-body[data-record-view="group"] .records-grid .record-card.is-group-view .record-icon{
-  grid-column:1 !important;
-  grid-row:1 !important;
-  align-self:center !important;
-}
-body[data-record-view="group"] .records-grid .record-card.is-group-view .record-title-only{
-  grid-column:2 !important;
-  grid-row:1 !important;
-  min-width:0 !important;
-  width:auto !important;
-  max-width:none !important;
-  padding:0 !important;
-  margin:0 !important;
-  display:block !important;
-  overflow:visible !important;
-  white-space:normal !important;
-  word-break:normal !important;
-  overflow-wrap:normal !important;
-  hyphens:none !important;
-  text-overflow:clip !important;
-  font-size:10px !important;
-  line-height:1.16 !important;
-  font-weight:800 !important;
-  align-self:center !important;
-}
-body[data-record-view="group"] .records-grid .record-card.is-group-view .record-status{
-  grid-column:3 !important;
-  grid-row:1 !important;
-  position:static !important;
-  transform:none !important;
-  justify-self:end !important;
-  align-self:center !important;
-  width:max-content !important;
-  max-width:78px !important;
-  margin:0 !important;
-  padding:3px 5px !important;
-  font-size:6px !important;
-  line-height:1 !important;
-  white-space:nowrap !important;
-  overflow:hidden !important;
-  text-overflow:ellipsis !important;
-  z-index:auto !important;
-}
-body[data-record-view="group"] .records-grid .record-card.is-group-view .favorite-btn{
-  position:absolute !important;
-  top:8px !important;
-  right:6px !important;
-  width:18px !important;
-  height:18px !important;
-  padding:0 !important;
-  z-index:5 !important;
-}
-body[data-record-view="group"] .records-grid .record-card.is-group-view .expand-cue{
-  display:none !important;
-}
-
-/* Group/detail document rows: the empty-state message is secondary and
-   occupies only the right-most content lane. */
-body[data-record-view="group"] .records-grid .record-card.is-group-view .expanded-file-main{
-  min-width:0 !important;
-  display:grid !important;
-  grid-template-columns:minmax(0,1fr) auto !important;
-  grid-template-rows:auto auto !important;
-  column-gap:10px !important;
-  row-gap:3px !important;
-  align-items:center !important;
-}
-body[data-record-view="group"] .records-grid .record-card.is-group-view .expanded-file-title{
-  grid-column:1 !important;
-  grid-row:1 !important;
-  display:grid !important;
-  grid-template-columns:16px minmax(0,1fr) auto !important;
-  align-items:center !important;
-  min-width:0 !important;
-  column-gap:6px !important;
-  font-size:9px !important;
-  line-height:1.15 !important;
-  font-weight:800 !important;
-}
-body[data-record-view="group"] .records-grid .record-card.is-group-view .expanded-file-title > span:first-of-type{
-  min-width:0 !important;
-  overflow:visible !important;
-  white-space:normal !important;
-  word-break:normal !important;
-  overflow-wrap:normal !important;
-  text-overflow:clip !important;
-}
-body[data-record-view="group"] .records-grid .record-card.is-group-view .expanded-file-meta{
-  grid-column:1 !important;
-  grid-row:2 !important;
-  min-width:0 !important;
-  margin-top:0 !important;
-}
-body[data-record-view="group"] .records-grid .record-card.is-group-view .slot-missing-note{
-  grid-column:2 !important;
-  grid-row:1 / span 2 !important;
-  justify-self:end !important;
-  align-self:center !important;
-  width:max-content !important;
-  max-width:150px !important;
-  margin:0 !important;
-  padding:5px 8px !important;
-  background:#fff1f2 !important;
-  border:1px solid #fecdd3 !important;
-  border-radius:7px !important;
-  color:#991b1b !important;
-  font-size:7px !important;
-  line-height:1.2 !important;
-  font-weight:800 !important;
-  text-align:right !important;
-  white-space:normal !important;
-}
-
-@media(max-width:560px){
-  body[data-record-view="group"] .records-grid .record-card.is-group-view .record-collapsed-face{
-    grid-template-columns:32px minmax(0,1fr) auto !important;
-    min-height:72px !important;
-    padding:7px 8px !important;
-    column-gap:8px !important;
-  }
-  body[data-record-view="group"] .records-grid .record-card.is-group-view .record-title-only{
-    font-size:9.5px !important;
-    line-height:1.15 !important;
-  }
-  body[data-record-view="group"] .records-grid .record-card.is-group-view .record-status{
-    max-width:66px !important;
-  }
-  body[data-record-view="group"] .records-grid .record-card.is-group-view .expanded-file-main{
-    grid-template-columns:minmax(0,1fr) !important;
-    grid-template-rows:auto auto auto !important;
-  }
-  body[data-record-view="group"] .records-grid .record-card.is-group-view .slot-missing-note{
-    grid-column:1 !important;
-    grid-row:3 !important;
-    justify-self:end !important;
-  }
-}
-
-/* V65.2.9.1: missing-state label is represented once, by the right-side
-   "No document uploaded yet." message. Do not duplicate it beside the title. */
-body[data-record-view="group"] .records-grid .record-card.is-group-view .expanded-file-title .expanded-status.missing{
-  display:none !important;
-}
-body[data-record-view="group"] .records-grid .record-card.is-group-view .expanded-file-title{
-  grid-template-columns:16px minmax(0,1fr) !important;
 }
