@@ -2862,10 +2862,10 @@ body[data-record-view="group"] .records-grid{
   gap:14px !important;
 }
 body[data-record-view="group"] .records-grid .record-card.is-group-view{
-  height:318px !important;
-  min-height:318px !important;
-  max-height:318px !important;
-  overflow:hidden !important;
+  height:auto !important;
+  min-height:0 !important;
+  max-height:none !important;
+  overflow:visible !important;
   border-radius:13px !important;
   background:linear-gradient(180deg,#fff 0%,#f8fbfe 100%) !important;
   border-color:color-mix(in srgb,var(--record-accent) 24%,#d8e2ec) !important;
@@ -2975,7 +2975,7 @@ body[data-record-view="group"] .records-grid .is-group-view.is-expanded .expand-
   body[data-record-view="all"] .records-grid,
   body[data-record-view="group"] .records-grid{grid-template-columns:1fr !important;}
   body[data-record-view="all"] .records-grid .record-status span:last-child{display:inline !important;}
-  body[data-record-view="group"] .records-grid .record-card.is-group-view{height:318px !important;min-height:318px !important;}
+  body[data-record-view="group"] .records-grid .record-card.is-group-view{height:auto !important;min-height:0 !important;max-height:none !important;overflow:visible !important;}
 }
 
 
@@ -3464,14 +3464,25 @@ body[data-record-view="group"] .expanded-footer{
   margin-top:10px !important;
 }
 
-
-/* V64.2 ISSUE FIXES — narrow stability layer; preserves base visual system. */
-.records-control-panel{overflow:visible !important;}
-.records-control-main,.records-control-tools{min-width:0 !important;}
-.records-control-main .engineering-records-tabs-row{min-width:0 !important;overflow:visible !important;}
-.records-control-main .category-tabs{max-width:100% !important;min-width:0 !important;}
-.records-grid{align-items:start !important;grid-auto-rows:max-content !important;}
-body[data-record-view="all"] .records-grid .record-card.is-expanded{align-self:start !important;overflow:visible !important;}
-body[data-record-view="group"] .records-grid .record-card.is-group-view{align-self:start !important;}
-body[data-record-view="group"] .records-grid .record-card.is-group-view .record-expanded-panel{overflow:visible !important;}
-@media(max-width:900px){.records-control-panel{overflow:visible !important;}.records-control-tools .tool-group{min-width:0 !important;}.records-grid{grid-auto-rows:max-content !important;}}
+/* V64.2 repair: expanded/group cards must size to their content instead of
+   using the legacy fixed-height group workspace rules. */
+body[data-record-view="group"] .records-grid .record-card.is-group-view,
+body[data-record-view="group"] .records-grid .record-card.is-group-view.is-expanded{
+  height:auto !important;
+  min-height:0 !important;
+  max-height:none !important;
+  overflow:visible !important;
+}
+body[data-record-view="group"] .records-grid .record-card.is-group-view .record-expanded-panel,
+body[data-record-view="group"] .records-grid .record-card.is-group-view.is-expanded .record-expanded-panel{
+  height:auto !important;
+  min-height:0 !important;
+  max-height:none !important;
+  overflow:visible !important;
+}
+body[data-record-view="group"] .records-grid .record-card.is-group-view .expanded-file-list{
+  height:auto !important;
+  min-height:0 !important;
+  max-height:none !important;
+  overflow:visible !important;
+}
