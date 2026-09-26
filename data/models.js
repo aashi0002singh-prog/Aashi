@@ -1,8 +1,5 @@
 export const MODEL_ORDER = ["A576","A376","A076","A075","A085","S741"];
 export const RECORD_ORDER = ["A","B","C","D","E","F","G","H","I","J","K","L","N","P","Q","R","T","U","V"];
-export function recordCodeValue(code=""){return String(code).toUpperCase().split("").reduce((n,c)=>n*26+(c.charCodeAt(0)-64),0)}
-export function compareRecordCodes(a,b){return recordCodeValue(a)-recordCodeValue(b)}
-export function nextRecordCode(existing=[]){const used=new Set(existing.map(x=>String(x).toUpperCase()));let n=1;while(true){let x="",v=n;while(v){v--;x=String.fromCharCode(65+v%26)+x;v=Math.floor(v/26)}if(!used.has(x))return x;n++}}
 
 export const CATEGORIES = [
   { key:"all", label:"All", icon:"fa-layer-group" },
