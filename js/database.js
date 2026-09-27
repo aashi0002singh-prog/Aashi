@@ -226,7 +226,7 @@ export async function moveFilePrefix(oldPrefix,newPrefix){
       const record=await new Promise((resolve,reject)=>{const tx=db.transaction(FILE_STORE,"readonly"),req=tx.objectStore(FILE_STORE).get(oldKey);req.onsuccess=()=>resolve(req.result||null);req.onerror=()=>reject(req.error||new Error("File metadata read failed"));});
       if(record){
         if(typeof record.baseKey==="string" && (record.baseKey===oldPrefix || record.baseKey.startsWith(`${oldPrefix}_`))){
-          record.baseKey=newKey===newPrefix?newPrefix:newPrefix+record.baseKey.slice(oldPrefix.length);
+          record.baseKey=newPrefix+record.baseKey.slice(oldPrefix.length);
         }
         await new Promise((resolve,reject)=>{const tx=db.transaction(FILE_STORE,"readwrite");const store=tx.objectStore(FILE_STORE);store.put(record,newKey);store.delete(oldKey);tx.oncomplete=resolve;tx.onerror=()=>reject(tx.error||new Error("File key move failed"));tx.onabort=()=>reject(tx.error||new Error("File key move aborted"));});
       }

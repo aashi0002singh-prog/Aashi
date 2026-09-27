@@ -1,4 +1,4 @@
-import {MODEL_ORDER,RECORD_ORDER,CATEGORIES,CATEGORY_COLORS,createDefaultData,resolveModelCode,subpartId,slotBaseKey} from "../data/models.js";
+import {MODEL_ORDER,RECORD_ORDER,CATEGORIES,CATEGORY_COLORS,createDefaultData,subpartId,storageKeyFor,resolveModelCode} from "../data/models.js";
 import {saveFile,saveFileVersion,getFile,getFiles,listFileVersions,listFileVersionsForBases,deleteAllFiles,deleteAuditLogs,addAudit,moveFilePrefix,deleteFilePrefix} from "./database.js";
 import {toast,escapeHtml,formatBytes,downloadBlob,downloadText} from "./ui.js";
 
@@ -138,7 +138,7 @@ async function refreshUploadedFlags(model=currentModel){
   renderCards();
 }
 
-function keyForSubpart(model,key,sub,index){return slotBaseKey(model,key,sub,index)}
+function keyForSubpart(model,key,sub,index){return storageKeyFor(model,key,sub,index)}
 async function hydrateInlinePreviews(entries){
   const modelAtStart=currentModel;
   const expandedKeys=new Set(expandedCards);
@@ -209,7 +209,6 @@ function renderCategories(){
   };
   document.getElementById("categoryTabs").innerHTML=CATEGORIES.map(c=>`<button class="cat-btn ${activeCategory===c.key?"active":""}" data-cat="${escapeHtml(c.key)}" style="--cat-color:${tabColors[c.key]||"#2563eb"}"><i class="fa-solid ${escapeHtml(c.icon||"fa-folder")}"></i><span>${escapeHtml(c.label)}</span><b class="cat-count">${RECORD_ORDER.filter(k=>currentItems()[k]?.category===c.key).length|| (c.key==="all"?RECORD_ORDER.filter(k=>currentItems()[k]).length:0)}</b></button>`).join("")
 }
-
 
 function filteredEntries(){let arr=RECORD_ORDER.map(k=>[k,currentItems()[k]]).filter(([,i])=>i).filter(([k,i])=>{const cat=activeCategory==="all"||i.category===activeCategory;const fav=!favoritesOnly||favorites.includes(`${currentModel}:${k}`);return cat&&fav&&(!query||itemText(k,i).includes(query.toLowerCase()))});if(sortMode==="title")arr.sort((a,b)=>a[1].title.localeCompare(b[1].title));if(sortMode==="category")arr.sort((a,b)=>a[1].category.localeCompare(b[1].category)||a[0].localeCompare(b[0]));if(sortMode==="favorite")arr.sort((a,b)=>Number(favorites.includes(`${currentModel}:${b[0]}`))-Number(favorites.includes(`${currentModel}:${a[0]}`)));return arr}
 function renderCards(){
@@ -416,11 +415,12 @@ async function upload(e){
 }
 
 function parseStorageIdentity(storageKey){
-  const value=String(storageKey||"").split("::v::")[0];
-  const model=resolveModelCode(value,data)||currentModel;
+  const value=String(storageKey||"");
+  const model=resolveModelCode(value,modelList())||currentModel;
   const rest=value===model?"":value.slice(model.length+1);
-  const [key,...parts]=rest.split("_");
-  return {model,key:key||"",subpart:parts.join("_")};
+  const clean=rest.split("::v::")[0];
+  const parts=clean.split("_");
+  return {model,key:parts.shift()||"",subpart:parts.join("_")};
 }
 
 async function downloadRecord(storageKey,filename){
@@ -499,9 +499,7 @@ Generated: ${new Date().toISOString()}`;
 }
 function openPresentation(key){const i=recordData(key);if(!i)return;document.getElementById("presentationModal")?.setAttribute("data-presentation-key",key);const entries=expandedFileMap.get(key)||[];document.getElementById("presentationContent").innerHTML=`<div class="presentation-code">${currentModel} · ${escapeHtml(i.title)}</div><h2>${escapeHtml(i.title)}</h2><div class="presentation-category">${escapeHtml(i.category)}</div><div class="presentation-tags">${(i.tags||[]).map(t=>`<span class="tag">${escapeHtml(t)}</span>`).join("")}</div><div class="presentation-file">${entries.map(x=>`<strong>${escapeHtml(x.name)}</strong><span class="${x.present?"status-present":"status-missing"}">${x.present?"PRESENT":"MISSING"}</span><strong>File</strong><span>${escapeHtml(x.filename)}</span><strong>Size</strong><span>${escapeHtml(x.size)}</span>`).join("")}</div>`;openModal("presentationModal")}
 function navigateRecord(delta){const arr=RECORD_ORDER.filter(k=>currentItems()[k]),modal=document.getElementById("presentationModal"),activeKey=modal?.classList.contains("hidden")?location.hash.split("/").pop():modal.dataset.presentationKey,idx=arr.indexOf(activeKey),next=arr[Math.max(0,Math.min(arr.length-1,(idx<0?0:idx)+delta))];if(!next)return;if(modal&&!modal.classList.contains("hidden")){openRecord(next);openPresentation(next)}else openRecord(next)}
-async function resetData(){if(!confirm("Reset all local dashboard data and stored files? This cannot be undone."))return;try{await deleteAllFiles();await deleteAuditLogs();data=createDefaultData();localStorage.removeItem(CUSTOM_MODELS_KEY);
-    [STORAGE_KEY,PREF_KEY,"MOBILE_RND_FAVORITES","MOBILE_RND_RECENT","MOBILE_RND_LAST_MODEL","MOBILE_RND_SIDEBAR","MOBILE_RND_LAB_MODEL_LINKS"].forEach(k=>localStorage.removeItem(k));
-    data=createDefaultData();saveData();prefs=loadPrefs();draftPrefs={...prefs};uploadedFiles=new Map();uploadedKeys=new Set();favorites=[];recentlyViewed=[];expandedCards.clear();currentModel=modelList()[0];activeCategory="all";query="";renderCategories();populateUploadModels(currentModel);renderAll();closeModal("settingsModal");toast("Local data reset to default dataset.","success")}catch(err){console.error("Reset failed",err);toast(`Reset failed: ${err?.message||String(err)}`,"error")}}
+async function resetData(){if(!confirm("Reset all local dashboard data and stored files? This cannot be undone."))return;try{await deleteAllFiles();await deleteAuditLogs();data=createDefaultData();localStorage.removeItem(CUSTOM_MODELS_KEY);saveData();uploadedFiles=new Map();uploadedKeys=new Set();favorites=[];recentlyViewed=[];expandedCards.clear();localStorage.removeItem("MOBILE_RND_FAVORITES");localStorage.removeItem("MOBILE_RND_RECENT");currentModel=modelList()[0];activeCategory="all";query="";renderCategories();populateUploadModels(currentModel);renderAll();closeModal("settingsModal");toast("Local data reset to default dataset.","success")}catch(err){console.error("Reset failed",err);toast(`Reset failed: ${err?.message||String(err)}`,"error")}}
 function dateStamp(){return new Date().toISOString().slice(0,10).replaceAll("-","")}
 function restoreSidebarState(){if(localStorage.getItem("MOBILE_RND_SIDEBAR")==="collapsed"){document.body.classList.add("sidebar-collapsed");document.getElementById("sidebarCollapseBtn").innerHTML='<i class="fa-solid fa-angles-right"></i>'}}
 
