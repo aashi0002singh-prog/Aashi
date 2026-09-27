@@ -3881,3 +3881,87 @@ body[data-record-view="all"] .records-grid .record-card.is-expanded .version-row
   width:100% !important;
   box-sizing:border-box !important;
 }
+
+
+/* V64.2 V4 — AUTHORITATIVE CATEGORY/EXPANDED DOCUMENT WORKSPACE FIX
+   Category/group view contains full document details. It must therefore use
+   a readable minimum card width instead of the compact 5/6-column index grid.
+   Long filenames are flexible text, never layout constraints. */
+@media (min-width: 901px){
+  body[data-record-view="group"] .records-grid{
+    grid-template-columns:repeat(auto-fit,minmax(320px,1fr)) !important;
+    gap:12px !important;
+    align-items:start !important;
+    grid-auto-rows:max-content !important;
+  }
+}
+@media (max-width: 900px) and (min-width: 621px){
+  body[data-record-view="group"] .records-grid{
+    grid-template-columns:repeat(2,minmax(0,1fr)) !important;
+    gap:10px !important;
+  }
+}
+@media (max-width: 620px){
+  body[data-record-view="group"] .records-grid{
+    grid-template-columns:1fr !important;
+    gap:10px !important;
+  }
+}
+
+body[data-record-view="group"] .records-grid .record-card.is-group-view,
+body[data-record-view="group"] .records-grid .record-card.is-group-view .record-expanded-panel,
+body[data-record-view="group"] .records-grid .record-card.is-group-view .expanded-file-list,
+body[data-record-view="group"] .records-grid .record-card.is-group-view .expanded-file-row,
+body[data-record-view="group"] .records-grid .record-card.is-group-view .expanded-file-main{
+  min-width:0 !important;
+  max-width:100% !important;
+  box-sizing:border-box !important;
+}
+body[data-record-view="group"] .records-grid .record-card.is-group-view .expanded-file-row{
+  overflow:hidden !important;
+}
+body[data-record-view="group"] .records-grid .record-card.is-group-view .expanded-file-title{
+  min-width:0 !important;
+  max-width:100% !important;
+}
+body[data-record-view="group"] .records-grid .record-card.is-group-view .expanded-file-title > span:first-of-type{
+  flex:1 1 auto !important;
+  min-width:0 !important;
+  max-width:100% !important;
+  white-space:normal !important;
+  overflow-wrap:anywhere !important;
+  word-break:normal !important;
+  overflow:hidden !important;
+}
+body[data-record-view="group"] .records-grid .record-card.is-group-view .expanded-file-meta{
+  min-width:0 !important;
+  max-width:100% !important;
+}
+body[data-record-view="group"] .records-grid .record-card.is-group-view .expanded-file-meta span:first-child{
+  min-width:0 !important;
+  max-width:100% !important;
+  flex:1 1 100% !important;
+  white-space:normal !important;
+  overflow-wrap:anywhere !important;
+  word-break:normal !important;
+}
+body[data-record-view="group"] .records-grid .record-card.is-group-view .version-history,
+body[data-record-view="group"] .records-grid .record-card.is-group-view .version-row,
+body[data-record-view="group"] .records-grid .record-card.is-group-view .version-name,
+body[data-record-view="group"] .records-grid .record-card.is-group-view .version-note{
+  min-width:0 !important;
+  max-width:100% !important;
+  box-sizing:border-box !important;
+}
+body[data-record-view="group"] .records-grid .record-card.is-group-view .version-name,
+body[data-record-view="group"] .records-grid .record-card.is-group-view .version-note{
+  overflow-wrap:anywhere !important;
+  word-break:normal !important;
+}
+body[data-record-view="group"] .records-grid .record-card.is-group-view .expanded-file-actions{
+  min-width:0 !important;
+  max-width:100% !important;
+  overflow:visible !important;
+}
+
+/* Cache-bust marker for the V4 document-workspace rules. */
