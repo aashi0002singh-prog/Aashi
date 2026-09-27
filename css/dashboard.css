@@ -3824,3 +3824,60 @@ body[data-record-view="group"] .records-grid .record-card.is-group-view{
 .tool-search input::placeholder{color:#94a3b8;}
 body[data-theme="dark"] .tool-search{background:#111827;border-color:#334155;color:#cbd5e1;}
 @media(max-width:700px){.tool-search{width:100%;min-width:0}.tool-search input{width:100%;}}
+
+
+/* V64.2 FINAL DOCUMENT-WORKSPACE FIX
+   An expanded record contains preview/version history and therefore must use
+   the full Engineering Records row instead of remaining trapped in one
+   compact grid column. Group/category view intentionally keeps its cards in
+   their normal multi-column workspace. */
+body[data-record-view="all"] .records-grid .record-card.is-expanded{
+  grid-column:1 / -1 !important;
+  width:100% !important;
+  min-width:0 !important;
+  max-width:none !important;
+  box-sizing:border-box !important;
+}
+body[data-record-view="all"] .records-grid .record-card.is-expanded .record-expanded-panel,
+body[data-record-view="all"] .records-grid .record-card.is-expanded .expanded-file-list,
+body[data-record-view="all"] .records-grid .record-card.is-expanded .expanded-file-row,
+body[data-record-view="all"] .records-grid .record-card.is-expanded .expanded-file-main{
+  min-width:0 !important;
+  width:100% !important;
+  max-width:none !important;
+  box-sizing:border-box !important;
+}
+body[data-record-view="all"] .records-grid .record-card.is-expanded .expanded-file-row{
+  display:flex !important;
+  align-items:flex-start !important;
+  gap:10px !important;
+}
+body[data-record-view="all"] .records-grid .record-card.is-expanded .expanded-file-main{
+  flex:1 1 auto !important;
+}
+body[data-record-view="all"] .records-grid .record-card.is-expanded .expanded-file-actions{
+  flex:0 0 auto !important;
+  max-width:100% !important;
+  flex-wrap:wrap !important;
+}
+body[data-record-view="all"] .records-grid .record-card.is-expanded .expanded-file-title,
+body[data-record-view="all"] .records-grid .record-card.is-expanded .expanded-file-meta{
+  min-width:0 !important;
+  max-width:100% !important;
+}
+body[data-record-view="all"] .records-grid .record-card.is-expanded .expanded-file-meta span:first-child{
+  min-width:0 !important;
+  max-width:100% !important;
+  overflow-wrap:anywhere !important;
+  word-break:break-word !important;
+}
+body[data-record-view="all"] .records-grid .record-card.is-expanded .version-history{
+  width:100% !important;
+  min-width:0 !important;
+  box-sizing:border-box !important;
+}
+body[data-record-view="all"] .records-grid .record-card.is-expanded .version-row{
+  min-width:0 !important;
+  width:100% !important;
+  box-sizing:border-box !important;
+}
