@@ -1,15 +1,13 @@
 import {MODEL_ORDER,RECORD_ORDER,CATEGORIES,CATEGORY_COLORS,createDefaultData} from "../data/models.js";
 import {saveFile,saveFileVersion,getFile,getFiles,listFileVersions,listFileVersionsForBases,deleteAllFiles,deleteAuditLogs,addAudit,migrateFilePrefix,deleteFilePrefix} from "./database.js";
 import {toast,escapeHtml,formatBytes,downloadBlob,downloadText} from "./ui.js";
-import {renderRecordCard} from "./components/record-card.js";
-import {openPreviewWorkspace, closePreviewWorkspace} from "./components/preview-workspace.js";
+import {createRecordSystem} from "./records/record-system.js";
 
-const STORAGE_KEY="MOBILE_RND_DB_DATA_V10";
+const STORAGE_KEY="MOBILE_RND_DB_DATA_V1";
 const PREF_KEY="MOBILE_RND_PREFS_V3";
 const AUTH_KEY="RND_AUTH_V3";
 const MAX_FILE_SIZE=500*1024*1024;
 const ALLOWED=["pdf","xlsx","xls","zip","bin","dwg","csv","doc","docx","ppt","pptx","txt","log","md","jpg","jpeg","png","webp","gif","svg"];
-const HARDWARE_DEFAULT={title:"Hardware Checklist",category:"Specification",icon:"fa-clipboard-check",tags:["Hardware verification","Pre-S sign-off"],filename:"",size:""};
 const CUSTOM_MODELS_KEY="MOBILE_RND_CUSTOM_MODELS_V1";
 const RENAMED_MODELS_KEY="MOBILE_RND_RENAMED_MODELS_V1";
 function customModelCodes(){return readJson(CUSTOM_MODELS_KEY,[]).map(x=>String(x?.code||"").trim().toUpperCase()).filter(Boolean)}
@@ -36,7 +34,8 @@ let expandedCards=new Set();
 function readJson(key,fallback){try{const value=JSON.parse(localStorage.getItem(key)||"null");return value??fallback}catch{return fallback}}
 function loadData(){
   try{
-    const raw=JSON.parse(localStorage.getItem(STORAGE_KEY)||"null")||createDefaultData();
+    const stored=JSON.parse(localStorage.getItem(STORAGE_KEY)||"null");
+    const raw=stored&&typeof stored==="object"?stored:createDefaultData();
     const defaults=createDefaultData();
     customModelCodes().forEach(code=>{
       if(!raw[code]){
@@ -50,16 +49,6 @@ function loadData(){
         raw[code]=template;
       }
     });
-    // V1 data contract: preserve current records and user data, but do not run historical layout migrations.
-    for(const model of Object.keys(raw)){
-      if(!raw[model] || typeof raw[model]!=="object") continue;
-      const d=defaults[model]||defaults.A576;
-      raw[model].meta={...d.meta,...(raw[model].meta||{})};
-      raw[model].items={...(raw[model].items||{})};
-      for(const key of RECORD_ORDER){
-        if(!raw[model].items[key]) raw[model].items[key]=clone(d.items[key]);
-      }
-    }
     return raw;
   }catch{return createDefaultData()}
 }
@@ -169,50 +158,37 @@ async function refreshUploadedFlags(model=currentModel){
 
 function subpartId(sub,index){return String(sub?.id||sub?.name||`part-${index+1}`).trim().toLowerCase().replace(/[^a-z0-9]+/g,"-").replace(/^-+|-+$/g,"")||`part-${index+1}`}
 function keyForSubpart(model,key,sub,index){const storageKey=key==="M"?"O":key;return `${model}_${storageKey}_${subpartId(sub,index)}`}
-function renderHero(){const m=data[currentModel].meta;document.getElementById("activeModelCode").textContent=currentModel;document.getElementById("activeModelName").textContent=m.name;const modelType=m.modelType||(m.status==="Mass Production"?"Mass Production Model":"Development Model");document.getElementById("modelStatus").innerHTML=`<i class="fa-solid fa-circle"></i> ${escapeHtml(modelType)}`;document.getElementById("metaAp").textContent=m.ap||"—";document.getElementById("metaModelYear").textContent=m.modelYear||"—";document.getElementById("metaSielHwPic").textContent=m.sielHwPic||m.leadKorea||"—";document.getElementById("metaRfNetwork").textContent=m.rfNetwork||m.modem||"—"}
-function renderCategories(){
-  const tabColors={
-    all:"#2563eb",
-    Schematics:CATEGORY_COLORS["Schematics"],
-    "RF & Wireless":CATEGORY_COLORS["RF & Wireless"],
-    "Process & Tech":CATEGORY_COLORS["Process & Tech"],
-    "Defect summary & SW process":CATEGORY_COLORS["Defect summary & SW process"],
-    Specification:CATEGORY_COLORS.Specification
-  };
-  document.getElementById("categoryTabs").innerHTML=CATEGORIES.map(c=>`<button class="cat-btn ${activeCategory===c.key?"active":""}" data-cat="${escapeHtml(c.key)}" style="--cat-color:${tabColors[c.key]||"#2563eb"}"><i class="fa-solid ${escapeHtml(c.icon||"fa-folder")}"></i><span>${escapeHtml(c.label)}</span><b class="cat-count">${RECORD_ORDER.filter(k=>currentItems()[k]?.category===c.key).length|| (c.key==="all"?RECORD_ORDER.filter(k=>currentItems()[k]).length:0)}</b></button>`).join("")
-}
-function ensureSchematicCardsVisible(){
-  const items=currentItems();
-  const defaults=createDefaultData()[currentModel]?.items||{};
-  for(const key of ["A","B","C"]){
-    if(!items[key]) items[key]=clone(defaults[key]);
-    items[key].title=defaults[key].title;
-    items[key].category="Schematics";
-    items[key].icon=defaults[key].icon;
-    items[key].tags=clone(defaults[key].tags||[]);
-  }
-}
-
-function filteredEntries(){let arr=RECORD_ORDER.map(k=>[k,currentItems()[k]]).filter(([,i])=>i).filter(([k,i])=>{const cat=activeCategory==="all"||i.category===activeCategory;const fav=!favoritesOnly||favorites.includes(`${currentModel}:${k}`);return cat&&fav&&(!query||itemText(k,i).includes(query.toLowerCase()))});if(sortMode==="title")arr.sort((a,b)=>a[1].title.localeCompare(b[1].title));if(sortMode==="category")arr.sort((a,b)=>a[1].category.localeCompare(b[1].category)||a[0].localeCompare(b[0]));if(sortMode==="favorite")arr.sort((a,b)=>Number(favorites.includes(`${currentModel}:${b[0]}`))-Number(favorites.includes(`${currentModel}:${a[0]}`)));return arr}
-function renderCards(){
-  ensureSchematicCardsVisible();
-  const grid=document.getElementById("cardsGrid"),entries=filteredEntries(),total=RECORD_ORDER.filter(k=>currentItems()[k]).length;
-  const groupView=activeCategory!=="all";
-  document.body.dataset.recordView=groupView?"group":"all";
-  document.body.dataset.activeRecordCategory=activeCategory;
-  document.getElementById("recordCount").textContent=groupView?`${entries.length} records • Group view`:`${entries.length} of ${total} records • Compact view`;
-  const hasSecondaryFilters=Boolean(query||favoritesOnly||sortMode!=="default");
-  document.getElementById("activeFilters").classList.toggle("hidden",!hasSecondaryFilters);
-  document.getElementById("activeFilters").innerHTML=`${query?`<span class="filter-chip">Search: ${escapeHtml(query)}</span>`:""}${favoritesOnly?`<span class="filter-chip">Favorites only</span>`:""}${sortMode!=="default"?`<span class="filter-chip">Sort: ${escapeHtml(sortMode)}</span>`:""}`;
-  grid.innerHTML=entries.map(([k,i])=>{
-    const fileEntries=expandedFileMap.get(k)||[];
-    return renderRecordCard({
-      key:k,item:i,currentModel,isFavorite:favorites.includes(`${currentModel}:${k}`),
-      entries:fileEntries,expanded:expandedCards.has(k),groupView,isAdmin,
-      color:CATEGORY_COLORS[i.category]||CATEGORY_COLORS.Specification,escapeHtml
-    });
-  }).join("") || `<div class="empty-state"><i class="fa-solid fa-filter-circle-xmark"></i><h3 class="font-bold mt-3">No records found</h3><p class="text-xs mt-1">Adjust the search or filters.</p><button class="btn btn-light mt-3" data-clear-filters>Clear filters</button></div>`;
-}
+const recordSystem=createRecordSystem({
+  getCurrentModel:()=>currentModel,
+  getCurrentItems:()=>currentItems(),
+  getExpandedFileMap:()=>expandedFileMap,
+  getFavorites:()=>favorites,
+  getExpandedCards:()=>expandedCards,
+  getIsAdmin:()=>isAdmin,
+  getActiveCategory:()=>activeCategory,
+  getQuery:()=>query,
+  getFavoritesOnly:()=>favoritesOnly,
+  getSortMode:()=>sortMode,
+  getFilteredEntries:filteredEntries,
+  ensureSchematicCardsVisible,
+  getData:()=>data,
+  getCategoryColors:()=>CATEGORY_COLORS,
+  getRecordOrder:()=>RECORD_ORDER,
+  getColorForCategory:(category)=>CATEGORY_COLORS[category]||CATEGORY_COLORS.Specification,
+  getFile,
+  formatBytes,
+  getFormatBytes:formatBytes,
+  escapeHtml,
+  downloadRecord,
+  toast,
+  openUploadModal,
+  focusRecord,
+  getMotion:()=>prefs.motion
+});
+const renderCards=()=>recordSystem.renderCards();
+const previewRecord=(key)=>recordSystem.previewRecord(key);
+const downloadAllRecordFiles=(key)=>recordSystem.downloadAllRecordFiles(key);
+const downloadLatestForRecord=(key)=>recordSystem.downloadLatestForRecord(key);
 
 function renderAuth(){const slot=document.getElementById("adminAuthSlot");slot.innerHTML=isAdmin?`<div class="flex gap-1"><button id="uploadBtn" class="btn btn-cyan"><i class="fa-solid fa-cloud-arrow-up"></i> Upload</button><button id="addModelBtn" class="btn btn-dark"><i class="fa-solid fa-plus"></i> Model</button><button id="editModelBtn" class="btn btn-dark"><i class="fa-solid fa-pen-to-square"></i> Edit</button><button id="logoutBtn" class="header-icon-btn" title="Logout"><i class="fa-solid fa-right-from-bracket"></i></button></div>`:`<button id="loginBtn" class="btn btn-dark"><i class="fa-solid fa-lock"></i> Admin • Shivam</button>`;document.getElementById(isAdmin?"uploadBtn":"loginBtn").addEventListener("click",()=>isAdmin?openUploadModal():openModal("loginModal"));if(isAdmin)document.getElementById("addModelBtn")?.addEventListener("click",openAddModelModal);document.getElementById("editModelBtn")?.addEventListener("click",openEditModelModal);if(isAdmin)document.getElementById("logoutBtn").addEventListener("click",()=>{isAdmin=false;sessionStorage.removeItem(AUTH_KEY);renderAuth();renderCards();document.dispatchEvent(new Event("rnd-auth-changed"));toast("Admin session ended.","info")})}
 function populateUploadModels(selected=currentModel){const el=document.getElementById("uploadModel");if(!el)return;el.innerHTML=modelList().map(m=>`<option value="${m}">${m} • ${escapeHtml(data[m].meta.name)}</option>`).join("");el.value=modelList().includes(selected)?selected:currentModel;populateUploadRecords(el.value)}
@@ -238,7 +214,7 @@ function openUploadModal(recordKey="",subpartIndex=""){if(!isAdmin){toast("Admin
 function resetSelectedFile(){selectedFiles=[];const input=document.getElementById("fileInput");if(input)input.value="";const name=document.getElementById("fileName");if(name)name.textContent="Drop files here or click to browse";const status=document.getElementById("uploadStatus");if(status)status.textContent="";const rev=document.getElementById("uploadRevision");if(rev)rev.value="";const note=document.getElementById("uploadNote");if(note)note.value=""}
 
 function openModal(id){document.getElementById(id)?.classList.remove("hidden")}
-function closeModal(id){document.getElementById(id)?.classList.add("hidden");if(id==="filePreviewModal")closePreviewWorkspace();if(id==="uploadModal")resetSelectedFile()}
+function closeModal(id){document.getElementById(id)?.classList.add("hidden");if(id==="filePreviewModal"){const body=document.getElementById("filePreviewBody");const url=body?.dataset?.objectUrl;if(url)URL.revokeObjectURL(url);if(body){delete body.dataset.objectUrl;body.innerHTML=""}}if(id==="uploadModal")resetSelectedFile()}
 function findModel(value){const v=String(value||"").trim().toUpperCase();return modelList().find(m=>m===v)||modelList().find(m=>m.toUpperCase()===v)||null}
 function renderModelPicker(filter=""){const menu=document.getElementById("modelPickerMenu");if(!menu)return;const q=String(filter||"").trim().toLowerCase(),matches=modelList().filter(m=>!q||m.toLowerCase().includes(q)||data[m].meta.name.toLowerCase().includes(q));menu.innerHTML=`<div class="model-picker-label"><i class="fa-solid fa-list-check"></i><span>Select Model</span></div>`+(matches.length?matches.map(m=>`<button type="button" class="model-picker-option ${m===currentModel?"active":""}" data-picker-model="${m}" role="option" aria-selected="${m===currentModel}"><span class="model-picker-code">${m}</span><span class="model-picker-name">${escapeHtml(data[m].meta.name)}</span></button>`).join(""):`<div class="model-picker-empty">No model found</div>`);menu.querySelectorAll("[data-picker-model]").forEach(b=>b.addEventListener("click",()=>{setModel(b.dataset.pickerModel);closeModelPicker()}))}
 function openModelPicker(){const m=document.getElementById("modelPickerMenu"),i=document.getElementById("modelPickerInput");if(m){m.classList.remove("hidden");i?.setAttribute("aria-expanded","true")}}
@@ -278,33 +254,176 @@ function bindEvents(){
   document.getElementById("cardsGrid").addEventListener("click",e=>{
     const up=e.target.closest("[data-open-upload]");if(up){openUploadModal(up.dataset.openUpload,up.dataset.subpartIndex||"");return}
     const fav=e.target.closest("[data-favorite]");if(fav){toggleFavorite(fav.dataset.favorite);return}
+    const previewRecordBtn=e.target.closest("[data-preview-record]");if(previewRecordBtn){previewRecord(previewRecordBtn.dataset.previewRecord);return}
     const preview=e.target.closest("[data-preview-file]");if(preview){previewStoredFile(preview.dataset.previewFile,preview.dataset.filename);return}
-    const previewRecord=e.target.closest("[data-preview-record]");if(previewRecord){
-      const key=previewRecord.dataset.previewRecord,entries=expandedFileMap.get(key)||[],entry=entries.find(x=>x.present);
-      if(entry) previewStoredFile(entry.storageKey,entry.filename); else openPreviewWorkspace({model:currentModel,item:currentItems()[key],entries,selectedStorageKey:"",selectedFilename:"",getFile,formatBytes,escapeHtml,downloadRecord,openUploadModal,isAdmin});
-      return;
-    }
+    const latest=e.target.closest("[data-download-latest]");if(latest){downloadLatestForRecord(latest.dataset.downloadLatest);return}
     const d=e.target.closest("[data-download]");if(d){downloadRecord(d.dataset.download,d.dataset.filename);return}
     const o=e.target.closest("[data-open-record]");if(o){openRecord(o.dataset.openRecord);openPresentation(o.dataset.openRecord);return}
     const c=e.target.closest("[data-copy-record]");if(c){copyRecord(c.dataset.copyRecord);return}
     const l=e.target.closest("[data-link-record]");if(l){copyLink(l.dataset.linkRecord);return}
     const clr=e.target.closest("[data-clear-filters]");if(clr){clearFilters();return}
     const card=e.target.closest(".record-card");
-    if(card&&!e.target.closest("button,a,input,select,textarea")){
-      const key=card.dataset.record;
-      if(expandedCards.has(key)) expandedCards.delete(key); else expandedCards.add(key);
-      renderCards();
-      requestAnimationFrame(()=>document.getElementById(`record-${key}`)?.scrollIntoView({behavior:prefs.motion?"smooth":"auto",block:"nearest"}));
-    }
+    if(card&&!e.target.closest("button,a,input,select,textarea")){const key=card.dataset.record;if(expandedCards.has(key))expandedCards.delete(key);else expandedCards.add(key);renderCards();requestAnimationFrame(()=>document.getElementById(`record-${key}`)?.scrollIntoView({behavior:prefs.motion?"smooth":"auto",block:"nearest"}));}
   });
-  document.getElementById("cardsGrid").addEventListener("keydown",e=>{
-    const card=e.target.closest(".record-card");
-    if(card&&(e.key==="Enter"||e.key===" ")&&!e.target.closest("button,input,select,textarea")){
-      e.preventDefault();const key=card.dataset.record;
-      if(expandedCards.has(key)) expandedCards.delete(key); else expandedCards.add(key);
-      renderCards();
+  document.getElementById("cardsGrid").addEventListener("keydown",e=>{const card=e.target.closest(".record-card");if(card&&(e.key==="Enter"||e.key===" ")&&!e.target.closest("button,input,select,textarea")){e.preventDefault();const key=card.dataset.record;if(expandedCards.has(key))expandedCards.delete(key);else expandedCards.add(key);renderCards();}});
+  document.getElementById("copySpecsBtn").addEventListener("click",copySpecs);document.getElementById("exportJsonBtn").addEventListener("click",exportModel);document.getElementById("exportReportBtn").addEventListener("click",exportReport);document.getElementById("settingsBtn").addEventListener("click",openSettings);document.getElementById("themeBtn").addEventListener("click",()=>{prefs.theme=prefs.theme==="dark"?"light":"dark";savePrefs();draftPrefs={...prefs};applyPrefs()});document.getElementById("fullscreenBtn").addEventListener("click",toggleFullscreen);
+  ["themeSelect","accentSelect","densitySelect","motionToggle"].forEach(id=>document.getElementById(id)?.addEventListener("change",syncDraftPrefs));
+  document.getElementById("settingsApplyBtn")?.addEventListener("click",()=>applyDraftPrefs(false));document.getElementById("settingsOkBtn")?.addEventListener("click",()=>{applyDraftPrefs(true)});
+  document.getElementById("engineeringSearch")?.addEventListener("input",e=>{query=e.target.value.trim().toLowerCase();renderCards()});
+  document.getElementById("sortSelect").addEventListener("change",e=>{sortMode=e.target.value;renderCards()});document.getElementById("favoritesToggle").addEventListener("click",()=>{favoritesOnly=!favoritesOnly;document.getElementById("favoritesToggle").classList.toggle("active",favoritesOnly);renderCards()});document.getElementById("clearFiltersBtn").addEventListener("click",clearFilters);
+  document.getElementById("prevRecordBtn").addEventListener("click",()=>navigateRecord(-1));document.getElementById("nextRecordBtn").addEventListener("click",()=>navigateRecord(1));document.getElementById("presentationBtn").addEventListener("click",()=>{const k=filteredEntries()[0]?.[0];if(k)openPresentation(k)});
+  document.getElementById("recentList").addEventListener("click",e=>{const b=e.target.closest("[data-recent-key]");if(b){setModel(b.dataset.recentModel);setTimeout(()=>openRecord(b.dataset.recentKey),50)}});
+  document.querySelectorAll("[data-close]").forEach(b=>b.addEventListener("click",()=>closeModal(b.dataset.close)));document.querySelectorAll(".modal-backdrop").forEach(b=>b.addEventListener("click",()=>closeModal(b.parentElement.id)));
+  document.getElementById("loginForm").addEventListener("submit",login);document.getElementById("addModelForm")?.addEventListener("submit",addModel);document.getElementById("editModelSelect")?.addEventListener("change",e=>loadEditModelFields(e.target.value));
+  const passwordToggle=document.getElementById("passwordToggle");
+  passwordToggle?.addEventListener("click",()=>{const input=document.getElementById("passwordInput"); const showing=input.type==="text"; input.type=showing?"password":"text"; passwordToggle.innerHTML=showing?'<i class="fa-solid fa-eye"></i>':'<i class="fa-solid fa-eye-slash"></i>'; passwordToggle.setAttribute("aria-label",showing?"Show password":"Hide password"); passwordToggle.title=showing?"Show password":"Hide password"});
+  document.getElementById("uploadModel").addEventListener("change",e=>{populateUploadRecords(e.target.value);const first=document.getElementById("uploadRecord")?.value;if(first)document.getElementById("uploadRecord").value=first;updateSubpartSelector()});document.getElementById("uploadRecord").addEventListener("change",()=>updateSubpartSelector());
+  document.getElementById("dropZone").addEventListener("click",()=>document.getElementById("fileInput").click());document.getElementById("dropZone").addEventListener("dragover",e=>{e.preventDefault();document.getElementById("dropZone").classList.add("drag-active")});document.getElementById("dropZone").addEventListener("dragleave",()=>document.getElementById("dropZone").classList.remove("drag-active"));document.getElementById("dropZone").addEventListener("drop",e=>{e.preventDefault();document.getElementById("dropZone").classList.remove("drag-active");selectFiles(e.dataTransfer.files)});document.getElementById("fileInput").addEventListener("change",e=>selectFiles(e.target.files));document.getElementById("uploadForm").addEventListener("submit",upload);
+  document.getElementById("backupBtn").addEventListener("click",()=>downloadText(JSON.stringify(data,null,2),`MobileRD_Backup_${dateStamp()}.json`));document.getElementById("resetBtn").addEventListener("click",resetData);
+  document.addEventListener("keydown",e=>{const tag=document.activeElement?.tagName||"",typing=/INPUT|TEXTAREA|SELECT/.test(tag);if(e.key==="Escape")document.querySelectorAll(".modal:not(.hidden)").forEach(m=>m.classList.add("hidden"));if((e.ctrlKey||e.metaKey)&&e.key.toLowerCase()==="k"){e.preventDefault();document.getElementById("engineeringSearch")?.focus();return}if(e.key==="/"&&!typing){e.preventDefault();document.getElementById("engineeringSearch")?.focus();return}if(e.key.toLowerCase()==="f"&&!typing)toggleFullscreen();if(e.key.toLowerCase()==="p"&&!typing){e.preventDefault();document.getElementById("presentationBtn").click()}if((e.key==="ArrowLeft"||e.key==="ArrowRight")&&!typing&&!document.querySelector(".modal:not(.hidden)")){navigateRecord(e.key==="ArrowLeft"?-1:1)}});
+}
+function syncDraftPrefs(){draftPrefs={theme:document.getElementById("themeSelect").value,accent:document.getElementById("accentSelect").value,density:document.getElementById("densitySelect").value,motion:document.getElementById("motionToggle").checked}}
+function openSettings(){draftPrefs={...prefs};applySettingsForm();openModal("settingsModal")}
+function applySettingsForm(){document.getElementById("themeSelect").value=draftPrefs.theme;document.getElementById("accentSelect").value=draftPrefs.accent;document.getElementById("densitySelect").value=draftPrefs.density;document.getElementById("motionToggle").checked=draftPrefs.motion}
+function applyDraftPrefs(closeAfter){syncDraftPrefs();prefs={...draftPrefs};savePrefs();applyPrefs();if(closeAfter)closeModal("settingsModal")}
+function applyPrefs(){document.body.classList.toggle("no-motion",!prefs.motion);document.body.dataset.theme=prefs.theme;document.body.dataset.accent=prefs.accent;document.body.dataset.density=prefs.density;applySettingsForm();document.getElementById("themeIcon").className=`fa-solid fa-${prefs.theme==="dark"?"sun":"moon"}`}
+function clearFilters(){query="";activeCategory="all";favoritesOnly=false;sortMode="default";document.getElementById("sortSelect").value="default";document.getElementById("engineeringSearch")?.setAttribute("value","");if(document.getElementById("engineeringSearch"))document.getElementById("engineeringSearch").value="";document.getElementById("favoritesToggle").classList.remove("active");renderCategories();renderCards()}
+function toggleFavorite(id){favorites=favorites.includes(id)?favorites.filter(x=>x!==id):[...favorites,id];localStorage.setItem("MOBILE_RND_FAVORITES_V1",JSON.stringify(favorites));renderCards();toast(favorites.includes(id)?"Added to favorites.":"Removed from favorites.","info")}
+async function toggleFullscreen(){try{if(!document.fullscreenElement)await document.documentElement.requestFullscreen();else await document.exitFullscreen()}catch{toast("Fullscreen is not available.","error")}}
+function customModels(){return readJson(CUSTOM_MODELS_KEY,[]).filter(x=>x&&x.code&&data[x.code])}
+function editableModels(){return modelList()}
+function openAddModelModal(){if(!isAdmin){toast("Admin authentication is required.","error");return}setModelAdminFormMode("add");document.getElementById("addModelForm")?.reset();document.getElementById("addModelError")?.classList.add("hidden");openModal("addModelModal")}
+function openEditModelModal(){if(!isAdmin){toast("Admin authentication is required.","error");return}const models=editableModels();if(!models.length){toast("No editable model is available.","info");return}setModelAdminFormMode("edit");populateEditModelSelect(models[0]);openModal("addModelModal")}
+function setModelAdminFormMode(mode){const edit=mode==="edit",title=document.getElementById("addModelTitle"),desc=document.querySelector("#addModelModal .modal-description"),submit=document.getElementById("addModelSubmit"),icon=document.querySelector("#addModelModal .modal-icon i"),wrap=document.getElementById("editModelSelectWrap"),code=document.getElementById("newModelCode"),help=document.getElementById("addModelHelp");if(title)title.textContent=edit?"Edit Existing Model":"Add New Model";if(desc)desc.textContent=edit?"Admin-only model update. Model code can be changed safely and associated stored files are migrated.":"Admin-only model registration. New models appear automatically in the model selector.";if(submit)submit.innerHTML=edit?'<i class="fa-solid fa-floppy-disk"></i> Save Updated Model':'<i class="fa-solid fa-plus"></i> Add Model';if(icon)icon.className=`fa-solid ${edit?"fa-pen-to-square":"fa-square-plus"}`;wrap?.classList.toggle("hidden",!edit);if(code)code.readOnly=false;const del=document.getElementById("deleteModelBtn");if(del){del.classList.toggle("hidden",!edit);del.onclick=deleteSelectedModel;}if(help)help.innerHTML=edit?'<i class="fa-solid fa-database"></i> Model code is editable. Stored document/version keys are migrated automatically.':'<i class="fa-solid fa-database"></i> Model registration is stored locally in this browser and survives page reloads.';["newModelName","newModelProcessor","newModelYear","newModelPic","newModelRf","newModelType"].forEach(id=>document.getElementById(id)?.toggleAttribute("required",!edit||id!=="newModelPic"));document.getElementById("addModelForm")?.setAttribute("data-mode",mode)}
+function populateEditModelSelect(selected=""){const el=document.getElementById("editModelSelect");if(!el)return;const models=editableModels();el.innerHTML=models.map(code=>`<option value="${escapeHtml(code)}">${escapeHtml(code)} • ${escapeHtml(data[code]?.meta?.name||code)}</option>`).join("");if(selected&&models.includes(selected))el.value=selected;loadEditModelFields(el.value)}
+function loadEditModelFields(code){const model=data[code];if(!model)return;document.getElementById("newModelCode").value=code;document.getElementById("newModelName").value=model.meta?.name||"";document.getElementById("newModelProcessor").value=model.meta?.ap||"";document.getElementById("newModelYear").value=model.meta?.modelYear||"";document.getElementById("newModelPic").value=model.meta?.sielHwPic||model.meta?.leadKorea||"";document.getElementById("newModelRf").value=model.meta?.rfNetwork||model.meta?.modem||"";document.getElementById("newModelType").value=model.meta?.modelType||(model.meta?.status==="Mass Production"?"Mass Production Model":"Development Model")}
+async function addModel(e){
+  e.preventDefault();if(!isAdmin)return;
+  const form=document.getElementById("addModelForm"),mode=form?.dataset.mode||"add",oldCode=document.getElementById("editModelSelect")?.value||"",code=document.getElementById("newModelCode").value.trim().toUpperCase(),name=document.getElementById("newModelName").value.trim(),processor=document.getElementById("newModelProcessor").value.trim(),modelYear=document.getElementById("newModelYear").value.trim(),pic=document.getElementById("newModelPic").value.trim(),rf=document.getElementById("newModelRf").value.trim(),modelType=document.getElementById("newModelType").value,err=document.getElementById("addModelError");
+  const fail=msg=>{err.textContent=msg;err.classList.remove("hidden")};
+  if(!/^[A-Z][A-Z0-9_-]{1,23}$/.test(code))return fail("Use a valid model code (2–24 characters, letters/numbers/_/-). ");
+  if(!name||!processor||!modelYear||!rf||!["Development Model","Mass Production Model"].includes(modelType)||(mode!=="edit"&&!pic))return fail("Complete all required model information fields.");
+  if(mode==="edit"){
+    if(!oldCode||!modelList().includes(oldCode)||!data[oldCode])return fail("Select a valid existing model to edit.");
+    if(code!==oldCode&&modelList().includes(code))return fail("That model code already exists. Choose another code.");
+    const model=data[oldCode];model.meta={...model.meta,name,ap:processor,modelYear,sielHwPic:pic,rfNetwork:rf,modem:rf,leadKorea:pic,modelType,status:modelType==="Mass Production Model"?"Mass Production":"Development"};
+    if(code!==oldCode){
+      data[code]=model;delete data[oldCode];
+      const custom=readJson(CUSTOM_MODELS_KEY,[]),idx=custom.findIndex(x=>x.code===oldCode);if(idx>=0)custom[idx]={...custom[idx],code,name,processor,modelYear,sielHwPic:pic,rfNetwork:rf,modelType};else custom.push({code,name,processor,modelYear,sielHwPic:pic,rfNetwork:rf,modelType});
+      const renamed=renamedModelMap();if(MODEL_ORDER.includes(oldCode))renamed[oldCode]=code;
+      await migrateFilePrefix(oldCode,code);
+      if(currentModel===oldCode){currentModel=code;localStorage.setItem("MOBILE_RND_LAST_MODEL_V1",code)}
+      localStorage.setItem(CUSTOM_MODELS_KEY,JSON.stringify(custom));if(MODEL_ORDER.includes(oldCode))localStorage.setItem(RENAMED_MODELS_KEY,JSON.stringify(renamed));
+      saveData();closeModal("addModelModal");populateUploadModels(currentModel);renderAll();renderModelPicker("");const picker=document.getElementById("modelPickerInput");if(picker)picker.value=currentModel;toast(`${oldCode} renamed to ${code} and stored document keys migrated.`,'success');addAudit("MODEL_RENAME",{from:oldCode,to:code,name,processor,modelYear,sielHwPic:pic,rfNetwork:rf,modelType});return;
     }
-  });
+    const custom=readJson(CUSTOM_MODELS_KEY,[]),idx=custom.findIndex(x=>x.code===oldCode);if(idx>=0)custom[idx]={...custom[idx],code,name,processor,modelYear,sielHwPic:pic,rfNetwork:rf,modelType};else custom.push({code,name,processor,modelYear,sielHwPic:pic,rfNetwork:rf,modelType});localStorage.setItem(CUSTOM_MODELS_KEY,JSON.stringify(custom));saveData();closeModal("addModelModal");populateUploadModels(currentModel);renderAll();renderModelPicker("");toast(`${code} model details updated.`,'success');addAudit("MODEL_EDIT",{model:code,name,processor,modelYear,sielHwPic:pic,rfNetwork:rf,modelType});return;
+  }
+  if(modelList().includes(code))return fail("This model code already exists. Use Edit Model to update its details.");
+  const defaults=createDefaultData().A576,model=clone(defaults);model.meta={...model.meta,name,ap:processor,modelYear,sielHwPic:pic,rfNetwork:rf,modem:rf,leadKorea:pic,modelType,status:modelType==="Mass Production Model"?"Mass Production":"Development"};
+  for(const item of Object.values(model.items)){if(item.filename)item.filename=item.filename.replaceAll("A576",code);item.subItems?.forEach(sub=>{if(sub.filename)sub.filename=sub.filename.replaceAll("A576",code)});item.mergedSources?.forEach(src=>{if(src.filename)src.filename=src.filename.replaceAll("A576",code)})}
+  data[code]=model;const custom=readJson(CUSTOM_MODELS_KEY,[]);custom.push({code,name,processor,modelYear,sielHwPic:pic,rfNetwork:rf,modelType});localStorage.setItem(CUSTOM_MODELS_KEY,JSON.stringify(custom));saveData();closeModal("addModelModal");populateUploadModels(currentModel);renderAll();renderModelPicker("");toast(`${code} added to the model selection list.`,'success');addAudit("MODEL_ADD",{model:code,name,processor,modelYear,sielHwPic:pic,rfNetwork:rf,modelType});
+}
+async function deleteSelectedModel(){if(!isAdmin)return;const code=document.getElementById("editModelSelect")?.value||"";if(!code||!data[code]){toast("Select a model to delete.","error");return}const custom=readJson(CUSTOM_MODELS_KEY,[]);if(!custom.some(x=>x.code===code)){toast("Built-in models cannot be deleted from the admin panel.","error");return}if(!confirm(`Delete model ${code} and all locally stored documents for this model? This cannot be undone.`))return;await deleteFilePrefix(code);const renamed=renamedModelMap(),original=Object.entries(renamed).find(([,newCode])=>newCode===code)?.[0];delete data[code];if(original&&MODEL_ORDER.includes(original)){delete renamed[original];data[original]=createDefaultData()[original]}localStorage.setItem(CUSTOM_MODELS_KEY,JSON.stringify(custom.filter(x=>x.code!==code)));localStorage.setItem(RENAMED_MODELS_KEY,JSON.stringify(renamed));saveData();const models=modelList();currentModel=models[0]||"";localStorage.setItem("MOBILE_RND_LAST_MODEL_V1",currentModel);closeModal("addModelModal");populateUploadModels(currentModel);renderCategories();renderAll();renderModelPicker("");toast(original?`${code} removed and ${original} restored.`:`${code} deleted.`,'success');addAudit("MODEL_DELETE",{model:code,restoredModel:original||""})}
+
+function login(e){e.preventDefault();const input=document.getElementById("passwordInput");const error=document.getElementById("loginError");if(input.value==="admin123"){isAdmin=true;sessionStorage.setItem(AUTH_KEY,"true");closeModal("loginModal");document.getElementById("passwordInput").value="";renderAuth();renderCards();document.dispatchEvent(new Event("rnd-auth-changed"));toast("Admin session authenticated.","success");addAudit("LOGIN")}else{error.classList.remove("hidden");input.classList.add("input-error");input.focus();setTimeout(()=>input.classList.remove("input-error"),700)}}
+function selectFiles(fileList){if(!isAdmin){toast("Admin authentication is required to upload documents.","error");return}const files=[...(fileList||[])];if(!files.length)return;const valid=[];const rejected=[];for(const file of files){const ext=file.name.split(".").pop().toLowerCase();if(!ALLOWED.includes(ext)){rejected.push(`${file.name}: unsupported type`);continue}if(file.size>MAX_FILE_SIZE){rejected.push(`${file.name}: exceeds 500 MB`);continue}valid.push(file)}selectedFiles=[...selectedFiles,...valid];const name=document.getElementById("fileName");if(name)name.textContent=selectedFiles.length?selectedFiles.map(f=>`${f.name} (${formatBytes(f.size)})`).join(" • "):"Drop files here or click to browse";const status=document.getElementById("uploadStatus");if(status)status.textContent=rejected.length?`${selectedFiles.length} file${selectedFiles.length===1?"":"s"} ready. ${rejected.join("; ")}`:`${selectedFiles.length} file${selectedFiles.length===1?"":"s"} ready for upload.`}
+async function upload(e){
+  e.preventDefault();if(!selectedFiles.length){toast("Please select at least one file first.","error");return}
+  const model=document.getElementById("uploadModel").value,key=document.getElementById("uploadRecord").value,note=document.getElementById("uploadNote").value.trim(),revision=document.getElementById("uploadRevision")?.value.trim()||"",item=data[model]?.items?.[key];
+  if(!item){toast("Upload target is not available.","error");return}
+  const selector=document.getElementById("uploadSubPart"),sourceValue=selector?.value||"";
+  let storageKey=`${model}_${key}`,targetLabel=item.title,source=null;
+  if(Array.isArray(item.mergedSources)&&item.mergedSources.length){source=item.mergedSources.find(x=>String(x.key)===String(sourceValue))||item.mergedSources[0];storageKey=`${model}_${source.key}`;targetLabel=`${item.title} / ${source.name}`}
+  else if(Array.isArray(item.subItems)&&item.subItems.length){const idx=Number(sourceValue);source=item.subItems[idx];if(!source){toast("Select a document entry first.","error");return}storageKey=keyForSubpart(model,key,source,idx);targetLabel=`${item.title} / ${source.name}`}
+  const files=[...selectedFiles],btn=document.getElementById("saveUploadBtn"),progressWrap=document.getElementById("uploadProgressWrap"),progress=document.getElementById("uploadProgress"),status=document.getElementById("uploadStatus");btn.disabled=true;progressWrap.classList.remove("hidden");progress.style.width="0%";
+  try{
+    for(let i=0;i<files.length;i++){
+      const file=files[i];if(status)status.textContent=`Saving ${i+1} of ${files.length}: ${file.name}`;
+      let saved;
+      try{
+        saved=await saveFileVersion(storageKey,file,{revision,note},(pct,part,total)=>{progress.style.width=`${pct}%`;if(status)status.textContent=`Saving ${file.name}… ${pct}% (${part}/${total} chunks)`});
+      }catch(err){
+        const detail=err?.name?`${err.name}: ${err.message||"storage operation failed"}`:(err?.message||String(err));
+        console.error("IndexedDB file commit failed",err);
+        if(status)status.textContent=`Upload failed for ${file.name}: ${detail}`;
+        toast(`File was not saved: ${detail}`,"error");
+        throw err;
+      }
+      if(source){source.uploadedFilename=file.name;source.uploadedSize=formatBytes(file.size);source.updatedAt=new Date().toISOString();if(note)source.detail=note}
+      else {item.filename=file.name;item.size=formatBytes(file.size);item.uploadedFilename=file.name;item.uploadedSize=formatBytes(file.size);item.updatedAt=new Date().toISOString();if(note)item.note=note}
+      try{await addAudit("UPLOAD",{model,key,subpart:source?.name||"",filename:file.name,size:file.size,versionKey:saved.key})}
+      catch(auditErr){console.warn("File saved but audit logging failed",auditErr)}
+    }
+    try{saveData()}catch(metaErr){console.warn("File saved but local metadata persistence failed",metaErr)}
+    try{
+      // Refresh the document state without forcing the record into the compact
+      // grid's narrow column. In ALL view the user can expand the record on
+      // demand; in a category/group view the existing group layout remains
+      // expanded naturally.
+      await refreshUploadedFlags(currentModel);
+      renderRecent();
+      requestAnimationFrame(()=>focusRecord(key));
+    }catch(uiErr){console.warn("File saved but UI refresh failed",uiErr)}
+    closeModal("uploadModal");toast(`${files.length} file${files.length===1?"":"s"} saved to ${targetLabel}.`,`success`);resetSelectedFile();document.getElementById("uploadModel").value=currentModel;populateUploadRecords(currentModel);updateSubpartSelector();
+  }catch(err){
+    console.error("Upload operation stopped",err);
+    if(status&&!String(status.textContent||"").startsWith("Upload failed")) status.textContent=`Upload stopped: ${err?.message||String(err)}`;
+  }finally{btn.disabled=false;setTimeout(()=>progressWrap.classList.add("hidden"),300)}
+}
+
+function parseStorageIdentity(storageKey){
+  const value=String(storageKey||"");
+  const model=[...modelList()].sort((a,b)=>b.length-a.length).find(m=>value===m||value.startsWith(`${m}_`))||currentModel;
+  const rest=value===model?"":value.slice(model.length+1);
+  const key=rest.split("::v::")[0].split("_")[0]||"";
+  const suffix=rest.includes("_")?rest.slice(rest.indexOf("_")+1):"";
+  return {model,key,subpart:suffix};
+}
+
+async function downloadRecord(storageKey,filename){
+  try{
+    let record=await getFile(storageKey),resolvedKey=storageKey;
+    const {model,key}=parseStorageIdentity(storageKey);
+    if(key==="T"||key==="U"){
+      const primaryMatches=record?.blob && ((key==="T"&&!isKoreaMemberFile(record))||(key==="U"&&isKoreaMemberFile(record)));
+      if(!primaryMatches){
+        const legacyKey=`${model}_${key==="T"?"U":"T"}`;
+        const legacy=await getFile(legacyKey);
+        if(legacy?.blob && ((key==="T"&&!isKoreaMemberFile(legacy))||(key==="U"&&isKoreaMemberFile(legacy)))){record=legacy;resolvedKey=legacyKey;}
+        else if(!record?.blob) record=null;
+      }
+    }
+    if(record?.blob){
+      const ok=downloadBlob(record.blob,record.filename||filename);
+      if(ok){
+        const parsed= parseStorageIdentity(resolvedKey),resolvedModel=parsed.model,resolvedRecord=parsed.key,subpart=parsed.subpart;
+        await addAudit("DOWNLOAD",{model:resolvedModel,key:resolvedRecord,subpart,filename:record.filename||filename});
+        toast("Download started.","success");
+        return;
+      }
+      toast("Browser blocked the download. Please allow downloads for this site.","error");
+      return;
+    }
+  }catch(err){console.error("File download lookup failed",err)}
+  toast("No uploaded file is available for this record. Admin must upload the document first.","info");
+}
+async function previewStoredFile(storageKey,filename){
+  try{
+    const record=await getFile(storageKey);if(!record?.blob){toast("No uploaded file is available for preview.","info");return;}
+    const body=document.getElementById("filePreviewBody"),title=document.getElementById("filePreviewTitle"),meta=document.getElementById("filePreviewMeta");
+    const previousUrl=body?.dataset?.objectUrl;if(previousUrl)URL.revokeObjectURL(previousUrl);
+    const objectUrl=URL.createObjectURL(record.blob);if(body)body.dataset.objectUrl=objectUrl;
+    if(title)title.textContent=record.filename||filename||"Engineering file";
+    if(meta)meta.textContent=`${currentModel} · ${formatBytes(record.size||record.blob.size)} · ${record.blob.type||"unknown type"}`;
+    if(body){const name=record.filename||filename||"file",ext=name.split(".").pop().toLowerCase();
+      if(record.blob.type?.startsWith("image/")||["png","jpg","jpeg","webp","gif","svg"].includes(ext)) body.innerHTML=`<img class="file-preview-image" src="${objectUrl}" alt="${escapeHtml(name)}">`;
+      else if(record.blob.type==="application/pdf"||ext==="pdf") body.innerHTML=`<iframe class="file-preview-frame" src="${objectUrl}" title="PDF preview"></iframe>`;
+      else if(record.blob.type?.startsWith("text/")||["csv","txt","log","md"].includes(ext)){const text=await record.blob.text();body.innerHTML=`<pre class="file-preview-text">${escapeHtml(text.slice(0,200000))}</pre>`;}
+      else body.innerHTML=`<div class="file-preview-unsupported"><i class="fa-solid fa-file-lines"></i><strong>Preview is not available for this file type.</strong><span>Use Download to open the original file in its native application.</span><button type="button" class="btn btn-dark" id="inlinePreviewDownload"><i class="fa-solid fa-download"></i> Download</button></div>`;
+      document.getElementById("inlinePreviewDownload")?.addEventListener("click",()=>downloadRecord(storageKey,name));
+    }
+    document.getElementById("filePreviewModal")?.classList.remove("hidden");
+  }catch(err){console.error("Preview failed",err);toast("Unable to preview this file.","error")}
 }
 
 function recordData(key){return currentItems()[key]}
@@ -350,6 +469,8 @@ function dateStamp(){return new Date().toISOString().slice(0,10).replaceAll("-",
 function restoreSidebarState(){if(localStorage.getItem("MOBILE_RND_SIDEBAR_V1")==="collapsed"){document.body.classList.add("sidebar-collapsed");document.getElementById("sidebarCollapseBtn").innerHTML='<i class="fa-solid fa-angles-right"></i>'}}
 
 init();
+// V61: wait for fonts/layout to settle, then perform one harmless final render.
+// This reduces first-open layout shifts on wide desktop viewports.
 window.addEventListener("load",()=>{
   requestAnimationFrame(()=>requestAnimationFrame(()=>{
     renderAll();

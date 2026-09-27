@@ -1,7 +1,6 @@
 import {MODEL_ORDER, RECORD_ORDER, createDefaultData} from "../data/models.js";
 import {getFile, getAuditLogs, addAudit, listFileMetadata} from "./database.js";
 import {downloadBlob, formatBytes, escapeHtml} from "./ui.js";
-import {openPreviewWorkspace} from "./components/preview-workspace.js";
 
 /*
   Isolated File Command Center.
@@ -11,7 +10,7 @@ import {openPreviewWorkspace} from "./components/preview-workspace.js";
 
 const DATA_KEY = "MOBILE_RND_DB_DATA_V10";
 let rows = [];
-
+let objectUrl = null;
 
 function loadData() {
   try { return JSON.parse(localStorage.getItem(DATA_KEY)) || createDefaultData(); }
@@ -129,6 +128,12 @@ async function recentUploads() {
   }
 }
 
+function clearPreview() {
+  if (objectUrl) { URL.revokeObjectURL(objectUrl); objectUrl = null; }
+  const body = document.getElementById("filePreviewBody");
+  if (body) body.innerHTML = "";
+}
+
 async function getSelected(row) {
   return getFile(row.storageKey || `${row.model}_${row.key}`);
 }
@@ -145,21 +150,27 @@ async function downloadRow(row) {
 async function previewRow(row) {
   const record = await getSelected(row);
   if (!record?.blob) throw new Error("File is not present in local storage.");
-  const storageKey=row.storageKey || `${row.model}_${row.key}`;
-  const filename=record.filename || row.filename || "Engineering file";
-  await openPreviewWorkspace({
-    model:row.model,
-    item:{title:row.key,category:row.category,tags:[]},
-    entries:[{name:row.key,filename,size:formatBytes(record.blob.size),present:true,versionCount:1,storageKey,versions:[{key:storageKey,versionLabel:"Current",filename,size:formatBytes(record.blob.size)}]}],
-    selectedStorageKey:storageKey,
-    selectedFilename:filename,
-    getFile,
-    formatBytes,
-    escapeHtml,
-    downloadRecord:async(key,name)=>downloadRow({...row,storageKey:key,filename:name}),
-    openUploadModal:()=>{},
-    isAdmin:false
-  });
+  clearPreview();
+  objectUrl = URL.createObjectURL(record.blob);
+  const body = document.getElementById("filePreviewBody");
+  const title = document.getElementById("filePreviewTitle");
+  const meta = document.getElementById("filePreviewMeta");
+  if (title) title.textContent = record.filename || row.filename;
+  if (meta) meta.textContent = `${row.model} · ${row.key} · ${formatBytes(record.blob.size)} · ${record.blob.type || "unknown type"}`;
+  if (!body) return;
+  const ext = extOf(record.filename || row.filename);
+  if (record.blob.type.startsWith("image/") || ["png", "jpg", "jpeg", "webp", "gif", "svg"].includes(ext)) {
+    body.innerHTML = `<img class="file-preview-image" src="${objectUrl}" alt="${escapeHtml(record.filename || row.filename)}">`;
+  } else if (record.blob.type === "application/pdf" || ext === "pdf") {
+    body.innerHTML = `<iframe class="file-preview-frame" src="${objectUrl}" title="PDF preview"></iframe>`;
+  } else if (record.blob.type.startsWith("text/") || ["csv", "txt", "log", "md"].includes(ext)) {
+    const text = await record.blob.text();
+    body.innerHTML = `<pre class="file-preview-text">${escapeHtml(text.slice(0, 200000))}</pre>`;
+  } else {
+    body.innerHTML = `<div class="file-preview-unsupported"><i class="fa-solid ${iconFor(row.filename)}"></i><strong>Preview not available for this file type.</strong><span>You can download the original file from the command center.</span><button type="button" class="btn btn-dark" id="previewDownloadBtn"><i class="fa-solid fa-download"></i> Download</button></div>`;
+    document.getElementById("previewDownloadBtn")?.addEventListener("click", () => downloadRow(row).catch(e => window.alert(e.message)));
+  }
+  document.getElementById("filePreviewModal")?.classList.remove("hidden");
 }
 
 async function refresh() {
