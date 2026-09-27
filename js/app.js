@@ -1,206 +1,58 @@
 import {MODEL_ORDER,RECORD_ORDER,CATEGORIES,CATEGORY_COLORS,createDefaultData} from "../data/models.js";
-import {saveFile,saveFileVersion,getFile,getFiles,listFileVersions,listFileVersionsForBases,deleteAllFiles,deleteAuditLogs,addAudit,migrateFilePrefix,deleteFilePrefix} from "./database.js";
+import {saveFile,saveFileVersion,getFile,getFiles,listFileVersions,listFileVersionsForBases,deleteAllFiles,deleteAuditLogs,addAudit,moveFilePrefix,deleteFilePrefix} from "./database.js";
 import {toast,escapeHtml,formatBytes,downloadBlob,downloadText} from "./ui.js";
 
-const STORAGE_KEY="MOBILE_RND_DB_DATA_V10";
-const PREF_KEY="MOBILE_RND_PREFS_V3";
-const AUTH_KEY="RND_AUTH_V3";
+const STORAGE_KEY="MOBILE_RND_DATA";
+const PREF_KEY="MOBILE_RND_PREFS";
+const AUTH_KEY="RND_AUTH";
+const CUSTOM_MODELS_KEY="MOBILE_RND_CUSTOM_MODELS";
 const MAX_FILE_SIZE=500*1024*1024;
 const ALLOWED=["pdf","xlsx","xls","zip","bin","dwg","csv","doc","docx","ppt","pptx","txt","log","md","jpg","jpeg","png","webp","gif","svg"];
-const LEGACY_RECORD_MAP={S:"A",B:"B",I:"C",P:"D",K:"E",L:"F",M:"G",T:"H",C:"I",E:"J",H:"K",F:"L",G:"M",Q:"N",J:"O",A:"P",D:"Q",N:"R",O:"S",R:"U",U:"T",VSWR:"H",HWC:"T"};
-const HARDWARE_DEFAULT={title:"Hardware Checklist",category:"Specification",icon:"fa-clipboard-check",tags:["Hardware verification","Pre-S sign-off"],filename:"",size:""};
-const CUSTOM_MODELS_KEY="MOBILE_RND_CUSTOM_MODELS_V1";
-const RENAMED_MODELS_KEY="MOBILE_RND_RENAMED_MODELS_V1";
-function customModelCodes(){return readJson(CUSTOM_MODELS_KEY,[]).map(x=>String(x?.code||"").trim().toUpperCase()).filter(Boolean)}
-function renamedModelMap(){return readJson(RENAMED_MODELS_KEY,{});}
-function modelList(){const renamed=renamedModelMap();return [...MODEL_ORDER,...customModelCodes()].filter((m,i,a)=>a.indexOf(m)===i&&!renamed[m]&&data?.[m])}
 
 function clone(value){return structuredClone(value)}
-
-function migrateRecordKeys(raw){
-  const defaults=createDefaultData();
-  if(!raw||typeof raw!=="object") return defaults;
-  let changed=false;
-  const renamed=renamedModelMap();
-  for(const [oldCode,newCode] of Object.entries(renamed)){
-    if(raw[oldCode]&&!raw[newCode]){raw[newCode]=raw[oldCode];delete raw[oldCode];changed=true;}
-    else if(raw[oldCode]&&raw[newCode]){delete raw[oldCode];changed=true;}
-  }
-  const modelCodes=[...MODEL_ORDER,...customModelCodes()].filter((m,i,a)=>a.indexOf(m)===i&&!renamed[m]);
-  for(const model of modelCodes){
-    const defaultModel=defaults[model]||defaults.A576;
-    if(!raw[model]||typeof raw[model]!=="object"){
-      raw[model]=clone(defaultModel); changed=true; continue;
-    }
-    const block=raw[model];
-    if(!block.meta) { block.meta=clone(defaultModel.meta); changed=true; }
-    if(!block.items||typeof block.items!=="object") { block.items=clone(defaultModel.items); changed=true; continue; }
-    const items=block.items;
-    const legacyLayout=items.A?.title==="Basic Model Details" || items.S?.title==="Block Diagram" || items.P?.title==="MIPI Table";
-    const v632KeyPartsLayout=items.I?.title==="Process Flow Chart" && items.O?.title==="Key Parts Details";
-    const v641OldLayout=items.P?.title==="Key Parts Details" && items.M?.title==="Base Model Defect History" && items.O?.title==="SW Log Process";
-    const v64OldLayout=items.I?.title==="Key Parts Details" && items.P?.title==="Basic Model Details";
-    if(v641OldLayout){
-      const old={...items};
-      const reordered={};
-      ["A","B","C","D","E","F","G","H","I","J","K","L"].forEach(k=>reordered[k]=old[k]);
-      reordered.M=clone(old.P);
-      reordered.N=clone(old.M);
-      reordered.O=clone(old.N);
-      reordered.P=clone(old.O);
-      ["Q","R","S","T","U","V"].forEach(k=>reordered[k]=old[k]);
-      block.items=reordered; changed=true;
-    }
-    else if(v64OldLayout){
-      const old={...items};
-      const reordered={};
-      ["A","B","C","D","E","F","G","H"].forEach(k=>reordered[k]=old[k]);
-      reordered.I=clone(defaultModel.items.I);
-      reordered.J=clone(old.J); reordered.K=clone(old.K); reordered.L=clone(old.L); reordered.M=clone(old.M); reordered.N=clone(old.N); reordered.O=clone(old.O);
-      reordered.P=clone(old.I); reordered.Q=clone(old.P); reordered.R=clone(old.Q); reordered.S=clone(old.R); reordered.T=clone(old.S); reordered.U=clone(old.T); reordered.V=clone(old.U);
-      block.items=reordered; changed=true;
-    }
-    else if(v632KeyPartsLayout){
-      const reordered={};
-      for(const key of RECORD_ORDER) reordered[key]=items[key];
-      reordered.I=clone(items.O);
-      reordered.J=clone(items.I);
-      reordered.K=clone(items.J);
-      reordered.L=clone(items.K);
-      reordered.M=clone(items.L);
-      reordered.N=clone(items.M);
-      reordered.O=clone(items.N);
-      block.items=reordered;
-      changed=true;
-    }
-    else if(legacyLayout){
-      const migrated={};
-      for(const [oldKey,newKey] of Object.entries(LEGACY_RECORD_MAP)){
-        if(items[oldKey] && !migrated[newKey]) migrated[newKey]=clone(items[oldKey]);
-      }
-      block.items=migrated;
-      changed=true;
-    }
-    // V64.2 dashboard restructuring: Schematics are grouped as a section, but
-    // Block Diagram (A), Circuit Diagram (B), and SOC Table (C) remain separate cards.
-    // Preserve each card independently while keeping N/O as the combined defect summary.
-    const legacyA=items.A, legacyB=items.B, legacyC=items.C, legacyN=items.N, legacyO=items.O;
-    // V64.2 schematic integrity: A/B/C must always exist as three independent records.
-    // Recover missing B/C from the canonical defaults without touching their independent file keys.
-    for(const schematicKey of ["A","B","C"]){
-      if(!items[schematicKey]){ items[schematicKey]=clone(defaultModel.items[schematicKey]); changed=true; }
-      items[schematicKey].category="Schematics";
-    }
-    const defaultA=clone(defaultModel.items.A);
-    if(legacyA && !Array.isArray(legacyA.mergedSources)){
-      Object.assign(defaultA,clone(legacyA));
-      if(legacyA.uploadedFilename||legacyA.filename) defaultA.filename=legacyA.uploadedFilename||legacyA.filename;
-      if(legacyA.uploadedSize||legacyA.size) defaultA.size=legacyA.uploadedSize||legacyA.size;
-      if(Array.isArray(legacyA.tags)&&legacyA.tags.length) defaultA.tags=clone(legacyA.tags);
-    }
-    items.A=defaultA;
-    if(items.N?.title!==defaultModel.items.N?.title || !Array.isArray(items.N?.mergedSources)){
-      const merged=clone(defaultModel.items.N);
-      const sourceByKey=new Map((merged.mergedSources||[]).map(x=>[x.key,x]));
-      for(const old of [legacyN,legacyO]){
-        const oldKey=old===legacyN?"N":"O";
-        const target=sourceByKey.get(oldKey); if(!target||!old) continue;
-        Object.assign(target,{filename:old.uploadedFilename||old.filename||target.filename,size:old.uploadedSize||old.size||target.size});
-        if(Array.isArray(old.tags)&&old.tags.length) target.detail=old.tags.join(" • ");
-      }
-      items.N=merged; changed=true;
-    }
-    // Records removed from the visual information architecture are intentionally no longer rendered.
-    ["M","O","S"].forEach(k=>{if(items[k]){delete items[k];changed=true;}});
-    // V64.1.9 canonical T/U mapping: T = Hardware Checklist, U = Korea Member Details.
-    // Older V64 builds could force the Korea-member record into T, leaving both T and U
-    // with the Hardware Checklist title. Move the record metadata back to its canonical slot.
-    const t=block.items.T, u=block.items.U;
-    const tLooksLikeKorea=String(t?.title||"").trim()==="Korea Member Details" || (t?.tags||[]).some(x=>String(x).toLowerCase().includes("korea member")) || String(t?.filename||"").includes("Korea_HQ_Roster");
-    const uLooksLikeHardware=String(u?.title||"").trim()==="Hardware Checklist" || (u?.tags||[]).some(x=>String(x).toLowerCase().includes("hardware verification"));
-    if(tLooksLikeKorea && uLooksLikeHardware){
-      block.items.T=clone(u);
-      block.items.U=clone(t);
-      changed=true;
-    }
-    if(block.items.HWC && !block.items.T){
-      block.items.T={...clone(block.items.HWC),...clone(HARDWARE_DEFAULT)};
-      block.items.T.uploadedFilename=block.items.HWC.uploadedFilename||block.items.HWC.filename||"";
-      block.items.T.uploadedSize=block.items.HWC.uploadedSize||block.items.HWC.size||"";
-      delete block.items.HWC; changed=true;
-    }
-    if(block.items.VSWR && !block.items.H){
-      block.items.H={...clone(defaultModel.items.H),...clone(block.items.VSWR)};
-      delete block.items.VSWR; changed=true;
-    }
-    for(const key of RECORD_ORDER){
-      if(!block.items[key]){ block.items[key]=clone(defaultModel.items[key]); changed=true; }
-      const d=defaultModel.items[key];
-      const item=block.items[key];
-      if(item.title!==d.title) { item.title=d.title; changed=true; }
-      if(item.category!==d.category) { item.category=d.category; changed=true; }
-      if(item.icon!==d.icon) { item.icon=d.icon; changed=true; }
-      if(key==="T" || key==="U"){
-        const canonicalTags=clone(d.tags||[]);
-        if(JSON.stringify(item.tags||[])!==JSON.stringify(canonicalTags)){ item.tags=canonicalTags; changed=true; }
-      } else if(!Array.isArray(item.tags)) { item.tags=clone(d.tags||[]); changed=true; }
-      if(key==="T" && item.title!==HARDWARE_DEFAULT.title){ item.title=HARDWARE_DEFAULT.title; item.category=HARDWARE_DEFAULT.category; item.icon=HARDWARE_DEFAULT.icon; item.tags=clone(HARDWARE_DEFAULT.tags); changed=true; }
-      if(["A","B","J","M"].includes(key)) {
-        const defaultsSub=Array.isArray(d.subItems)?d.subItems:[];
-        const existingSub=Array.isArray(item.subItems)?item.subItems:[];
-        const byName=new Map(existingSub.filter(Boolean).map(s=>[String(s.name||"").trim().toLowerCase(),s]));
-        const merged=defaultsSub.map(ds=>{
-          const old=byName.get(String(ds.name||"").trim().toLowerCase());
-          return old?{...clone(ds),...clone(old)}:clone(ds);
-        });
-        if(JSON.stringify(item.subItems||[])!==JSON.stringify(merged)){item.subItems=merged;changed=true;}
-      }
-    }
-  }
-  if(changed){try{localStorage.setItem(STORAGE_KEY,JSON.stringify(raw))}catch{} }
-  return raw;
-}
+function readJson(key,fallback){try{const value=JSON.parse(localStorage.getItem(key)||"null");return value??fallback}catch{return fallback}}
+function customModels(){return readJson(CUSTOM_MODELS_KEY,[]).filter(x=>x&&x.code&&data?.[x.code])}
+function customModelCodes(){return readJson(CUSTOM_MODELS_KEY,[]).map(x=>String(x?.code||"").trim().toUpperCase()).filter(Boolean)}
+function modelList(){const replaced=new Set(readJson(CUSTOM_MODELS_KEY,[]).map(x=>String(x?.replaces||"").trim().toUpperCase()).filter(Boolean));return [...MODEL_ORDER,...customModelCodes()].filter((m,i,a)=>a.indexOf(m)===i&&!replaced.has(m)&&data?.[m])}
 
 let data=loadData();
 let prefs=loadPrefs();
 let draftPrefs={...prefs};
-let currentModel=modelList()[0];
+let currentModel=modelList()[0]||MODEL_ORDER[0];
 let activeCategory="all", query="", sortMode="default", favoritesOnly=false;
-const ENGINEERING_TABS_HIDDEN_KEY="MOBILE_RND_ENGINEERING_TABS_HIDDEN_V1";
-let recentlyViewed=readJson("MOBILE_RND_RECENT_V1",[]);
-let favorites=readJson("MOBILE_RND_FAVORITES_V1",[]);
+let recentlyViewed=readJson("MOBILE_RND_RECENT",[]);
+let favorites=readJson("MOBILE_RND_FAVORITES",[]);
 let isAdmin=sessionStorage.getItem(AUTH_KEY)==="true";
 let selectedFiles=[];
 let uploadedKeys=new Set();
 let uploadedFiles=new Map();
-let uploadedSubpartFiles=new Map();
 let expandedFileMap=new Map();
 let expandedCards=new Set();
 
-function readJson(key,fallback){try{const value=JSON.parse(localStorage.getItem(key)||"null");return value??fallback}catch{return fallback}}
 function loadData(){
-  try{
-    const raw=JSON.parse(localStorage.getItem(STORAGE_KEY)||"null")||createDefaultData();
-    const renamed=renamedModelMap();
-    for(const [oldCode,newCode] of Object.entries(renamed)){
-      if(raw[oldCode]&&!raw[newCode]){raw[newCode]=raw[oldCode];delete raw[oldCode];}
-      else if(raw[oldCode]&&raw[newCode])delete raw[oldCode];
+  const defaults=createDefaultData();
+  const stored=readJson(STORAGE_KEY,null);
+  const custom=readJson(CUSTOM_MODELS_KEY,[]).filter(x=>x&&String(x.code||"").trim());
+  const out={};
+  for(const code of MODEL_ORDER){
+    const source=stored?.[code];
+    out[code]={meta:{...defaults[code].meta,...(source?.meta||{})},items:clone(defaults[code].items)};
+  }
+  for(const entry of custom){
+    const code=String(entry.code).trim().toUpperCase();
+    if(!code||out[code])continue;
+    const template=clone(defaults.A576);
+    template.meta={...template.meta,name:String(entry.name||`Galaxy ${code}`),ap:String(entry.processor||"—"),modelYear:String(entry.modelYear||"—"),sielHwPic:String(entry.sielHwPic||"—"),rfNetwork:String(entry.rfNetwork||"—"),modem:String(entry.rfNetwork||"—"),modelType:String(entry.modelType||"Development Model"),status:String(entry.modelType||"Development Model")==="Mass Production Model"?"Mass Production":"Development"};
+    for(const item of Object.values(template.items)){
+      if(item.filename)item.filename=item.filename.replaceAll("A576",code);
+      item.subItems?.forEach(sub=>{if(sub.filename)sub.filename=sub.filename.replaceAll("A576",code)});
+      item.mergedSources?.forEach(src=>{if(src.filename)src.filename=src.filename.replaceAll("A576",code)});
     }
-    const defaults=createDefaultData();
-    customModelCodes().forEach(code=>{
-      if(!raw[code]){
-        const template=clone(defaults.A576);
-        template.meta={...template.meta,name:code,modelYear:"—",sielHwPic:"—",rfNetwork:"—"};
-        for(const item of Object.values(template.items)){
-          if(item.filename)item.filename=item.filename.replaceAll("A576",code);
-          item.subItems?.forEach(sub=>{if(sub.filename)sub.filename=sub.filename.replaceAll("A576",code)});
-          item.mergedSources?.forEach(src=>{if(src.filename)src.filename=src.filename.replaceAll("A576",code)});
-        }
-        raw[code]=template;
-      }
-    });
-    return migrateRecordKeys(raw);
-  }catch{return createDefaultData()}
+    const source=stored?.[code];
+    out[code]={meta:{...template.meta,...(source?.meta||{}),name:String(entry.name||source?.meta?.name||template.meta.name)},items:template.items};
+  }
+  localStorage.setItem(STORAGE_KEY,JSON.stringify(out));
+  return out;
 }
 function saveData(){localStorage.setItem(STORAGE_KEY,JSON.stringify(data))}
 function loadPrefs(){try{return {...{theme:"light",accent:"cyan",density:"comfortable",motion:true},...JSON.parse(localStorage.getItem(PREF_KEY)||"{}")}}catch{return {theme:"light",accent:"cyan",density:"comfortable",motion:true}}}
@@ -208,11 +60,11 @@ function savePrefs(){localStorage.setItem(PREF_KEY,JSON.stringify(prefs))}
 function currentItems(){return data[currentModel].items}
 function currentItemsFor(model){return data[model]?.items||{}}
 function itemText(k,item){return [k,item.title,item.category,item.filename,item.uploadedFilename,...(item.tags||[]),...(item.subItems||[]).flatMap(s=>[s.name,s.filename,s.size]),...(item.mergedSources||[]).flatMap(s=>[s.name,s.filename,s.size,s.detail])].join(" ").toLowerCase()}
-function markRecent(key){const id=`${currentModel}:${key}`;recentlyViewed=[id,...recentlyViewed.filter(x=>x!==id)].slice(0,8);localStorage.setItem("MOBILE_RND_RECENT_V1",JSON.stringify(recentlyViewed))}
+function markRecent(key){const id=`${currentModel}:${key}`;recentlyViewed=[id,...recentlyViewed.filter(x=>x!==id)].slice(0,8);localStorage.setItem("MOBILE_RND_RECENT",JSON.stringify(recentlyViewed))}
 function parseHash(){const m=location.hash.match(/^#record\/([^/]+)\/?([^/]*)$/);if(m&&modelList().includes(m[1])&&currentItemsFor(m[1])[m[2]]){currentModel=m[1];activeCategory="all";query="";renderAll();refreshUploadedFlags(currentModel);setTimeout(()=>focusRecord(m[2]),0)}}
 function init(){
   populateUploadModels(currentModel);
-  const last=localStorage.getItem("MOBILE_RND_LAST_MODEL_V1");if(last&&modelList().includes(last))currentModel=last;
+  const last=localStorage.getItem("MOBILE_RND_LAST_MODEL");if(last&&modelList().includes(last))currentModel=last;
   populateUploadModels(currentModel);
   const picker=document.getElementById("modelPickerInput"),menu=document.getElementById("modelPickerMenu"),toggle=document.getElementById("modelPickerToggle");
   if(picker){picker.value=currentModel;picker.addEventListener("input",()=>{renderModelPicker(picker.value);openModelPicker()});picker.addEventListener("focus",()=>{renderModelPicker(picker.value);openModelPicker()});picker.addEventListener("keydown",e=>{if(e.key==="Enter"){e.preventDefault();const m=findModel(picker.value);if(m){setModel(m);closeModelPicker()}else toast("Select a valid model.","error")}if(e.key==="Escape")closeModelPicker()})}
@@ -222,25 +74,6 @@ function init(){
   renderCategories();renderAll();bindEvents();applyPrefs();refreshUploadedFlags(currentModel);restoreSidebarState();parseHash();
 }
 
-function isKoreaMemberFile(record){
-  const n=String(record?.filename||"").toLowerCase();
-  return n.includes("korea") || n.includes("hq_roster") || n.includes("member_stage") || n.includes("member");
-}
-function recordStoredFor(model,key,storedMap){
-  const primary=storedMap.get(`${model}_${key}`);
-  if(key==="T"){
-    if(primary && !isKoreaMemberFile(primary)) return primary;
-    return storedMap.get(`${model}_U`) || primary;
-  }
-  if(key==="U"){
-    if(primary && isKoreaMemberFile(primary)) return primary;
-    const legacy=storedMap.get(`${model}_T`);
-    return legacy && isKoreaMemberFile(legacy) ? legacy : (isKoreaMemberFile(primary) ? primary : null);
-  }
-  return primary;
-}
-
-async function renderFileSummary(){ return; }
 function renderAll(){renderHero();renderCategories();renderCards();populateUploadRecords(document.getElementById("uploadModel")?.value||currentModel);renderAuth();renderRecent()}
 async function refreshUploadedFlags(model=currentModel){
   const items=data[model]?.items||{};
@@ -251,11 +84,11 @@ async function refreshUploadedFlags(model=currentModel){
     const item=items[key];
     const slots=[];
     if(Array.isArray(item.mergedSources)){
-      item.mergedSources.forEach(src=>slots.push({baseKey:`${model}_${src.key}`,sourceKey:src.key,selectorValue:src.key,name:src.name,detail:src.detail||"",filename:src.filename||"No document uploaded",size:src.size||"—"}));
+      item.mergedSources.forEach(src=>slots.push({baseKey:`${model}_${src.key}`,sourceKey:src.key,selectorValue:src.key,name:src.name,detail:src.detail||"",filename:"No document uploaded",size:"—"}));
     }else if(Array.isArray(item.subItems)&&item.subItems.length){
-      item.subItems.forEach((sub,i)=>slots.push({baseKey:keyForSubpart(model,key,sub,i),sourceKey:key,selectorValue:String(i),subpartIndex:i,name:sub.name||`File ${i+1}`,detail:sub.note||"",filename:sub.filename||"No document uploaded",size:sub.size||"—"}));
+      item.subItems.forEach((sub,i)=>slots.push({baseKey:keyForSubpart(model,key,sub,i),sourceKey:key,selectorValue:String(i),subpartIndex:i,name:sub.name||`File ${i+1}`,detail:sub.note||"",filename:"No document uploaded",size:"—"}));
     }else{
-      slots.push({baseKey:`${model}_${key}`,sourceKey:key,selectorValue:"",name:item.title,detail:"",filename:key==="T"?"No checklist uploaded":item.filename||"No document uploaded",size:item.size||"—"});
+      slots.push({baseKey:`${model}_${key}`,sourceKey:key,selectorValue:"",name:item.title,detail:"",filename:key==="T"?"No checklist uploaded":"No document uploaded",size:"—"});
     }
     slotDescriptors.set(key,slots);
     slots.forEach(slot=>baseKeys.push(slot.baseKey));
@@ -307,7 +140,7 @@ async function refreshUploadedFlags(model=currentModel){
 }
 
 function subpartId(sub,index){return String(sub?.id||sub?.name||`part-${index+1}`).trim().toLowerCase().replace(/[^a-z0-9]+/g,"-").replace(/^-+|-+$/g,"")||`part-${index+1}`}
-function keyForSubpart(model,key,sub,index){const storageKey=key==="M"?"O":key;return `${model}_${storageKey}_${subpartId(sub,index)}`}
+function keyForSubpart(model,key,sub,index){return `${model}_${key}_${subpartId(sub,index)}`}
 async function hydrateInlinePreviews(entries){
   const modelAtStart=currentModel;
   const expandedKeys=new Set(expandedCards);
@@ -401,8 +234,7 @@ function renderCards(){
   const hasSecondaryFilters=Boolean(query||favoritesOnly||sortMode!=="default");
   document.getElementById("activeFilters").classList.toggle("hidden",!hasSecondaryFilters);
   document.getElementById("activeFilters").innerHTML=`${query?`<span class="filter-chip">Search: ${escapeHtml(query)}</span>`:""}${favoritesOnly?`<span class="filter-chip">Favorites only</span>`:""}${sortMode!=="default"?`<span class="filter-chip">Sort: ${escapeHtml(sortMode)}</span>`:""}`;
-  // V64.2 unified engineering grid: Schematics is a filter/category only.
-  // A = Block Diagram, B = Circuit Diagram, C = SOC Table remain three
+    // A = Block Diagram, B = Circuit Diagram, C = SOC Table remain three
   // independent cards and participate in the same unified grid as every record.
   grid.innerHTML=entries.map(([k,i])=>renderCard(k,i)).join("") || `<div class="empty-state"><i class="fa-solid fa-filter-circle-xmark"></i><h3 class="font-bold mt-3">No records found</h3><p class="text-xs mt-1">Adjust the search or filters.</p><button class="btn btn-light mt-3" data-clear-filters>Clear filters</button></div>`;
   if(entries.length) hydrateInlinePreviews(entries);
@@ -452,7 +284,7 @@ function renderModelPicker(filter=""){const menu=document.getElementById("modelP
 function openModelPicker(){const m=document.getElementById("modelPickerMenu"),i=document.getElementById("modelPickerInput");if(m){m.classList.remove("hidden");i?.setAttribute("aria-expanded","true")}}
 function closeModelPicker(){const m=document.getElementById("modelPickerMenu"),i=document.getElementById("modelPickerInput");if(m){m.classList.add("hidden");i?.setAttribute("aria-expanded","false")}}
 function toggleModelPicker(){const m=document.getElementById("modelPickerMenu");if(m?.classList.contains("hidden"))openModelPicker();else closeModelPicker()}
-function setModel(m){if(!modelList().includes(m))return;expandedCards.clear();currentModel=m;localStorage.setItem("MOBILE_RND_LAST_MODEL_V1",m);activeCategory="all";query="";if(document.getElementById("engineeringSearch"))document.getElementById("engineeringSearch").value="";favoritesOnly=false;sortMode="default";populateUploadModels(m);renderAll();refreshUploadedFlags(m);const picker=document.getElementById("modelPickerInput");if(picker)picker.value=currentModel;renderModelPicker("");location.hash="";window.scrollTo({top:0,behavior:prefs.motion?"smooth":"auto"})}
+function setModel(m){if(!modelList().includes(m))return;expandedCards.clear();currentModel=m;localStorage.setItem("MOBILE_RND_LAST_MODEL",m);activeCategory="all";query="";if(document.getElementById("engineeringSearch"))document.getElementById("engineeringSearch").value="";favoritesOnly=false;sortMode="default";populateUploadModels(m);renderAll();refreshUploadedFlags(m);const picker=document.getElementById("modelPickerInput");if(picker)picker.value=currentModel;renderModelPicker("");location.hash="";window.scrollTo({top:0,behavior:prefs.motion?"smooth":"auto"})}
 function openRecord(key){
   const item=currentItems()?.[key];
   if(!item)return;
@@ -482,7 +314,7 @@ function bindEvents(){
   };
   applyEngineeringTabsState(engineeringTabsHidden);
   engineeringTabsToggle?.addEventListener("click",()=>{const hidden=!engineeringTabsRow?.classList.contains("tabs-hidden");localStorage.setItem(ENGINEERING_TABS_HIDDEN_KEY,hidden?"1":"0");applyEngineeringTabsState(hidden)});
-  document.getElementById("sidebarCollapseBtn")?.addEventListener("click",()=>{document.body.classList.toggle("sidebar-collapsed");const collapsed=document.body.classList.contains("sidebar-collapsed");localStorage.setItem("MOBILE_RND_SIDEBAR_V1",collapsed?"collapsed":"expanded");document.getElementById("sidebarCollapseBtn").innerHTML=`<i class="fa-solid fa-angles-${collapsed?"right":"left"}"></i>`});
+  document.getElementById("sidebarCollapseBtn")?.addEventListener("click",()=>{document.body.classList.toggle("sidebar-collapsed");const collapsed=document.body.classList.contains("sidebar-collapsed");localStorage.setItem("MOBILE_RND_SIDEBAR",collapsed?"collapsed":"expanded");document.getElementById("sidebarCollapseBtn").innerHTML=`<i class="fa-solid fa-angles-${collapsed?"right":"left"}"></i>`});
   document.getElementById("categoryTabs").addEventListener("click",e=>{const b=e.target.closest("[data-cat]");if(b){activeCategory=b.dataset.cat;expandedCards.clear();renderCategories();renderCards()}});
   document.getElementById("cardsGrid").addEventListener("click",e=>{
     const up=e.target.closest("[data-open-upload]");if(up){openUploadModal(up.dataset.openUpload,up.dataset.subpartIndex||"");return}
@@ -519,9 +351,8 @@ function applySettingsForm(){document.getElementById("themeSelect").value=draftP
 function applyDraftPrefs(closeAfter){syncDraftPrefs();prefs={...draftPrefs};savePrefs();applyPrefs();if(closeAfter)closeModal("settingsModal")}
 function applyPrefs(){document.body.classList.toggle("no-motion",!prefs.motion);document.body.dataset.theme=prefs.theme;document.body.dataset.accent=prefs.accent;document.body.dataset.density=prefs.density;applySettingsForm();document.getElementById("themeIcon").className=`fa-solid fa-${prefs.theme==="dark"?"sun":"moon"}`}
 function clearFilters(){query="";activeCategory="all";favoritesOnly=false;sortMode="default";document.getElementById("sortSelect").value="default";document.getElementById("engineeringSearch")?.setAttribute("value","");if(document.getElementById("engineeringSearch"))document.getElementById("engineeringSearch").value="";document.getElementById("favoritesToggle").classList.remove("active");renderCategories();renderCards()}
-function toggleFavorite(id){favorites=favorites.includes(id)?favorites.filter(x=>x!==id):[...favorites,id];localStorage.setItem("MOBILE_RND_FAVORITES_V1",JSON.stringify(favorites));renderCards();toast(favorites.includes(id)?"Added to favorites.":"Removed from favorites.","info")}
+function toggleFavorite(id){favorites=favorites.includes(id)?favorites.filter(x=>x!==id):[...favorites,id];localStorage.setItem("MOBILE_RND_FAVORITES",JSON.stringify(favorites));renderCards();toast(favorites.includes(id)?"Added to favorites.":"Removed from favorites.","info")}
 async function toggleFullscreen(){try{if(!document.fullscreenElement)await document.documentElement.requestFullscreen();else await document.exitFullscreen()}catch{toast("Fullscreen is not available.","error")}}
-function customModels(){return readJson(CUSTOM_MODELS_KEY,[]).filter(x=>x&&x.code&&data[x.code])}
 function editableModels(){return modelList()}
 function openAddModelModal(){if(!isAdmin){toast("Admin authentication is required.","error");return}setModelAdminFormMode("add");document.getElementById("addModelForm")?.reset();document.getElementById("addModelError")?.classList.add("hidden");openModal("addModelModal")}
 function openEditModelModal(){if(!isAdmin){toast("Admin authentication is required.","error");return}const models=editableModels();if(!models.length){toast("No editable model is available.","info");return}setModelAdminFormMode("edit");populateEditModelSelect(models[0]);openModal("addModelModal")}
@@ -540,12 +371,14 @@ async function addModel(e){
     const model=data[oldCode];model.meta={...model.meta,name,ap:processor,modelYear,sielHwPic:pic,rfNetwork:rf,modem:rf,leadKorea:pic,modelType,status:modelType==="Mass Production Model"?"Mass Production":"Development"};
     if(code!==oldCode){
       data[code]=model;delete data[oldCode];
-      const custom=readJson(CUSTOM_MODELS_KEY,[]),idx=custom.findIndex(x=>x.code===oldCode);if(idx>=0)custom[idx]={...custom[idx],code,name,processor,modelYear,sielHwPic:pic,rfNetwork:rf,modelType};else custom.push({code,name,processor,modelYear,sielHwPic:pic,rfNetwork:rf,modelType});
-      const renamed=renamedModelMap();if(MODEL_ORDER.includes(oldCode))renamed[oldCode]=code;
-      await migrateFilePrefix(oldCode,code);
-      if(currentModel===oldCode){currentModel=code;localStorage.setItem("MOBILE_RND_LAST_MODEL_V1",code)}
-      localStorage.setItem(CUSTOM_MODELS_KEY,JSON.stringify(custom));if(MODEL_ORDER.includes(oldCode))localStorage.setItem(RENAMED_MODELS_KEY,JSON.stringify(renamed));
-      saveData();closeModal("addModelModal");populateUploadModels(currentModel);renderAll();renderModelPicker("");const picker=document.getElementById("modelPickerInput");if(picker)picker.value=currentModel;toast(`${oldCode} renamed to ${code} and stored document keys migrated.`,'success');addAudit("MODEL_RENAME",{from:oldCode,to:code,name,processor,modelYear,sielHwPic:pic,rfNetwork:rf,modelType});return;
+      const custom=readJson(CUSTOM_MODELS_KEY,[]),idx=custom.findIndex(x=>x.code===oldCode);
+      const entry={...(idx>=0?custom[idx]:{}),code,name,processor,modelYear,sielHwPic:pic,rfNetwork:rf,modelType};
+      if(MODEL_ORDER.includes(oldCode))entry.replaces=oldCode;
+      if(idx>=0)custom[idx]=entry;else custom.push(entry);
+      await moveFilePrefix(oldCode,code);
+      if(currentModel===oldCode){currentModel=code;localStorage.setItem("MOBILE_RND_LAST_MODEL",code)}
+      localStorage.setItem(CUSTOM_MODELS_KEY,JSON.stringify(custom));
+      saveData();closeModal("addModelModal");populateUploadModels(currentModel);renderAll();renderModelPicker("");const picker=document.getElementById("modelPickerInput");if(picker)picker.value=currentModel;toast(`${oldCode} renamed to ${code} and stored document keys moved.`,'success');addAudit("MODEL_RENAME",{from:oldCode,to:code,name,processor,modelYear,sielHwPic:pic,rfNetwork:rf,modelType});return;
     }
     const custom=readJson(CUSTOM_MODELS_KEY,[]),idx=custom.findIndex(x=>x.code===oldCode);if(idx>=0)custom[idx]={...custom[idx],code,name,processor,modelYear,sielHwPic:pic,rfNetwork:rf,modelType};else custom.push({code,name,processor,modelYear,sielHwPic:pic,rfNetwork:rf,modelType});localStorage.setItem(CUSTOM_MODELS_KEY,JSON.stringify(custom));saveData();closeModal("addModelModal");populateUploadModels(currentModel);renderAll();renderModelPicker("");toast(`${code} model details updated.`,'success');addAudit("MODEL_EDIT",{model:code,name,processor,modelYear,sielHwPic:pic,rfNetwork:rf,modelType});return;
   }
@@ -554,7 +387,7 @@ async function addModel(e){
   for(const item of Object.values(model.items)){if(item.filename)item.filename=item.filename.replaceAll("A576",code);item.subItems?.forEach(sub=>{if(sub.filename)sub.filename=sub.filename.replaceAll("A576",code)});item.mergedSources?.forEach(src=>{if(src.filename)src.filename=src.filename.replaceAll("A576",code)})}
   data[code]=model;const custom=readJson(CUSTOM_MODELS_KEY,[]);custom.push({code,name,processor,modelYear,sielHwPic:pic,rfNetwork:rf,modelType});localStorage.setItem(CUSTOM_MODELS_KEY,JSON.stringify(custom));saveData();closeModal("addModelModal");populateUploadModels(currentModel);renderAll();renderModelPicker("");toast(`${code} added to the model selection list.`,'success');addAudit("MODEL_ADD",{model:code,name,processor,modelYear,sielHwPic:pic,rfNetwork:rf,modelType});
 }
-async function deleteSelectedModel(){if(!isAdmin)return;const code=document.getElementById("editModelSelect")?.value||"";if(!code||!data[code]){toast("Select a model to delete.","error");return}const custom=readJson(CUSTOM_MODELS_KEY,[]);if(!custom.some(x=>x.code===code)){toast("Built-in models cannot be deleted from the admin panel.","error");return}if(!confirm(`Delete model ${code} and all locally stored documents for this model? This cannot be undone.`))return;await deleteFilePrefix(code);const renamed=renamedModelMap(),original=Object.entries(renamed).find(([,newCode])=>newCode===code)?.[0];delete data[code];if(original&&MODEL_ORDER.includes(original)){delete renamed[original];data[original]=createDefaultData()[original]}localStorage.setItem(CUSTOM_MODELS_KEY,JSON.stringify(custom.filter(x=>x.code!==code)));localStorage.setItem(RENAMED_MODELS_KEY,JSON.stringify(renamed));saveData();const models=modelList();currentModel=models[0]||"";localStorage.setItem("MOBILE_RND_LAST_MODEL_V1",currentModel);closeModal("addModelModal");populateUploadModels(currentModel);renderCategories();renderAll();renderModelPicker("");toast(original?`${code} removed and ${original} restored.`:`${code} deleted.`,'success');addAudit("MODEL_DELETE",{model:code,restoredModel:original||""})}
+async function deleteSelectedModel(){if(!isAdmin)return;const code=document.getElementById("editModelSelect")?.value||"";if(!code||!data[code]){toast("Select a model to delete.","error");return}const custom=readJson(CUSTOM_MODELS_KEY,[]);const entry=custom.find(x=>x.code===code);if(!entry){toast("Built-in models cannot be deleted from the admin panel.","error");return}if(!confirm(`Delete model ${code} and all locally stored documents for this model? This cannot be undone.`))return;await deleteFilePrefix(code);const original=String(entry.replaces||"").toUpperCase();delete data[code];if(original&&MODEL_ORDER.includes(original))data[original]=createDefaultData()[original];localStorage.setItem(CUSTOM_MODELS_KEY,JSON.stringify(custom.filter(x=>x.code!==code)));saveData();const models=modelList();currentModel=models[0]||MODEL_ORDER[0];localStorage.setItem("MOBILE_RND_LAST_MODEL",currentModel);closeModal("addModelModal");populateUploadModels(currentModel);renderCategories();renderAll();renderModelPicker("");toast(original?`${code} removed and ${original} restored.`:`${code} deleted.`,'success');addAudit("MODEL_DELETE",{model:code,restoredModel:original||""})}
 
 function login(e){e.preventDefault();const input=document.getElementById("passwordInput");const error=document.getElementById("loginError");if(input.value==="admin123"){isAdmin=true;sessionStorage.setItem(AUTH_KEY,"true");closeModal("loginModal");document.getElementById("passwordInput").value="";renderAuth();renderCards();document.dispatchEvent(new Event("rnd-auth-changed"));toast("Admin session authenticated.","success");addAudit("LOGIN")}else{error.classList.remove("hidden");input.classList.add("input-error");input.focus();setTimeout(()=>input.classList.remove("input-error"),700)}}
 function selectFiles(fileList){if(!isAdmin){toast("Admin authentication is required to upload documents.","error");return}const files=[...(fileList||[])];if(!files.length)return;const valid=[];const rejected=[];for(const file of files){const ext=file.name.split(".").pop().toLowerCase();if(!ALLOWED.includes(ext)){rejected.push(`${file.name}: unsupported type`);continue}if(file.size>MAX_FILE_SIZE){rejected.push(`${file.name}: exceeds 500 MB`);continue}valid.push(file)}selectedFiles=[...selectedFiles,...valid];const name=document.getElementById("fileName");if(name)name.textContent=selectedFiles.length?selectedFiles.map(f=>`${f.name} (${formatBytes(f.size)})`).join(" • "):"Drop files here or click to browse";const status=document.getElementById("uploadStatus");if(status)status.textContent=rejected.length?`${selectedFiles.length} file${selectedFiles.length===1?"":"s"} ready. ${rejected.join("; ")}`:`${selectedFiles.length} file${selectedFiles.length===1?"":"s"} ready for upload.`}
@@ -580,17 +413,10 @@ async function upload(e){
         toast(`File was not saved: ${detail}`,"error");
         throw err;
       }
-      if(source){source.uploadedFilename=file.name;source.uploadedSize=formatBytes(file.size);source.updatedAt=new Date().toISOString();if(note)source.detail=note}
-      else {item.filename=file.name;item.size=formatBytes(file.size);item.uploadedFilename=file.name;item.uploadedSize=formatBytes(file.size);item.updatedAt=new Date().toISOString();if(note)item.note=note}
       try{await addAudit("UPLOAD",{model,key,subpart:source?.name||"",filename:file.name,size:file.size,versionKey:saved.key})}
       catch(auditErr){console.warn("File saved but audit logging failed",auditErr)}
     }
-    try{saveData()}catch(metaErr){console.warn("File saved but local metadata persistence failed",metaErr)}
     try{
-      // Refresh the document state without forcing the record into the compact
-      // grid's narrow column. In ALL view the user can expand the record on
-      // demand; in a category/group view the existing group layout remains
-      // expanded naturally.
       await refreshUploadedFlags(currentModel);
       renderRecent();
       requestAnimationFrame(()=>focusRecord(key));
@@ -614,20 +440,12 @@ function parseStorageIdentity(storageKey){
 async function downloadRecord(storageKey,filename){
   try{
     let record=await getFile(storageKey),resolvedKey=storageKey;
-    const {model,key}=parseStorageIdentity(storageKey);
-    if(key==="T"||key==="U"){
-      const primaryMatches=record?.blob && ((key==="T"&&!isKoreaMemberFile(record))||(key==="U"&&isKoreaMemberFile(record)));
-      if(!primaryMatches){
-        const legacyKey=`${model}_${key==="T"?"U":"T"}`;
-        const legacy=await getFile(legacyKey);
-        if(legacy?.blob && ((key==="T"&&!isKoreaMemberFile(legacy))||(key==="U"&&isKoreaMemberFile(legacy)))){record=legacy;resolvedKey=legacyKey;}
-        else if(!record?.blob) record=null;
-      }
-    }
+    const parsed= parseStorageIdentity(storageKey);
+    const {model,key}=parsed;
     if(record?.blob){
       const ok=downloadBlob(record.blob,record.filename||filename);
       if(ok){
-        const parsed= parseStorageIdentity(resolvedKey),resolvedModel=parsed.model,resolvedRecord=parsed.key,subpart=parsed.subpart;
+        const resolved=parseStorageIdentity(resolvedKey),resolvedModel=resolved.model,resolvedRecord=resolved.key,subpart=resolved.subpart;
         await addAudit("DOWNLOAD",{model:resolvedModel,key:resolvedRecord,subpart,filename:record.filename||filename});
         toast("Download started.","success");
         return;
@@ -695,12 +513,11 @@ Generated: ${new Date().toISOString()}`;
 }
 function openPresentation(key){const i=recordData(key);if(!i)return;document.getElementById("presentationModal")?.setAttribute("data-presentation-key",key);const entries=expandedFileMap.get(key)||[];document.getElementById("presentationContent").innerHTML=`<div class="presentation-code">${currentModel} · ${escapeHtml(i.title)}</div><h2>${escapeHtml(i.title)}</h2><div class="presentation-category">${escapeHtml(i.category)}</div><div class="presentation-tags">${(i.tags||[]).map(t=>`<span class="tag">${escapeHtml(t)}</span>`).join("")}</div><div class="presentation-file">${entries.map(x=>`<strong>${escapeHtml(x.name)}</strong><span class="${x.present?"status-present":"status-missing"}">${x.present?"PRESENT":"MISSING"}</span><strong>File</strong><span>${escapeHtml(x.filename)}</span><strong>Size</strong><span>${escapeHtml(x.size)}</span>`).join("")}</div>`;openModal("presentationModal")}
 function navigateRecord(delta){const arr=RECORD_ORDER.filter(k=>currentItems()[k]),modal=document.getElementById("presentationModal"),activeKey=modal?.classList.contains("hidden")?location.hash.split("/").pop():modal.dataset.presentationKey,idx=arr.indexOf(activeKey),next=arr[Math.max(0,Math.min(arr.length-1,(idx<0?0:idx)+delta))];if(!next)return;if(modal&&!modal.classList.contains("hidden")){openRecord(next);openPresentation(next)}else openRecord(next)}
-async function resetData(){if(!confirm("Reset all local dashboard data and stored files? This cannot be undone."))return;try{await deleteAllFiles();await deleteAuditLogs();data=createDefaultData();localStorage.removeItem(CUSTOM_MODELS_KEY);localStorage.removeItem(RENAMED_MODELS_KEY);saveData();uploadedFiles=new Map();uploadedKeys=new Set();favorites=[];recentlyViewed=[];expandedCards.clear();localStorage.removeItem("MOBILE_RND_FAVORITES_V1");localStorage.removeItem("MOBILE_RND_RECENT_V1");currentModel=modelList()[0];activeCategory="all";query="";renderCategories();populateUploadModels(currentModel);renderAll();closeModal("settingsModal");toast("Local data reset to default dataset.","success")}catch(err){console.error("Reset failed",err);toast(`Reset failed: ${err?.message||String(err)}`,"error")}}
+async function resetData(){if(!confirm("Reset all local dashboard data and stored files? This cannot be undone."))return;try{await deleteAllFiles();await deleteAuditLogs();data=createDefaultData();localStorage.removeItem(CUSTOM_MODELS_KEY);saveData();uploadedFiles=new Map();uploadedKeys=new Set();favorites=[];recentlyViewed=[];expandedCards.clear();localStorage.removeItem("MOBILE_RND_FAVORITES");localStorage.removeItem("MOBILE_RND_RECENT");currentModel=modelList()[0];activeCategory="all";query="";renderCategories();populateUploadModels(currentModel);renderAll();closeModal("settingsModal");toast("Local data reset to default dataset.","success")}catch(err){console.error("Reset failed",err);toast(`Reset failed: ${err?.message||String(err)}`,"error")}}
 function dateStamp(){return new Date().toISOString().slice(0,10).replaceAll("-","")}
-function restoreSidebarState(){if(localStorage.getItem("MOBILE_RND_SIDEBAR_V1")==="collapsed"){document.body.classList.add("sidebar-collapsed");document.getElementById("sidebarCollapseBtn").innerHTML='<i class="fa-solid fa-angles-right"></i>'}}
+function restoreSidebarState(){if(localStorage.getItem("MOBILE_RND_SIDEBAR")==="collapsed"){document.body.classList.add("sidebar-collapsed");document.getElementById("sidebarCollapseBtn").innerHTML='<i class="fa-solid fa-angles-right"></i>'}}
 
 init();
-// V61: wait for fonts/layout to settle, then perform one harmless final render.
 // This reduces first-open layout shifts on wide desktop viewports.
 window.addEventListener("load",()=>{
   requestAnimationFrame(()=>requestAnimationFrame(()=>{

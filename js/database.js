@@ -1,43 +1,23 @@
-const DB_NAME="MobileRD_Master_DB";
-const DB_VERSION=7;
+const DB_NAME="MobileRD_Canonical_Repository";
+const DB_VERSION=1;
 const CHUNK_STORE="file_chunks";
 const CHUNK_SIZE=4*1024*1024;
 const FILE_STORE="files";
-const LEGACY_FILE_STORE="heavy_files";
 const LOG_STORE="audit";
 
 function openDB(){
   return new Promise((resolve,reject)=>{
-    if(!globalThis.indexedDB){ reject(new Error("IndexedDB is unavailable in this browser context")); return; }
+    if(!globalThis.indexedDB){reject(new Error("IndexedDB is unavailable in this browser context"));return;}
     const req=indexedDB.open(DB_NAME,DB_VERSION);
-    req.onblocked=()=>reject(new Error("IndexedDB upgrade is blocked by another open dashboard tab. Close other dashboard tabs and retry."));
+    req.onblocked=()=>reject(new Error("IndexedDB is busy. Close other dashboard tabs and retry."));
     req.onupgradeneeded=e=>{
       const db=e.target.result;
-      const tx=e.target.transaction;
-      if(!db.objectStoreNames.contains(FILE_STORE)) db.createObjectStore(FILE_STORE);
-      if(!db.objectStoreNames.contains(CHUNK_STORE)) db.createObjectStore(CHUNK_STORE);
-      if(!db.objectStoreNames.contains(LOG_STORE)) db.createObjectStore(LOG_STORE,{keyPath:"id",autoIncrement:true});
-      if(db.objectStoreNames.contains(LEGACY_FILE_STORE)){
-        const oldStore=tx.objectStore(LEGACY_FILE_STORE),newStore=tx.objectStore(FILE_STORE);
-        oldStore.openCursor().onsuccess=event=>{
-          const cursor=event.target.result;
-          if(!cursor)return;
-          const value=cursor.value;
-          if(value?.blob)newStore.put(value,cursor.primaryKey);
-          else if(value instanceof Blob)newStore.put({blob:value,filename:String(cursor.primaryKey),size:value.size,type:value.type||"",updatedAt:new Date().toISOString()},cursor.primaryKey);
-          cursor.continue();
-        };
-      }
+      if(!db.objectStoreNames.contains(FILE_STORE))db.createObjectStore(FILE_STORE);
+      if(!db.objectStoreNames.contains(CHUNK_STORE))db.createObjectStore(CHUNK_STORE);
+      if(!db.objectStoreNames.contains(LOG_STORE))db.createObjectStore(LOG_STORE,{keyPath:"id",autoIncrement:true});
     };
-    req.onsuccess=()=>{
-      const db=req.result;
-      db.onversionchange=()=>db.close();
-      resolve(db);
-    };
-    req.onerror=()=>{
-      const err=req.error||new Error("IndexedDB open failed");
-      reject(err);
-    };
+    req.onsuccess=()=>{const db=req.result;db.onversionchange=()=>db.close();resolve(db)};
+    req.onerror=()=>reject(req.error||new Error("IndexedDB open failed"));
   });
 }
 
@@ -192,12 +172,9 @@ export async function saveFileVersion(baseKey,file,options={},onProgress){
 export async function deleteAllFiles(){
   const db=await openDB();
   return new Promise((resolve,reject)=>{
-    const stores=[FILE_STORE,CHUNK_STORE];
-    if(db.objectStoreNames.contains(LEGACY_FILE_STORE))stores.push(LEGACY_FILE_STORE);
-    const tx=db.transaction(stores,"readwrite");
+    const tx=db.transaction([FILE_STORE,CHUNK_STORE],"readwrite");
     tx.objectStore(FILE_STORE).clear();
     tx.objectStore(CHUNK_STORE).clear();
-    if(stores.includes(LEGACY_FILE_STORE))tx.objectStore(LEGACY_FILE_STORE).clear();
     tx.oncomplete=()=>{db.close();resolve()};
     tx.onerror=()=>{db.close();reject(tx.error||new Error("File reset failed"))};
   });
@@ -235,7 +212,7 @@ export async function deleteAuditLogs(){
   });
 }
 
-export async function migrateFilePrefix(oldPrefix,newPrefix){
+export async function moveFilePrefix(oldPrefix,newPrefix){
   if(!oldPrefix||!newPrefix||oldPrefix===newPrefix)return;
   const db=await openDB();
   try{
@@ -248,13 +225,13 @@ export async function migrateFilePrefix(oldPrefix,newPrefix){
       const newKey=oldKey===oldPrefix?newPrefix:newPrefix+oldKey.slice(oldPrefix.length);
       const record=await new Promise((resolve,reject)=>{const tx=db.transaction(FILE_STORE,"readonly"),req=tx.objectStore(FILE_STORE).get(oldKey);req.onsuccess=()=>resolve(req.result||null);req.onerror=()=>reject(req.error||new Error("File metadata read failed"));});
       if(record){
-        await new Promise((resolve,reject)=>{const tx=db.transaction(FILE_STORE,"readwrite");const store=tx.objectStore(FILE_STORE);store.put(record,newKey);store.delete(oldKey);tx.oncomplete=resolve;tx.onerror=()=>reject(tx.error||new Error("File key migration failed"));tx.onabort=()=>reject(tx.error||new Error("File key migration aborted"));});
+        await new Promise((resolve,reject)=>{const tx=db.transaction(FILE_STORE,"readwrite");const store=tx.objectStore(FILE_STORE);store.put(record,newKey);store.delete(oldKey);tx.oncomplete=resolve;tx.onerror=()=>reject(tx.error||new Error("File key move failed"));tx.onabort=()=>reject(tx.error||new Error("File key move aborted"));});
       }
       const chunkCount=Number(record?.chunkCount||0);
       if(chunkCount){
         for(let i=0;i<chunkCount;i++){
           const chunk=await new Promise((resolve,reject)=>{const tx=db.transaction(CHUNK_STORE,"readonly"),req=tx.objectStore(CHUNK_STORE).get([oldKey,i]);req.onsuccess=()=>resolve(req.result||null);req.onerror=()=>reject(req.error||new Error("File chunk read failed"));});
-          if(chunk)await new Promise((resolve,reject)=>{const tx=db.transaction(CHUNK_STORE,"readwrite");const store=tx.objectStore(CHUNK_STORE);store.put(chunk,[newKey,i]);store.delete([oldKey,i]);tx.oncomplete=resolve;tx.onerror=()=>reject(tx.error||new Error("File chunk migration failed"));});
+          if(chunk)await new Promise((resolve,reject)=>{const tx=db.transaction(CHUNK_STORE,"readwrite");const store=tx.objectStore(CHUNK_STORE);store.put(chunk,[newKey,i]);store.delete([oldKey,i]);tx.oncomplete=resolve;tx.onerror=()=>reject(tx.error||new Error("File chunk move failed"));});
         }
       }
     }

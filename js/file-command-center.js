@@ -8,7 +8,7 @@ import {downloadBlob, formatBytes, escapeHtml} from "./ui.js";
   upload handlers, or existing click handlers. It only owns its own modal and button.
 */
 
-const DATA_KEY = "MOBILE_RND_DB_DATA_V10";
+const DATA_KEY = "MOBILE_RND_DATA";
 let rows = [];
 let objectUrl = null;
 
