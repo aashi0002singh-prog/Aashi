@@ -1,20 +1,21 @@
 import {isModuleEnabled} from '../module-manager.js';
-import {createDefaultData,slotBaseKey,subpartId} from '../../../data/models.js';
+import {createDefaultData} from '../../../data/models.js';
 import {getFile,listFileMetadata} from '../../database.js';
 import {downloadBlob,escapeHtml,formatBytes,toast} from '../../ui.js';
 
 const esc=escapeHtml;
 const modal=()=>document.getElementById('parameter360Modal');
 const res=()=>document.getElementById('parameter360Results');
-const STORAGE_KEY='MOBILE_RND_DATA';
+const STORAGE_KEY='MOBILE_RND_DB_DATA_V10';
 window.__p360SearchToken=0;
 
 function loadData(){
   try{const raw=JSON.parse(localStorage.getItem(STORAGE_KEY)||'null');return raw&&Object.keys(raw).length?raw:createDefaultData()}
   catch{return createDefaultData()}
 }
+function subpartId(sub,index){return String(sub?.id||sub?.name||`part-${index+1}`).trim().toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-+|-+$/g,'')||`part-${index+1}`}
 function storageKeysFor(model,key,sub,index){
-  if(sub)return [slotBaseKey(model,key,sub,index)];
+  if(sub){const primary=`${model}_${key}_${subpartId(sub,index)}`;if(key==='M'){const id=subpartId(sub,index);return [primary,`${model}_O_${id}`,`${model}_M`,`${model}_P`,`${model}_I`]}return [primary,`${model}_${key}`]}
   return [`${model}_${key}`];
 }
 function recordLabel(item,key){return item?.title||key}
