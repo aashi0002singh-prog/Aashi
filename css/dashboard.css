@@ -3714,3 +3714,106 @@ body[data-record-view="group"] .records-grid .record-card.is-group-view{
   }
 }
 
+
+/* FINAL V64.2 authoritative card geometry — latest-file-only correction.
+   Keep the compact category tabs and put the three record actions on their own
+   second row. Do not let older flex/grid overrides stretch the buttons or card. */
+.records-grid .record-card.is-expanded .record-expanded-panel{
+  display:flex !important;
+  flex-direction:column !important;
+  height:auto !important;
+  min-height:0 !important;
+  max-height:none !important;
+  overflow:visible !important;
+  box-sizing:border-box !important;
+}
+.records-grid .record-card.is-expanded .expanded-summary,
+.records-grid .record-card.is-expanded .inline-preview,
+.records-grid .record-card.is-expanded .expanded-file-list{
+  flex:0 0 auto !important;
+}
+.records-grid .record-card.is-expanded .expanded-footer{
+  order:10 !important;
+  display:flex !important;
+  flex:0 0 auto !important;
+  flex-direction:row !important;
+  align-items:center !important;
+  justify-content:flex-start !important;
+  flex-wrap:nowrap !important;
+  gap:6px !important;
+  width:100% !important;
+  min-height:32px !important;
+  height:32px !important;
+  margin:8px 0 0 !important;
+  padding:7px 0 0 !important;
+  border-top:1px solid #edf1f5 !important;
+  box-sizing:border-box !important;
+}
+.records-grid .record-card.is-expanded .expanded-footer .text-action{
+  flex:0 0 auto !important;
+  width:auto !important;
+  max-width:none !important;
+  height:24px !important;
+  min-height:24px !important;
+  padding:0 8px !important;
+  margin:0 !important;
+  font-size:8px !important;
+  line-height:1 !important;
+  white-space:nowrap !important;
+  overflow:visible !important;
+  text-overflow:clip !important;
+}
+body[data-record-view="group"] .records-grid .record-card.is-group-view .record-expanded-panel{
+  display:flex !important;
+  flex-direction:column !important;
+  height:auto !important;
+  min-height:0 !important;
+  max-height:none !important;
+  overflow:visible !important;
+  box-sizing:border-box !important;
+}
+body[data-record-view="group"] .records-grid .record-card.is-group-view .expanded-footer{
+  order:10 !important;
+  display:flex !important;
+  flex:0 0 auto !important;
+  flex-direction:row !important;
+  align-items:center !important;
+  justify-content:flex-start !important;
+  flex-wrap:nowrap !important;
+  gap:6px !important;
+  width:100% !important;
+  min-height:32px !important;
+  height:32px !important;
+  margin:8px 0 0 !important;
+  padding:7px 0 0 !important;
+  border-top:1px solid #edf1f5 !important;
+  box-sizing:border-box !important;
+}
+body[data-record-view="group"] .records-grid .record-card.is-group-view .expanded-footer .text-action{
+  flex:0 0 auto !important;
+  width:auto !important;
+  max-width:none !important;
+  height:24px !important;
+  min-height:24px !important;
+  padding:0 8px !important;
+  margin:0 !important;
+  font-size:8px !important;
+  white-space:nowrap !important;
+  overflow:visible !important;
+  text-overflow:clip !important;
+}
+.records-grid .record-card.is-expanded,
+body[data-record-view="group"] .records-grid .record-card.is-group-view{
+  height:auto !important;
+  min-height:0 !important;
+  max-height:none !important;
+  overflow:visible !important;
+  align-self:start !important;
+}
+
+/* Keep the Engineering Records heading typography independent from compact tabs. */
+.records-control-main > .records-control-header,
+.records-control-main .records-control-title,
+.records-control-main .engineering-records-title{
+  font-size:20px !important;
+}
