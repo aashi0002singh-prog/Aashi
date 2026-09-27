@@ -81,7 +81,7 @@
 
       <div class="sidebar-modules" aria-label="Portal feature modules">
         <div class="sidebar-module-title"><i class="fa-solid fa-grip"></i><span>PORTAL MODULES</span></div>
-        <button class="sidebar-module-btn" data-module="fileCommandCenter" id="modelDocumentBtn"><i class="fa-solid fa-folder-open"></i><span>Model Documents</span></button>
+        <button class="sidebar-module-btn" data-module="modelDocument" id="modelDocumentBtn"><i class="fa-solid fa-folder-open"></i><span>Model Documents</span></button>
         <button class="sidebar-module-btn" data-module="excelComparison" id="modelComparisonBtnTop"><i class="fa-solid fa-code-compare"></i><span>Parameter / Spec Comparison</span></button>
         <button class="sidebar-module-btn" data-module="labKnowledge" id="labKnowledgeBtn"><i class="fa-solid fa-flask-vial"></i><span>R&amp;D Lab Testing Setup</span></button>
       </div>
@@ -429,16 +429,17 @@
     import {applyModuleVisibility} from './js/modules/module-manager.js';
     import {initLabKnowledge} from './js/modules/lab-knowledge/module.js';
     import {initParameter360} from './js/modules/parameter-360/module.js';
+ import {initModelDocument} from './js/modules/model-document/module.js';
     document.addEventListener('DOMContentLoaded',()=>{
       applyModuleVisibility();
       initLabKnowledge();
       initParameter360();
-      document.getElementById('modelDocumentBtn')?.addEventListener('click',()=>document.getElementById('fileCenterBtn')?.click());
-      document.getElementById('modelComparisonBtnTop')?.addEventListener('click',()=>document.dispatchEvent(new CustomEvent('portal-open-excel-comparison')));
+   initModelDocument();
+         document.getElementById('modelComparisonBtnTop')?.addEventListener('click',()=>document.dispatchEvent(new CustomEvent('portal-open-excel-comparison')));
     });
   </script>
   <script type="module" src="js/app.js?v=clean-2026-09"></script>
   <script type="module" src="js/file-command-center.js?v=clean-2026-09"></script>
-  <script type="module" src="js/model-comparison/comparison.js?v=clean-2026-09"></script>
+  <script type="module" src="js/modules/model-comparison/module.js?v=hard-clean-v8"></script>
 </body>
 </html>
