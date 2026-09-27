@@ -1,5 +1,5 @@
 const DB_NAME="MobileRD_Master_DB";
-const DB_VERSION=5;
+const DB_VERSION=7;
 const CHUNK_STORE="file_chunks";
 const CHUNK_SIZE=4*1024*1024;
 const FILE_STORE="files";
