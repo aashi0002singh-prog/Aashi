@@ -1,20 +1,20 @@
 import {isModuleEnabled} from '../module-manager.js';
-import {MODEL_ORDER,createDefaultData} from '../../../data/models.js';
-import {getFile} from '../../database.js';
+import {createDefaultData,slotBaseKey,subpartId} from '../../../data/models.js';
+import {getFile,listFileMetadata} from '../../database.js';
 import {downloadBlob,escapeHtml,formatBytes,toast} from '../../ui.js';
 
 const esc=escapeHtml;
 const modal=()=>document.getElementById('parameter360Modal');
 const res=()=>document.getElementById('parameter360Results');
-const STORAGE_KEY='MOBILE_RND_DB_DATA_V10';
+const STORAGE_KEY='MOBILE_RND_DATA';
+window.__p360SearchToken=0;
 
 function loadData(){
   try{const raw=JSON.parse(localStorage.getItem(STORAGE_KEY)||'null');return raw&&Object.keys(raw).length?raw:createDefaultData()}
   catch{return createDefaultData()}
 }
-function subpartId(sub,index){return String(sub?.id||sub?.name||`part-${index+1}`).trim().toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-+|-+$/g,'')||`part-${index+1}`}
 function storageKeysFor(model,key,sub,index){
-  if(key==='M'){const id=subpartId(sub,index);return [`${model}_O_${id}`,`${model}_M`,`${model}_P`,`${model}_I`]}
+  if(sub)return [slotBaseKey(model,key,sub,index)];
   return [`${model}_${key}`];
 }
 function recordLabel(item,key){return item?.title||key}
@@ -55,31 +55,33 @@ function resultMarkup(r){
     <span class="p360-key">${esc(r.key)}</span>
   </article>`;
 }
-function search(q){
+async function search(q,token){
   q=q.trim().toLowerCase();
   if(!q){res().innerHTML='<div class="p360-empty"><i class="fa-solid fa-magnifying-glass"></i><p>Search a parameter, specification, tag, document or record.</p></div>';return}
-  const data=loadData(),rows=[];
-  Object.keys(data||{}).forEach(model=>{
+  const data=loadData(),rows=[],stored=await listFileMetadata(),byBase=new Map();
+  if(token!==window.__p360SearchToken)return;
+  for(const record of stored){const base=record.baseKey||String(record.key||'').split('::v::')[0];if(!base)continue;const list=byBase.get(base)||[];list.push(record);byBase.set(base,list)}
+  for(const list of byBase.values())list.sort((a,b)=>String(a.updatedAt||'').localeCompare(String(b.updatedAt||'')));
+  const resolveStored=(candidates)=>{for(const candidate of candidates){const versions=byBase.get(candidate)||[];if(versions.length)return versions[versions.length-1]}return null};
+  for(const model of Object.keys(data||{})){
     const m=data[model];
-    Object.entries(m?.items||{}).forEach(([key,item])=>{
+    for(const [key,item] of Object.entries(m?.items||{})){
       const subs=Array.isArray(item?.subItems)?item.subItems:[];
-      const hay=[model,m?.meta?.name,m?.meta?.ap,m?.meta?.modem,m?.meta?.status,m?.meta?.swVersion,key,item?.title,item?.category,item?.filename,item?.uploadedFilename,...(item?.tags||[]),...subs.flatMap(s=>[s?.name,s?.filename,s?.uploadedFilename])].join(' ').toLowerCase();
-      if(!hay.includes(q))return;
-      const subMatches=subs.filter(s=>[s?.name,s?.filename,s?.uploadedFilename].join(' ').toLowerCase().includes(q));
-      const matchedSub=subMatches[0];
-      const storageCandidates=storageKeysFor(model,key,matchedSub,matchedSub?subs.indexOf(matchedSub):0);
-      const fileName=matchedSub?.uploadedFilename||matchedSub?.filename||item?.uploadedFilename||item?.filename||'';
-      const storageKey=fileName?storageCandidates.join('||'):null;
-      rows.push({model,key,item,subMatches,storageKey:fileName?storageKey:null,fileName});
-    });
-  });
+      const hay=[model,m?.meta?.name,m?.meta?.ap,m?.meta?.modem,m?.meta?.status,m?.meta?.swVersion,key,item?.title,item?.category,item?.filename,item?.uploadedFilename,item?.note,...(item?.tags||[]),...subs.flatMap(s=>[s?.name,s?.filename,s?.uploadedFilename,s?.note])].join(' ').toLowerCase();
+      if(!hay.includes(q))continue;
+      const subMatches=subs.filter(s=>[s?.name,s?.filename,s?.uploadedFilename,s?.note].join(' ').toLowerCase().includes(q));
+      const matchedSub=subMatches[0],candidates=storageKeysFor(model,key,matchedSub,matchedSub?subs.indexOf(matchedSub):0),storedRecord=resolveStored(candidates);
+      const fileName=storedRecord?.filename||matchedSub?.uploadedFilename||item?.uploadedFilename||'No uploaded file';
+      rows.push({model,key,item,subMatches,storageKey:storedRecord?.key||null,fileName,fileSize:storedRecord?.size||0});
+    }
+  }
+  if(token!==window.__p360SearchToken)return;
   res().innerHTML=rows.length?rows.slice(0,100).map(resultMarkup).join(''):'<div class="p360-empty"><i class="fa-solid fa-circle-question"></i><p>No matching engineering record found in the local model repository.</p></div>';
 }
-
 export function initParameter360(){
   if(!isModuleEnabled('parameter360'))return;
   ['parameter360HeaderBtn','parameter360Btn'].forEach(id=>document.getElementById(id)?.addEventListener('click',()=>{modal().classList.remove('hidden');document.getElementById('parameter360Search')?.focus()}));
-  document.getElementById('parameter360Search')?.addEventListener('input',e=>search(e.target.value));
+  document.getElementById('parameter360Search')?.addEventListener('input',e=>{const token=++window.__p360SearchToken;search(e.target.value,token).catch(err=>{console.error('Parameter 360 search failed',err);res().innerHTML='<div class="p360-empty"><i class="fa-solid fa-triangle-exclamation"></i><p>Search could not access the local file repository.</p></div>'})});
   res()?.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){const result=e.target.closest('[data-p360-result]');if(result){e.preventDefault();const [model,key]=result.dataset.p360Result.split('|');navigateToRecord(model,key);}}});
   res()?.addEventListener('click',e=>{
     const open=e.target.closest('[data-p360-open]');
