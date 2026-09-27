@@ -113,6 +113,7 @@
       </div>
       <div class="records-control-tools data-tools">
         <div class="tool-group">
+          <label class="tool-search" title="Search Engineering Records"><i class="fa-solid fa-magnifying-glass"></i><input id="engineeringSearch" type="search" placeholder="Search records, tags, files..." aria-label="Search Engineering Records"></label>
           <label class="tool-select"><span>Sort</span><select id="sortSelect"><option value="default">Record order</option><option value="title">Title</option><option value="category">Category</option><option value="favorite">Favorites first</option></select></label>
           <button id="favoritesToggle" class="tool-btn" title="Show favorites only"><i class="fa-regular fa-star"></i> Favorites</button>
           <button id="presentationBtn" class="tool-btn"><i class="fa-solid fa-display"></i> Presentation</button>
@@ -121,7 +122,7 @@
           <details class="records-more-tools">
             <summary><i class="fa-solid fa-ellipsis"></i> More Tools</summary>
             <div class="records-more-menu">
-              <button id="exportJsonBtn" class="tool-btn" title="Backup the current model data as JSON"><i class="fa-solid fa-database"></i> Backup Data</button>
+              <button id="exportJsonBtn" class="tool-btn" title="Export the current model metadata as JSON; uploaded binaries remain in the local repository"><i class="fa-solid fa-database"></i> Backup Data</button>
               <button id="exportReportBtn" class="tool-btn" title="Export the selected model's engineering record report"><i class="fa-solid fa-file-lines"></i> Engineering Report</button>
             </div>
           </details>
@@ -372,7 +373,7 @@
       <div class="settings-danger">
         <div><strong>Local data</strong><small>Export or reset the local dashboard dataset.</small></div>
         <div class="flex gap-2">
-          <button id="backupBtn" class="btn btn-light">Backup Data</button>
+          <button id="backupBtn" class="btn btn-light">Backup Metadata</button>
           <button id="resetBtn" class="btn btn-danger">Reset Local Data</button>
         </div>
       </div>
@@ -432,7 +433,7 @@
       applyModuleVisibility();
       initLabKnowledge();
       initParameter360();
-      document.getElementById('modelDocumentBtn')?.addEventListener('click',()=>document.getElementById('fileSummaryTitle')?.scrollIntoView({behavior:'smooth',block:'start'}));
+      document.getElementById('modelDocumentBtn')?.addEventListener('click',()=>document.getElementById('fileCenterBtn')?.click());
       document.getElementById('modelComparisonBtnTop')?.addEventListener('click',()=>document.dispatchEvent(new CustomEvent('portal-open-excel-comparison')));
     });
   </script>
