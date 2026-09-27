@@ -11,11 +11,11 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;600;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="css/dashboard.css?v=V2-CLEAN">
-  <link rel="stylesheet" href="css/record-system.css?v=V2-CLEAN">
+  <link rel="stylesheet" href="css/dashboard.css?v=V3-CLEAN">
   <link rel="stylesheet" href="css/lab-knowledge.css?v=V1-CLEAN">
   <link rel="stylesheet" href="css/modular-features.css?v=V1-CLEAN">
   <link rel="stylesheet" href="css/model-comparison.css?v=V1-CLEAN">
+  <link rel="stylesheet" href="css/record-system.css?v=V7-FINAL">
 </head>
 
 <body class="min-h-screen bg-slate-100 text-slate-800 antialiased">
@@ -84,6 +84,15 @@
         <button class="sidebar-module-btn" data-module="labKnowledge" id="labKnowledgeBtn"><i class="fa-solid fa-flask-vial"></i><span>R&amp;D Lab Testing Setup</span></button>
       </div>
 
+      <div class="sidebar-telemetry" aria-label="Repository telemetry">
+        <div class="sidebar-telemetry-title"><i class="fa-solid fa-chart-line"></i><span>TELEMETRY</span></div>
+        <div class="sidebar-telemetry-grid">
+          <div class="sidebar-telemetry-item"><span>RECORDS</span><strong id="telemetryRecords">—</strong></div>
+          <div class="sidebar-telemetry-item"><span>FILES</span><strong id="telemetryFiles">—</strong></div>
+          <div class="sidebar-telemetry-item"><span>STORAGE</span><strong>LOCAL</strong></div>
+        </div>
+      </div>
+
       <div class="sidebar-actions">
         <button id="copySpecsBtn" class="sidebar-action"><i class="fa-regular fa-copy"></i><span>Copy Specs</span></button>
       </div>
@@ -102,7 +111,7 @@
             <div class="section-icon"><i class="fa-solid fa-layer-group"></i></div>
             <div>
               <h2 id="engineeringRecordsTitle">Engineering Records</h2>
-              <p id="recordCount">21 records</p>
+              <p id="recordCount">— records</p>
             </div>
           </div>
           <button id="engineeringTabsToggle" class="records-tabs-toggle" type="button" aria-expanded="true" title="Hide Engineering Records category tabs">
@@ -115,7 +124,6 @@
       </div>
       <div class="records-control-tools data-tools">
         <div class="tool-group">
-          <label class="tool-search" title="Search Engineering Records"><i class="fa-solid fa-magnifying-glass"></i><input id="engineeringSearch" type="search" placeholder="Search records, tags, files..." aria-label="Search Engineering Records"></label>
           <label class="tool-select"><span>Sort</span><select id="sortSelect"><option value="default">Record order</option><option value="title">Title</option><option value="category">Category</option><option value="favorite">Favorites first</option></select></label>
           <button id="favoritesToggle" class="tool-btn" title="Show favorites only"><i class="fa-regular fa-star"></i> Favorites</button>
           <button id="presentationBtn" class="tool-btn"><i class="fa-solid fa-display"></i> Presentation</button>
@@ -136,10 +144,6 @@
 
     <div id="activeFilters" class="active-filters hidden"></div>
     <section id="cardsGrid" class="records-grid" aria-live="polite"></section>
-    <section class="recent-panel">
-      <div class="recent-heading"><span><i class="fa-solid fa-clock-rotate-left"></i> Recently Viewed</span><small>Existing records only</small></div>
-      <div id="recentList" class="recent-list"></div>
-    </section>
   </main>
   </div>
 
@@ -214,9 +218,9 @@
           <div><label class="form-label">Record</label><select id="uploadRecord" class="form-input"></select></div>
         </div>
         <div id="uploadSubPartWrap" class="hidden">
-          <label class="form-label">Document Entry</label>
+          <label class="form-label">Upload Destination</label>
           <select id="uploadSubPart" class="form-input"></select>
-          <p class="help-text">Choose the required document slot. You can upload unlimited versions to the same slot; existing versions are preserved.</p>
+          <p class="help-text">Choose an existing document to add a version, or choose “Add new document” to add another file. There is no per-record document limit.</p>
         </div>
         <div class="form-grid-2">
           <div><label class="form-label">Revision / Version</label><input id="uploadRevision" class="form-input" maxlength="80" placeholder="e.g. Rev 03 / V2.1"></div>
@@ -225,14 +229,14 @@
         <div id="dropZone" class="drop-zone">
           <i class="fa-solid fa-file-arrow-up"></i>
           <strong id="fileName">Drop file here or click to browse</strong>
-          <span>PDF, XLSX, XLS, ZIP, BIN, DWG, CSV, DOC, DOCX, PPT, PPTX, TXT, LOG, MD, JPG, JPEG, PNG, WEBP, GIF, SVG • Add as many files as your browser storage permits</span>
+          <span>Any file type • Add as many documents as your browser storage permits • Existing files and versions are preserved</span>
           <input id="fileInput" type="file" multiple hidden>
         </div>
         <div class="upload-progress hidden" id="uploadProgressWrap"><div id="uploadProgress"></div></div>
         <div id="uploadStatus" class="help-text"></div>
         <div class="modal-actions">
           <button type="button" class="btn btn-light" data-close="uploadModal">Cancel</button>
-          <button id="saveUploadBtn" class="btn btn-cyan" type="submit"><i class="fa-solid fa-floppy-disk"></i> Save Document</button>
+          <button id="saveUploadBtn" class="btn btn-cyan" type="submit"><i class="fa-solid fa-floppy-disk"></i> Save Document(s)</button>
         </div>
       </form>
     </section>
@@ -439,8 +443,8 @@
       document.getElementById('modelComparisonBtnTop')?.addEventListener('click',()=>document.dispatchEvent(new CustomEvent('portal-open-excel-comparison')));
     });
   </script>
-  <script type="module" src="js/app.js?v=V2-CLEAN"></script>
-  <script type="module" src="js/file-command-center.js?v=V2-CLEAN"></script>
-  <script type="module" src="js/model-comparison/comparison.js?v=V2-CLEAN"></script>
+  <script type="module" src="js/app.js?v=V7-FINAL"></script>
+  <script type="module" src="js/file-command-center.js?v=V1-CLEAN"></script>
+  <script type="module" src="js/model-comparison/comparison.js?v=V1-CLEAN"></script>
 </body>
 </html>
