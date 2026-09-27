@@ -1,5 +1,5 @@
 
-
+/* Model Comparison Module */
 .model-compare-modal{max-width:1500px;width:min(96vw,1500px);max-height:92vh;overflow:auto}
 .mc-hero{display:flex;justify-content:space-between;gap:18px;align-items:flex-start;margin-bottom:18px}
 .mc-hero-copy h2{margin:0;font-size:22px;font-weight:800;color:#0f172a}
