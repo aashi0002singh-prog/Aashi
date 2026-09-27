@@ -1,0 +1,35 @@
+{
+  "version": "V1.0-CLEAN-BASELINE",
+  "features": {
+    "modelDocuments": true,
+    "excelComparison": true,
+    "labKnowledge": true,
+    "parameter360": true,
+    "indexedDbFiles": true,
+    "fileCommandCenter": true,
+    "auditLogging": true,
+    "favorites": true,
+    "sorting": true,
+    "searchAndFilters": true,
+    "presentationMode": true,
+    "engineeringReport": true,
+    "responsiveLayout": true,
+    "dedicatedRecordPreview": true,
+    "adaptiveAllCardsGrid": true,
+    "groupThreeColumnGrid": true,
+    "naturalHeightCards": true
+  },
+  "uiRequirements": {
+    "activeModelBeforeDetails": true,
+    "detailsBeforePortalModules": true,
+    "noInlineFilePreviewInsideCards": true,
+    "dedicatedPreviewWorkspace": true,
+    "allCardsAdaptiveDensity": true,
+    "allCardsMinimumUsableWidth": true,
+    "groupMaximumThreeColumns": true,
+    "naturalCardHeight": true,
+    "noHistoricalLayoutMigrationCode": true
+  },
+  "architecture": "clean baseline / explicit view-specific layout contracts",
+  "storageNamespace": "MOBILE_RND_DB_DATA_V1"
+}
