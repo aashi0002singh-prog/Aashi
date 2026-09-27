@@ -7,7 +7,7 @@ const STATUS=Object.freeze({SAME:"Same",NEW:"New Parameter",DELETED:"Deleted Par
 function norm(v=""){return String(v??"").toLowerCase().replace(/[\u00a0\r\n\t]+/g," ").replace(/[_/\\|:;,.()[\]{}]+/g," ").replace(/[-–—]+/g," ").replace(/\s+/g," ").trim()}
 function compact(v=""){return norm(v).replace(/\s+/g,"")}
 function clean(v){return v===null||v===undefined?"":typeof v==="object"?JSON.stringify(v):String(v).trim()}
-function number(v){const s=String(v??"").replace(/,/g,"").trim();if(!s||["-","—","–","n/a","na","not applicable"].includes(s.toLowerCase()))return null;const m=s.match(/[-+]?\d+(?:\.\d+)?/);return m?Number(m[0]):null}
+function number(v){const s=String(v??"").replace(/,/g,"").trim();if(!s||["-","—","–","n/a","na","not applicable"].includes(s.toLowerCase()))return null;const m=s.match(/[-+]?(?:\d+(?:\.\d*)?|\.\d+)(?:[eE][-+]?\d+)?/);return m?Number(m[0]):null}
 function headerMatch(v,words){const n=norm(v);return words.some(w=>n===w||n.includes(w))}
 function tokens(v=""){return new Set(norm(v).split(" ").filter(Boolean).filter(x=>!new Set(["the","of","and","for","with","in","to","a","an","value","spec","specification","parameter"]).has(x)))}
 
@@ -38,6 +38,7 @@ function findLimitHeaders(rows){
     if(testRow>=0&&lowerRow>=0&&upperRow>=0)break;
   }
   if(testRow<0||lowerRow<0||upperRow<0)return null;
+  if(Math.max(testRow,lowerRow,upperRow)-Math.min(testRow,lowerRow,upperRow)>3)return null;
   return {start:Math.max(testRow,lowerRow,upperRow)};
 }
 
@@ -72,8 +73,7 @@ function parseWorkbook(workbook,label){
   return records;
 }
 
-/* Build a bounded candidate index. This replaces the previous all-vs-all
-   fuzzy scan, which could become quadratic on large engineering workbooks. */
+/* Build a bounded candidate index for predictable matching on large engineering workbooks. */
 function buildIndex(baseRecords){
   const exact=new Map(),tokenIndex=new Map();
   baseRecords.forEach(b=>{
@@ -89,8 +89,8 @@ function buildIndex(baseRecords){
 }
 function chooseMatch(upcoming,baseRecords,used,index){
   const exact=index.exact.get(upcoming.key)||[];
-  const exactAvailable=exact.find(b=>!used.has(b.id));
-  if(exactAvailable)return {record:exactAvailable,confidence:100,kind:"exact"};
+  const exactAvailable=exact.find(b=>!used.has(b.id)&&b.sheet===upcoming.sheet)||exact.find(b=>!used.has(b.id));
+  if(exactAvailable)return {record:exactAvailable,confidence:exactAvailable.sheet===upcoming.sheet?100:96,kind:exactAvailable.sheet===upcoming.sheet?"exact":"exact-cross-sheet"};
 
   const candidateIds=new Set();
   for(const token of tokens(upcoming.parameter)){
@@ -106,7 +106,7 @@ function chooseMatch(upcoming,baseRecords,used,index){
   }
   if(!candidates.length)return null;
 
-  const scored=candidates.map(b=>({record:b,score:similarity(upcoming.parameter,b.parameter)})).sort((a,b)=>b.score-a.score);
+  const scored=candidates.map(b=>({record:b,score:similarity(upcoming.parameter,b.parameter)+(b.sheet===upcoming.sheet?0.035:0)})).sort((a,b)=>b.score-a.score);
   const top=scored[0],second=scored[1]?.score||0,confidence=Math.round(top.score*100),margin=top.score-second;
   if(top.score>=.90&&margin>=.05)return {record:top.record,confidence,kind:"similar"};
   if(top.score>=.70)return {record:top.record,confidence,kind:"review"};
