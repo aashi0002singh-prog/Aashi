@@ -3817,3 +3817,10 @@ body[data-record-view="group"] .records-grid .record-card.is-group-view{
 .records-control-main .engineering-records-title{
   font-size:20px !important;
 }
+
+/* V64.2 corrective search control */
+.tool-search{display:flex;align-items:center;gap:6px;min-width:210px;height:30px;padding:0 9px;border:1px solid #d7dee8;border-radius:7px;background:#fff;color:#64748b;}
+.tool-search input{width:170px;border:0;outline:0;background:transparent;color:inherit;font-size:10px;min-width:0;}
+.tool-search input::placeholder{color:#94a3b8;}
+body[data-theme="dark"] .tool-search{background:#111827;border-color:#334155;color:#cbd5e1;}
+@media(max-width:700px){.tool-search{width:100%;min-width:0}.tool-search input{width:100%;}}
