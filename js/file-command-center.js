@@ -1,4 +1,4 @@
-import {MODEL_ORDER, RECORD_ORDER, createDefaultData} from "../data/models.js";
+import {MODEL_ORDER, RECORD_ORDER, createDefaultData, modelCodesFromData, slotBaseKey} from "../data/models.js";
 import {getFile, getAuditLogs, addAudit, listFileMetadata} from "./database.js";
 import {downloadBlob, formatBytes, escapeHtml} from "./ui.js";
 
@@ -17,18 +17,9 @@ function loadData() {
   catch { return createDefaultData(); }
 }
 
-function subpartId(sub, index) {
-  return String(sub?.id || sub?.name || `part-${index + 1}`).trim().toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "") || `part-${index + 1}`;
-}
+function keyForSubpart(model,key,sub,index){return slotBaseKey(model,key,sub,index)}
 
-function keyForSubpart(model, key, sub, index) {
-  const storageKey = key === "M" ? "O" : key;
-  return `${model}_${storageKey}_${subpartId(sub, index)}`;
-}
-
-function modelCodes(data) {
-  return Object.keys(data || {});
-}
+function modelCodes(data) { return modelCodesFromData(data); }
 
 async function collectRecords() {
   const data=loadData(),out=[];
