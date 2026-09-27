@@ -31,5 +31,19 @@
     "noHistoricalLayoutMigrationCode": true
   },
   "architecture": "clean baseline / explicit view-specific layout contracts",
-  "storageNamespace": "MOBILE_RND_DB_DATA_V1"
+  "storageNamespace": "MOBILE_RND_DB_DATA_V1",
+  "build": "V2 CLEAN RESTRUCTURED",
+  "sourceBaseline": "Mobile_RD_V1_CLEAN_REBUILD.zip",
+  "recordArchitecture": {
+    "cardCollapsedHeightPx": 65,
+    "allCards": "adaptive grid; 4 columns on typical laptop content widths; expands columns on larger widths",
+    "groupCards": "maximum 3 columns on desktop",
+    "expansion": "normal CSS grid flow; content-driven height; no absolute positioning",
+    "preview": "dedicated record preview workspace",
+    "titleWrapping": "single-line ellipsis; no arbitrary word breaking",
+    "modules": [
+      "js/records/record-system.js",
+      "css/record-system.css"
+    ]
+  }
 }
