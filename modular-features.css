@@ -1,0 +1,88 @@
+
+
+.model-sidebar {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.model-sidebar .sidebar-top { order: 1; }
+.model-sidebar .sidebar-telemetry { order: 2; }
+.model-sidebar .sidebar-actions { order: 3; }
+.model-sidebar .sidebar-modules { order: 4; }
+.model-sidebar .sidebar-footer { order: 5; margin-top: auto; }
+
+
+.sidebar-modules {
+  margin-top: 2px;
+  padding: 10px;
+  border: 1px solid rgba(34, 211, 238, .58);
+  border-radius: 10px;
+  background: linear-gradient(145deg, rgba(8, 47, 73, .92), rgba(15, 23, 42, .98));
+  box-shadow: 0 0 0 1px rgba(34, 211, 238, .08), 0 8px 20px rgba(2, 8, 23, .18);
+}
+
+.sidebar-module-title {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  margin: 0 4px 7px;
+  color: #67e8f9;
+  font: 800 9px/1.2 "JetBrains Mono", monospace;
+  letter-spacing: .14em;
+}
+
+.sidebar-module-title i { font-size: 11px; }
+
+.sidebar-module-btn {
+  width: 100%;
+  min-height: 40px;
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  margin: 3px 0;
+  padding: 8px 9px;
+  border: 1px solid transparent;
+  border-radius: 8px;
+  background: transparent;
+  color: #e2e8f0;
+  font: 700 11px/1.25 Inter, sans-serif;
+  text-align: left;
+  cursor: pointer;
+  transition: transform .16s ease, background .16s ease, border-color .16s ease, box-shadow .16s ease;
+}
+
+.sidebar-module-btn i {
+  width: 19px;
+  flex: 0 0 19px;
+  text-align: center;
+  color: #67e8f9;
+  font-size: 13px;
+}
+
+.sidebar-module-btn:hover {
+  transform: translateX(2px);
+  background: linear-gradient(90deg, rgba(34, 211, 238, .17), rgba(99, 102, 241, .10));
+  border-color: rgba(103, 232, 249, .55);
+  box-shadow: inset 2px 0 #22d3ee;
+  color: #fff;
+}
+
+.sidebar-module-btn:active { transform: translateX(1px) scale(.995); }
+.sidebar-module-btn:focus-visible { outline: 2px solid #22d3ee; outline-offset: 1px; }
+.sidebar-module-btn[hidden] { display: none !important; }
+
+@media (max-width: 900px) {
+  .sidebar-modules { margin-top: 8px; }
+  .sidebar-module-btn { min-height: 42px; }
+}
+
+@media (max-width: 620px) {
+  .sidebar-modules { padding: 9px; }
+  .sidebar-module-btn { font-size: 10.5px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .sidebar-module-btn { transition: none; }
+  .sidebar-module-btn:hover { transform: none; }
+}
