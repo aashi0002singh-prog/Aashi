@@ -1,0 +1,15 @@
+Mobile R&D Technical Hub — V1 Clean Restructured Validation
+
+Static checks
+- JavaScript syntax: PASS (all JS modules parsed by Node --check)
+- Dashboard CSS braces: PASS
+- Duplicate HTML IDs: PASS / none found
+- All Cards base grid: 4 columns on laptop desktop contract
+- Larger All Cards: adaptive auto-fit with minimum card width
+- Group grid: maximum 3 columns on desktop; 2/1 at narrower widths
+- Collapsed card: 3px stripe + 62px content = 65px total card height
+- Expanded cards: normal CSS grid flow; no absolute positioning for expansion
+- Inline card preview: removed
+- Dedicated preview workspace: retained and expanded into tabs
+- Historical layout migration code: removed from active V1 app.js
+- No runtime DOM patch script for card layout

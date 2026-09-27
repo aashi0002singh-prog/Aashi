@@ -11,10 +11,10 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;600;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="css/dashboard.css?v=V1-CLEAN">
-  <link rel="stylesheet" href="css/lab-knowledge.css?v=V1-CLEAN">
-  <link rel="stylesheet" href="css/modular-features.css?v=V1-CLEAN">
-  <link rel="stylesheet" href="css/model-comparison.css?v=V1-CLEAN">
+  <link rel="stylesheet" href="css/dashboard.css?v=V1-CLEAN-RESTRUCTURED">
+  <link rel="stylesheet" href="css/lab-knowledge.css?v=V1-CLEAN-RESTRUCTURED">
+  <link rel="stylesheet" href="css/modular-features.css?v=V1-CLEAN-RESTRUCTURED">
+  <link rel="stylesheet" href="css/model-comparison.css?v=V1-CLEAN-RESTRUCTURED">
 </head>
 
 <body class="min-h-screen bg-slate-100 text-slate-800 antialiased">
@@ -68,16 +68,18 @@
         <div id="modelStatus" class="status-pill"><i class="fa-solid fa-circle"></i> Mass Production</div>
       </div>
 
-      <div class="sidebar-details" aria-label="Active model details">
-        <div class="sidebar-details-title">ACTIVE MODEL DETAILS</div>
-        <div class="sidebar-metric"><span><i class="fa-solid fa-microchip"></i> PROCESSOR</span><strong id="metaAp">—</strong></div>
-        <div class="sidebar-metric"><span><i class="fa-solid fa-calendar-days"></i> LAUNCH YEAR</span><strong id="metaModelYear">—</strong></div>
-        <div class="sidebar-metric"><span><i class="fa-solid fa-user-tie"></i> KOREA LEAD / SIEL HW PIC</span><strong id="metaSielHwPic">—</strong></div>
-        <div class="sidebar-metric"><span><i class="fa-solid fa-tower-broadcast"></i> RF / NETWORK</span><strong id="metaRfNetwork">—</strong></div>
-      </div>
+      <section class="sidebar-model-details" aria-label="Active model details">
+        <div class="sidebar-section-title"><i class="fa-solid fa-circle-info"></i><span>ACTIVE MODEL DETAILS</span></div>
+        <div class="sidebar-detail-grid">
+          <div class="sidebar-detail"><span>PROCESSOR</span><strong id="metaAp">—</strong></div>
+          <div class="sidebar-detail"><span>LAUNCH YEAR</span><strong id="metaModelYear">—</strong></div>
+          <div class="sidebar-detail"><span>KOREA LEAD / SIEL HW PIC</span><strong id="metaSielHwPic">—</strong></div>
+          <div class="sidebar-detail"><span>RF / NETWORK</span><strong id="metaRfNetwork">—</strong></div>
+        </div>
+      </section>
 
       <div class="sidebar-modules" aria-label="Portal feature modules">
-        <div class="sidebar-module-title"><i class="fa-solid fa-grip"></i><span>PORTAL MODULES</span></div>
+        <div class="sidebar-module-title"><i class="fa-solid fa-grip"></i><span>FEATURE LIST / PORTAL MODULES</span></div>
         <button class="sidebar-module-btn" data-module="modelDocument" id="modelDocumentBtn"><i class="fa-solid fa-folder-open"></i><span>Model Documents</span></button>
         <button class="sidebar-module-btn" data-module="excelComparison" id="modelComparisonBtnTop"><i class="fa-solid fa-code-compare"></i><span>Parameter / Spec Comparison</span></button>
         <button class="sidebar-module-btn" data-module="labKnowledge" id="labKnowledgeBtn"><i class="fa-solid fa-flask-vial"></i><span>R&amp;D Lab Testing Setup</span></button>
@@ -145,7 +147,7 @@
   <footer class="app-footer">
     <div class="app-container footer-inner">
       <div><span class="online-dot"></span> Mobile R&D Technical Hub</div>
-      <div class="mono">IndexedDB • Local Repository • <span id="appVersion">V1.0 • Clean Adaptive Engineering Workspace</span></div>
+      <div class="mono">IndexedDB • Local Repository • <span id="appVersion">V1.0 • Clean Card Architecture</span></div>
     </div>
   </footer>
 
@@ -409,10 +411,8 @@
 
   <div id="filePreviewModal" class="modal hidden">
     <div class="modal-backdrop"></div>
-    <section class="modal-panel modal-xl file-preview-panel" role="dialog" aria-modal="true" aria-labelledby="filePreviewTitle">
-      <button class="modal-close" type="button" onclick="document.getElementById('filePreviewModal').classList.add('hidden')"><i class="fa-solid fa-xmark"></i></button>
-      <div class="modal-heading"><div class="modal-icon"><i class="fa-solid fa-eye"></i></div><div><h2 id="filePreviewTitle">File Preview</h2><p id="filePreviewMeta" class="modal-description"></p></div></div>
-      <div id="filePreviewBody" class="file-preview-body"></div>
+    <section class="modal-panel modal-preview-workspace" role="dialog" aria-modal="true" aria-label="Document Preview">
+      <div id="previewWorkspaceContent"></div>
     </section>
   </div>
 
@@ -438,8 +438,8 @@
       document.getElementById('modelComparisonBtnTop')?.addEventListener('click',()=>document.dispatchEvent(new CustomEvent('portal-open-excel-comparison')));
     });
   </script>
-  <script type="module" src="js/app.js?v=V1-CLEAN"></script>
-  <script type="module" src="js/file-command-center.js?v=V1-CLEAN"></script>
-  <script type="module" src="js/model-comparison/comparison.js?v=V1-CLEAN"></script>
+  <script type="module" src="js/app.js?v=V1-CLEAN-RESTRUCTURED"></script>
+  <script type="module" src="js/file-command-center.js?v=V1-CLEAN-RESTRUCTURED"></script>
+  <script type="module" src="js/model-comparison/comparison.js?v=V1-CLEAN-RESTRUCTURED"></script>
 </body>
 </html>
