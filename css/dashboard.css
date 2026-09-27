@@ -3624,3 +3624,93 @@ body[data-record-view="group"] .records-grid .record-card.is-group-view .expande
   font-size:7px !important;
   white-space:nowrap !important;
 }
+
+/* V64.2 latest correction: compact second-row card actions + restore Engineering Records tab readability. */
+.records-control-main .category-tabs .cat-btn{
+  font-size:12px !important;
+  font-weight:800 !important;
+}
+.records-control-main .category-tabs .cat-btn i{
+  font-size:12px !important;
+}
+.records-control-main .category-tabs .cat-btn .cat-count{
+  font-size:10px !important;
+}
+
+/* Expanded card actions are a compact second row, never three stretched columns. */
+.records-grid .record-card.is-expanded .expanded-footer{
+  display:flex !important;
+  flex-direction:row !important;
+  align-items:center !important;
+  justify-content:flex-start !important;
+  flex-wrap:nowrap !important;
+  gap:6px !important;
+  width:100% !important;
+  box-sizing:border-box !important;
+  min-height:31px !important;
+  height:auto !important;
+  margin-top:9px !important;
+  padding:8px 0 0 !important;
+  border-top:1px solid #edf1f5 !important;
+  grid-template-columns:none !important;
+}
+.records-grid .record-card.is-expanded .expanded-footer .text-action{
+  flex:0 0 auto !important;
+  width:auto !important;
+  min-width:0 !important;
+  max-width:none !important;
+  height:25px !important;
+  min-height:25px !important;
+  padding:0 9px !important;
+  border-radius:6px !important;
+  font-size:7.5px !important;
+  line-height:1 !important;
+  white-space:nowrap !important;
+  overflow:visible !important;
+  text-overflow:clip !important;
+}
+/* Group/category cards use the same second-row footer geometry. */
+body[data-record-view="group"] .records-grid .record-card.is-group-view .expanded-footer{
+  display:flex !important;
+  flex-direction:row !important;
+  align-items:center !important;
+  justify-content:flex-start !important;
+  flex-wrap:nowrap !important;
+  gap:5px !important;
+  width:100% !important;
+  min-height:31px !important;
+  height:auto !important;
+  margin-top:8px !important;
+  padding:8px 0 0 !important;
+  border-top:1px solid #edf1f5 !important;
+  grid-template-columns:none !important;
+}
+body[data-record-view="group"] .records-grid .record-card.is-group-view .expanded-footer .text-action{
+  flex:0 0 auto !important;
+  width:auto !important;
+  min-width:0 !important;
+  max-width:none !important;
+  height:25px !important;
+  min-height:25px !important;
+  padding:0 8px !important;
+  font-size:7.5px !important;
+  white-space:nowrap !important;
+  overflow:visible !important;
+  text-overflow:clip !important;
+}
+
+/* Preserve natural card height; the new footer row contributes its own height. */
+.records-grid .record-card.is-expanded,
+body[data-record-view="group"] .records-grid .record-card.is-group-view{
+  height:auto !important;
+  min-height:0 !important;
+  max-height:none !important;
+  overflow:visible !important;
+}
+@media(max-width:620px){
+  .records-grid .record-card.is-expanded .expanded-footer,
+  body[data-record-view="group"] .records-grid .record-card.is-group-view .expanded-footer{
+    flex-wrap:wrap !important;
+  }
+}
+
