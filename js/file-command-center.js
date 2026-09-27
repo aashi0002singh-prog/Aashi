@@ -1,5 +1,5 @@
 import {MODEL_ORDER, RECORD_ORDER, createDefaultData} from "../data/models.js";
-import {getFile, getAuditLogs, addAudit} from "./database.js";
+import {getFile, getAuditLogs, addAudit, listFileMetadata} from "./database.js";
 import {downloadBlob, formatBytes, escapeHtml} from "./ui.js";
 
 /*
@@ -32,39 +32,30 @@ function modelCodes(data) {
 
 async function collectRecords() {
   const data=loadData(),out=[];
+  const stored=await listFileMetadata();
+  const byBase=new Map();
+  for(const record of stored){
+    const baseKey=record.baseKey||String(record.key||"").split("::v::")[0];
+    if(!baseKey)continue;
+    const list=byBase.get(baseKey)||[];list.push(record);byBase.set(baseKey,list);
+  }
+  for(const list of byBase.values())list.sort((a,b)=>String(a.updatedAt||"").localeCompare(String(b.updatedAt||"")));
+  const latestFor=(baseKey)=>{const list=byBase.get(baseKey)||[];return list.length?list[list.length-1]:null};
+  const pushRow=(model,key,item,storageKey,subpart,slotFilename,slotSize)=>{
+    const latest=latestFor(storageKey);if(!latest)return;
+    out.push({model,key,subpart:subpart||"",title:item.title||key,category:item.category||"General",filename:latest.filename||slotFilename||"Uploaded file",size:latest.size?formatBytes(latest.size):(slotSize||"—"),storageKey:latest.key||storageKey,versionCount:(byBase.get(storageKey)||[]).length,updatedAt:latest.updatedAt||""});
+  };
   for(const model of modelCodes(data)){
     const items=data[model]?.items||{};
     for(const key of RECORD_ORDER){
-      const item=items[key]; if(!item) continue;
-      if(Array.isArray(item.mergedSources)){
-        for(const src of item.mergedSources){
-          try{
-            const storageKey=`${model}_${src.key}`,stored=await getFile(storageKey);
-            if(!stored?.blob) continue;
-            out.push({model,key,subpart:src.name||"",title:item.title||key,category:item.category||"General",filename:stored.filename||src.filename||"Uploaded file",size:stored.size?formatBytes(stored.size):(src.size||"—"),storageKey});
-          }catch(err){console.warn("File Command Center lookup failed",model,key,src.key,err)}
-        }
-        continue;
-      }
-      if(Array.isArray(item.subItems)){
-        for(let index=0;index<item.subItems.length;index++){
-          const sub=item.subItems[index],storageKey=keyForSubpart(model,key,sub,index);
-          try{
-            const stored=await getFile(storageKey); if(!stored?.blob) continue;
-            out.push({model,key,subpart:sub.name||`Part ${index+1}`,title:item.title||key,category:item.category||"General",filename:stored.filename||sub.filename||"Uploaded file",size:stored.size?formatBytes(stored.size):(sub.size||"—"),storageKey});
-          }catch(err){console.warn("File Command Center lookup failed",model,key,sub.name,err)}
-        }
-        continue;
-      }
-      try{
-        const storageKey=`${model}_${key}`,stored=await getFile(storageKey); if(!stored?.blob) continue;
-        out.push({model,key,title:item.title||key,category:item.category||"General",filename:stored.filename||item.filename||"Uploaded file",size:stored.size?formatBytes(stored.size):(item.size||"—"),storageKey});
-      }catch(err){console.warn("File Command Center lookup failed",model,key,err)}
+      const item=items[key];if(!item)continue;
+      if(Array.isArray(item.mergedSources)){for(const src of item.mergedSources)pushRow(model,key,item,`${model}_${src.key}`,src.name,src.filename,src.size);continue;}
+      if(Array.isArray(item.subItems)){for(let index=0;index<item.subItems.length;index++){const sub=item.subItems[index];pushRow(model,key,item,keyForSubpart(model,key,sub,index),sub.name||`Part ${index+1}`,sub.filename,sub.size)}continue;}
+      pushRow(model,key,item,`${model}_${key}`,"",item.filename,item.size);
     }
   }
-  return out;
+  return out.sort((a,b)=>String(a.model).localeCompare(String(b.model))||String(a.key).localeCompare(String(b.key))||String(a.subpart).localeCompare(String(b.subpart)));
 }
-
 function iconFor(filename = "") {
   const ext = filename.split(".").pop().toLowerCase();
   if (ext === "pdf") return "fa-file-pdf";
@@ -84,9 +75,11 @@ function open() { clearPreview(); document.getElementById("filePreviewModal")?.c
 
 function renderModelOptions() {
   const select = document.getElementById("fileCenterModel");
-  if (!select || select.options.length > 1) return;
+  if (!select) return;
   const data = loadData();
+  const selected=select.value;
   select.innerHTML = `<option value="">All models</option>` + modelCodes(data).map(m => `<option value="${escapeHtml(m)}">${escapeHtml(m)}</option>`).join("");
+  if(selected&&modelCodes(data).includes(selected))select.value=selected;
 }
 
 function filtered() {

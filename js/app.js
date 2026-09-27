@@ -1,5 +1,5 @@
 import {MODEL_ORDER,RECORD_ORDER,CATEGORIES,CATEGORY_COLORS,createDefaultData} from "../data/models.js";
-import {saveFile,saveFileVersion,getFile,getFiles,listFileVersions,deleteAllFiles,deleteAuditLogs,addAudit,migrateFilePrefix,deleteFilePrefix} from "./database.js";
+import {saveFile,saveFileVersion,getFile,getFiles,listFileVersions,listFileVersionsForBases,deleteAllFiles,deleteAuditLogs,addAudit,migrateFilePrefix,deleteFilePrefix} from "./database.js";
 import {toast,escapeHtml,formatBytes,downloadBlob,downloadText} from "./ui.js";
 
 const STORAGE_KEY="MOBILE_RND_DB_DATA_V10";
@@ -10,8 +10,10 @@ const ALLOWED=["pdf","xlsx","xls","zip","bin","dwg","csv","doc","docx","ppt","pp
 const LEGACY_RECORD_MAP={S:"A",B:"B",I:"C",P:"D",K:"E",L:"F",M:"G",T:"H",C:"I",E:"J",H:"K",F:"L",G:"M",Q:"N",J:"O",A:"P",D:"Q",N:"R",O:"S",R:"U",U:"T",VSWR:"H",HWC:"T"};
 const HARDWARE_DEFAULT={title:"Hardware Checklist",category:"Specification",icon:"fa-clipboard-check",tags:["Hardware verification","Pre-S sign-off"],filename:"",size:""};
 const CUSTOM_MODELS_KEY="MOBILE_RND_CUSTOM_MODELS_V1";
+const RENAMED_MODELS_KEY="MOBILE_RND_RENAMED_MODELS_V1";
 function customModelCodes(){return readJson(CUSTOM_MODELS_KEY,[]).map(x=>String(x?.code||"").trim().toUpperCase()).filter(Boolean)}
-function modelList(){return [...MODEL_ORDER,...customModelCodes()].filter((m,i,a)=>a.indexOf(m)===i&&data?.[m])}
+function renamedModelMap(){return readJson(RENAMED_MODELS_KEY,{});}
+function modelList(){const renamed=renamedModelMap();return [...MODEL_ORDER,...customModelCodes()].filter((m,i,a)=>a.indexOf(m)===i&&!renamed[m]&&data?.[m])}
 
 function clone(value){return structuredClone(value)}
 
@@ -19,7 +21,12 @@ function migrateRecordKeys(raw){
   const defaults=createDefaultData();
   if(!raw||typeof raw!=="object") return defaults;
   let changed=false;
-  const modelCodes=[...MODEL_ORDER,...customModelCodes()].filter((m,i,a)=>a.indexOf(m)===i);
+  const renamed=renamedModelMap();
+  for(const [oldCode,newCode] of Object.entries(renamed)){
+    if(raw[oldCode]&&!raw[newCode]){raw[newCode]=raw[oldCode];delete raw[oldCode];changed=true;}
+    else if(raw[oldCode]&&raw[newCode]){delete raw[oldCode];changed=true;}
+  }
+  const modelCodes=[...MODEL_ORDER,...customModelCodes()].filter((m,i,a)=>a.indexOf(m)===i&&!renamed[m]);
   for(const model of modelCodes){
     const defaultModel=defaults[model]||defaults.A576;
     if(!raw[model]||typeof raw[model]!=="object"){
@@ -86,7 +93,9 @@ function migrateRecordKeys(raw){
     }
     const defaultA=clone(defaultModel.items.A);
     if(legacyA && !Array.isArray(legacyA.mergedSources)){
-      Object.assign(defaultA,{filename:legacyA.uploadedFilename||legacyA.filename||defaultA.filename,size:legacyA.uploadedSize||legacyA.size||defaultA.size});
+      Object.assign(defaultA,clone(legacyA));
+      if(legacyA.uploadedFilename||legacyA.filename) defaultA.filename=legacyA.uploadedFilename||legacyA.filename;
+      if(legacyA.uploadedSize||legacyA.size) defaultA.size=legacyA.uploadedSize||legacyA.size;
       if(Array.isArray(legacyA.tags)&&legacyA.tags.length) defaultA.tags=clone(legacyA.tags);
     }
     items.A=defaultA;
@@ -172,6 +181,11 @@ function readJson(key,fallback){try{const value=JSON.parse(localStorage.getItem(
 function loadData(){
   try{
     const raw=JSON.parse(localStorage.getItem(STORAGE_KEY)||"null")||createDefaultData();
+    const renamed=renamedModelMap();
+    for(const [oldCode,newCode] of Object.entries(renamed)){
+      if(raw[oldCode]&&!raw[newCode]){raw[newCode]=raw[oldCode];delete raw[oldCode];}
+      else if(raw[oldCode]&&raw[newCode])delete raw[oldCode];
+    }
     const defaults=createDefaultData();
     customModelCodes().forEach(code=>{
       if(!raw[code]){
@@ -246,12 +260,11 @@ async function refreshUploadedFlags(model=currentModel){
     slotDescriptors.set(key,slots);
     slots.forEach(slot=>baseKeys.push(slot.baseKey));
   }
-  const files=await getFiles(baseKeys);
-  const versionCache=new Map();
-  await Promise.all([...new Set(baseKeys)].map(async baseKey=>{
-    try{versionCache.set(baseKey,await listFileVersions(baseKey));}
-    catch(err){console.warn("Version lookup failed",baseKey,err);versionCache.set(baseKey,[])}
-  }));
+  const uniqueBaseKeys=[...new Set(baseKeys)];
+  const files=await getFiles(uniqueBaseKeys);
+  let versionCache=new Map();
+  try{versionCache=await listFileVersionsForBases(uniqueBaseKeys)}
+  catch(err){console.warn("Version lookup failed",err);versionCache=new Map(uniqueBaseKeys.map(k=>[k,[]]))}
   if(model!==currentModel)return;
   uploadedFiles=new Map();
   uploadedKeys=new Set();
@@ -310,11 +323,12 @@ async function hydrateInlinePreviews(entries){
       if(modelAtStart!==currentModel||!expandedCards.has(key)) continue;
       if(!record?.blob){host.innerHTML=`<div class="inline-preview-empty"><i class="fa-solid fa-file-circle-xmark"></i><span>Document metadata is configured, but no stored binary is available.</span></div>`;continue;}
       const blob=record.blob;
+      const previousUrl=host.dataset.objectUrl;if(previousUrl)URL.revokeObjectURL(previousUrl);
       const name=entry.filename||record.filename||"document";
       const ext=(name.split(".").pop()||"").toLowerCase();
       const url=URL.createObjectURL(blob);
       host.dataset.objectUrl=url;
-      if(blob.type?.startsWith("image/")||["png","jpg","jpeg","webp","gif"].includes(ext)){
+      if(blob.type?.startsWith("image/")||["png","jpg","jpeg","webp","gif","svg"].includes(ext)){
         host.innerHTML=`<div class="inline-preview-toolbar"><span><i class="fa-solid fa-image"></i> IMAGE PREVIEW</span><span>${escapeHtml(name)}</span></div><div class="inline-preview-canvas"><img src="${url}" alt="${escapeHtml(name)}" loading="lazy"></div>`;
       }else if(blob.type==="application/pdf"||ext==="pdf"){
         host.innerHTML=`<div class="inline-preview-toolbar"><span><i class="fa-solid fa-file-pdf"></i> PDF PREVIEW</span><span>${escapeHtml(name)}</span></div><iframe class="inline-preview-frame" src="${url}" title="PDF preview of ${escapeHtml(name)}"></iframe>`;
@@ -432,13 +446,13 @@ function openUploadModal(recordKey="",subpartIndex=""){if(!isAdmin){toast("Admin
 function resetSelectedFile(){selectedFiles=[];const input=document.getElementById("fileInput");if(input)input.value="";const name=document.getElementById("fileName");if(name)name.textContent="Drop files here or click to browse";const status=document.getElementById("uploadStatus");if(status)status.textContent="";const rev=document.getElementById("uploadRevision");if(rev)rev.value="";const note=document.getElementById("uploadNote");if(note)note.value=""}
 
 function openModal(id){document.getElementById(id)?.classList.remove("hidden")}
-function closeModal(id){document.getElementById(id)?.classList.add("hidden");if(id==="uploadModal")resetSelectedFile()}
+function closeModal(id){document.getElementById(id)?.classList.add("hidden");if(id==="filePreviewModal"){const body=document.getElementById("filePreviewBody");const url=body?.dataset?.objectUrl;if(url)URL.revokeObjectURL(url);if(body){delete body.dataset.objectUrl;body.innerHTML=""}}if(id==="uploadModal")resetSelectedFile()}
 function findModel(value){const v=String(value||"").trim().toUpperCase();return modelList().find(m=>m===v)||modelList().find(m=>m.toUpperCase()===v)||null}
 function renderModelPicker(filter=""){const menu=document.getElementById("modelPickerMenu");if(!menu)return;const q=String(filter||"").trim().toLowerCase(),matches=modelList().filter(m=>!q||m.toLowerCase().includes(q)||data[m].meta.name.toLowerCase().includes(q));menu.innerHTML=`<div class="model-picker-label"><i class="fa-solid fa-list-check"></i><span>Select Model</span></div>`+(matches.length?matches.map(m=>`<button type="button" class="model-picker-option ${m===currentModel?"active":""}" data-picker-model="${m}" role="option" aria-selected="${m===currentModel}"><span class="model-picker-code">${m}</span><span class="model-picker-name">${escapeHtml(data[m].meta.name)}</span></button>`).join(""):`<div class="model-picker-empty">No model found</div>`);menu.querySelectorAll("[data-picker-model]").forEach(b=>b.addEventListener("click",()=>{setModel(b.dataset.pickerModel);closeModelPicker()}))}
 function openModelPicker(){const m=document.getElementById("modelPickerMenu"),i=document.getElementById("modelPickerInput");if(m){m.classList.remove("hidden");i?.setAttribute("aria-expanded","true")}}
 function closeModelPicker(){const m=document.getElementById("modelPickerMenu"),i=document.getElementById("modelPickerInput");if(m){m.classList.add("hidden");i?.setAttribute("aria-expanded","false")}}
 function toggleModelPicker(){const m=document.getElementById("modelPickerMenu");if(m?.classList.contains("hidden"))openModelPicker();else closeModelPicker()}
-function setModel(m){if(!modelList().includes(m))return;expandedCards.clear();currentModel=m;localStorage.setItem("MOBILE_RND_LAST_MODEL_V1",m);activeCategory="all";query="";favoritesOnly=false;sortMode="default";populateUploadModels(m);renderAll();refreshUploadedFlags(m);const picker=document.getElementById("modelPickerInput");if(picker)picker.value=currentModel;renderModelPicker("");location.hash="";window.scrollTo({top:0,behavior:prefs.motion?"smooth":"auto"})}
+function setModel(m){if(!modelList().includes(m))return;expandedCards.clear();currentModel=m;localStorage.setItem("MOBILE_RND_LAST_MODEL_V1",m);activeCategory="all";query="";if(document.getElementById("engineeringSearch"))document.getElementById("engineeringSearch").value="";favoritesOnly=false;sortMode="default";populateUploadModels(m);renderAll();refreshUploadedFlags(m);const picker=document.getElementById("modelPickerInput");if(picker)picker.value=currentModel;renderModelPicker("");location.hash="";window.scrollTo({top:0,behavior:prefs.motion?"smooth":"auto"})}
 function openRecord(key){
   const item=currentItems()?.[key];
   if(!item)return;
@@ -447,6 +461,7 @@ function openRecord(key){
   // Summary tiles must always reach their card, even when filters/search are active.
   activeCategory="all";
   query="";
+  if(document.getElementById("engineeringSearch"))document.getElementById("engineeringSearch").value="";
   favoritesOnly=false;
   sortMode="default";
   renderAll();
@@ -458,22 +473,17 @@ function focusRecord(key){const el=document.getElementById(`record-${key}`);if(e
 function renderRecent(){const wrap=document.getElementById("recentList");if(!wrap)return;const items=recentlyViewed.map(id=>{const [m,k]=id.split(":");const item=currentItemsFor(m)[k];return item?{m,k,item}:null}).filter(Boolean);wrap.innerHTML=items.length?items.map(x=>`<button class="recent-item" data-recent-model="${x.m}" data-recent-key="${x.k}"><span>${x.m} · ${x.k}</span><strong>${escapeHtml(x.item.title)}</strong></button>`).join(""):"<span class='help-text'>No recently viewed records.</span>"}
 
 function bindEvents(){
-  const summaryToggle=document.getElementById("fileSummaryToggle"),summaryBoard=document.querySelector(".file-summary-board"),summaryHidden=localStorage.getItem("MOBILE_RND_FILE_SUMMARY_HIDDEN_V1")==="1";
-  const engineeringTabsToggle=document.getElementById("engineeringTabsToggle"),engineeringTabsRow=document.getElementById("engineeringRecordsTabsRow"),engineeringTabsHidden=false;
+  const engineeringTabsToggle=document.getElementById("engineeringTabsToggle"),engineeringTabsRow=document.getElementById("engineeringRecordsTabsRow"),engineeringTabsHidden=localStorage.getItem(ENGINEERING_TABS_HIDDEN_KEY)==="1";
   const applyEngineeringTabsState=(hidden)=>{
     engineeringTabsRow?.classList.toggle("tabs-hidden",hidden);
     engineeringTabsToggle?.setAttribute("aria-expanded",String(!hidden));
     if(engineeringTabsToggle)engineeringTabsToggle.innerHTML=`<i class="fa-solid fa-eye${hidden?"":"-slash"}"></i><span>${hidden?"Show Tabs":"Hide Tabs"}</span>`;
     engineeringTabsToggle?.setAttribute("title",hidden?"Show Engineering Records category tabs":"Hide Engineering Records category tabs");
   };
-  localStorage.removeItem(ENGINEERING_TABS_HIDDEN_KEY);
-  applyEngineeringTabsState(false);
-  engineeringTabsToggle?.setAttribute("aria-hidden","true");
-  engineeringTabsToggle?.classList.add("tabs-control-disabled");
-  if(summaryBoard&&summaryToggle){summaryBoard.classList.toggle("summary-hidden",summaryHidden);summaryToggle.setAttribute("aria-expanded",String(!summaryHidden));summaryToggle.innerHTML=`<i class="fa-solid fa-eye${summaryHidden?"":"-slash"}"></i> ${summaryHidden?"Show":"Hide"}`;summaryToggle.addEventListener("click",()=>{const hidden=summaryBoard.classList.toggle("summary-hidden");localStorage.setItem("MOBILE_RND_FILE_SUMMARY_HIDDEN_V1",hidden?"1":"0");summaryToggle.setAttribute("aria-expanded",String(!hidden));summaryToggle.innerHTML=`<i class="fa-solid fa-eye${hidden?"":"-slash"}"></i> ${hidden?"Show":"Hide"}`})}
+  applyEngineeringTabsState(engineeringTabsHidden);
+  engineeringTabsToggle?.addEventListener("click",()=>{const hidden=!engineeringTabsRow?.classList.contains("tabs-hidden");localStorage.setItem(ENGINEERING_TABS_HIDDEN_KEY,hidden?"1":"0");applyEngineeringTabsState(hidden)});
   document.getElementById("sidebarCollapseBtn")?.addEventListener("click",()=>{document.body.classList.toggle("sidebar-collapsed");const collapsed=document.body.classList.contains("sidebar-collapsed");localStorage.setItem("MOBILE_RND_SIDEBAR_V1",collapsed?"collapsed":"expanded");document.getElementById("sidebarCollapseBtn").innerHTML=`<i class="fa-solid fa-angles-${collapsed?"right":"left"}"></i>`});
   document.getElementById("categoryTabs").addEventListener("click",e=>{const b=e.target.closest("[data-cat]");if(b){activeCategory=b.dataset.cat;expandedCards.clear();renderCategories();renderCards()}});
-  const summaryBody=document.getElementById("fileSummaryBody");summaryBody?.addEventListener("click",e=>{const b=e.target.closest("[data-summary-record]");if(b)openRecord(b.dataset.summaryRecord)});summaryBody?.addEventListener("keydown",e=>{if((e.key==="Enter"||e.key===" ")&&e.target.closest("[data-summary-record]")){e.preventDefault();openRecord(e.target.closest("[data-summary-record]").dataset.summaryRecord)}});
   document.getElementById("cardsGrid").addEventListener("click",e=>{
     const up=e.target.closest("[data-open-upload]");if(up){openUploadModal(up.dataset.openUpload,up.dataset.subpartIndex||"");return}
     const fav=e.target.closest("[data-favorite]");if(fav){toggleFavorite(fav.dataset.favorite);return}
@@ -490,24 +500,25 @@ function bindEvents(){
   document.getElementById("copySpecsBtn").addEventListener("click",copySpecs);document.getElementById("exportJsonBtn").addEventListener("click",exportModel);document.getElementById("exportReportBtn").addEventListener("click",exportReport);document.getElementById("settingsBtn").addEventListener("click",openSettings);document.getElementById("themeBtn").addEventListener("click",()=>{prefs.theme=prefs.theme==="dark"?"light":"dark";savePrefs();draftPrefs={...prefs};applyPrefs()});document.getElementById("fullscreenBtn").addEventListener("click",toggleFullscreen);
   ["themeSelect","accentSelect","densitySelect","motionToggle"].forEach(id=>document.getElementById(id)?.addEventListener("change",syncDraftPrefs));
   document.getElementById("settingsApplyBtn")?.addEventListener("click",()=>applyDraftPrefs(false));document.getElementById("settingsOkBtn")?.addEventListener("click",()=>{applyDraftPrefs(true)});
+  document.getElementById("engineeringSearch")?.addEventListener("input",e=>{query=e.target.value.trim().toLowerCase();renderCards()});
   document.getElementById("sortSelect").addEventListener("change",e=>{sortMode=e.target.value;renderCards()});document.getElementById("favoritesToggle").addEventListener("click",()=>{favoritesOnly=!favoritesOnly;document.getElementById("favoritesToggle").classList.toggle("active",favoritesOnly);renderCards()});document.getElementById("clearFiltersBtn").addEventListener("click",clearFilters);
   document.getElementById("prevRecordBtn").addEventListener("click",()=>navigateRecord(-1));document.getElementById("nextRecordBtn").addEventListener("click",()=>navigateRecord(1));document.getElementById("presentationBtn").addEventListener("click",()=>{const k=filteredEntries()[0]?.[0];if(k)openPresentation(k)});
   document.getElementById("recentList").addEventListener("click",e=>{const b=e.target.closest("[data-recent-key]");if(b){setModel(b.dataset.recentModel);setTimeout(()=>openRecord(b.dataset.recentKey),50)}});
-  document.querySelectorAll("[data-close]").forEach(b=>b.addEventListener("click",()=>closeModal(b.dataset.close)));document.querySelectorAll(".modal-backdrop").forEach(b=>b.addEventListener("click",()=>b.parentElement.classList.add("hidden")));
+  document.querySelectorAll("[data-close]").forEach(b=>b.addEventListener("click",()=>closeModal(b.dataset.close)));document.querySelectorAll(".modal-backdrop").forEach(b=>b.addEventListener("click",()=>closeModal(b.parentElement.id)));
   document.getElementById("loginForm").addEventListener("submit",login);document.getElementById("addModelForm")?.addEventListener("submit",addModel);document.getElementById("editModelSelect")?.addEventListener("change",e=>loadEditModelFields(e.target.value));
   const passwordToggle=document.getElementById("passwordToggle");
   passwordToggle?.addEventListener("click",()=>{const input=document.getElementById("passwordInput"); const showing=input.type==="text"; input.type=showing?"password":"text"; passwordToggle.innerHTML=showing?'<i class="fa-solid fa-eye"></i>':'<i class="fa-solid fa-eye-slash"></i>'; passwordToggle.setAttribute("aria-label",showing?"Show password":"Hide password"); passwordToggle.title=showing?"Show password":"Hide password"});
   document.getElementById("uploadModel").addEventListener("change",e=>{populateUploadRecords(e.target.value);const first=document.getElementById("uploadRecord")?.value;if(first)document.getElementById("uploadRecord").value=first;updateSubpartSelector()});document.getElementById("uploadRecord").addEventListener("change",()=>updateSubpartSelector());
   document.getElementById("dropZone").addEventListener("click",()=>document.getElementById("fileInput").click());document.getElementById("dropZone").addEventListener("dragover",e=>{e.preventDefault();document.getElementById("dropZone").classList.add("drag-active")});document.getElementById("dropZone").addEventListener("dragleave",()=>document.getElementById("dropZone").classList.remove("drag-active"));document.getElementById("dropZone").addEventListener("drop",e=>{e.preventDefault();document.getElementById("dropZone").classList.remove("drag-active");selectFiles(e.dataTransfer.files)});document.getElementById("fileInput").addEventListener("change",e=>selectFiles(e.target.files));document.getElementById("uploadForm").addEventListener("submit",upload);
   document.getElementById("backupBtn").addEventListener("click",()=>downloadText(JSON.stringify(data,null,2),`MobileRD_Backup_${dateStamp()}.json`));document.getElementById("resetBtn").addEventListener("click",resetData);
-  document.addEventListener("keydown",e=>{const tag=document.activeElement?.tagName||"",typing=/INPUT|TEXTAREA|SELECT/.test(tag);if(e.key==="Escape")document.querySelectorAll(".modal:not(.hidden)").forEach(m=>m.classList.add("hidden"));if((e.ctrlKey||e.metaKey)&&e.key.toLowerCase()==="k"){e.preventDefault();document.getElementById("parameter360HeaderBtn")?.click()}if(e.key==="/"&&!typing){e.preventDefault();document.getElementById("parameter360HeaderBtn")?.click()}if(e.key.toLowerCase()==="f"&&!typing)toggleFullscreen();if(e.key.toLowerCase()==="p"&&!typing){e.preventDefault();document.getElementById("presentationBtn").click()}if((e.key==="ArrowLeft"||e.key==="ArrowRight")&&!typing&&!document.querySelector(".modal:not(.hidden)")){navigateRecord(e.key==="ArrowLeft"?-1:1)}});
+  document.addEventListener("keydown",e=>{const tag=document.activeElement?.tagName||"",typing=/INPUT|TEXTAREA|SELECT/.test(tag);if(e.key==="Escape")document.querySelectorAll(".modal:not(.hidden)").forEach(m=>m.classList.add("hidden"));if((e.ctrlKey||e.metaKey)&&e.key.toLowerCase()==="k"){e.preventDefault();document.getElementById("engineeringSearch")?.focus();return}if(e.key==="/"&&!typing){e.preventDefault();document.getElementById("engineeringSearch")?.focus();return}if(e.key.toLowerCase()==="f"&&!typing)toggleFullscreen();if(e.key.toLowerCase()==="p"&&!typing){e.preventDefault();document.getElementById("presentationBtn").click()}if((e.key==="ArrowLeft"||e.key==="ArrowRight")&&!typing&&!document.querySelector(".modal:not(.hidden)")){navigateRecord(e.key==="ArrowLeft"?-1:1)}});
 }
 function syncDraftPrefs(){draftPrefs={theme:document.getElementById("themeSelect").value,accent:document.getElementById("accentSelect").value,density:document.getElementById("densitySelect").value,motion:document.getElementById("motionToggle").checked}}
 function openSettings(){draftPrefs={...prefs};applySettingsForm();openModal("settingsModal")}
 function applySettingsForm(){document.getElementById("themeSelect").value=draftPrefs.theme;document.getElementById("accentSelect").value=draftPrefs.accent;document.getElementById("densitySelect").value=draftPrefs.density;document.getElementById("motionToggle").checked=draftPrefs.motion}
 function applyDraftPrefs(closeAfter){syncDraftPrefs();prefs={...draftPrefs};savePrefs();applyPrefs();if(closeAfter)closeModal("settingsModal")}
 function applyPrefs(){document.body.classList.toggle("no-motion",!prefs.motion);document.body.dataset.theme=prefs.theme;document.body.dataset.accent=prefs.accent;document.body.dataset.density=prefs.density;applySettingsForm();document.getElementById("themeIcon").className=`fa-solid fa-${prefs.theme==="dark"?"sun":"moon"}`}
-function clearFilters(){query="";activeCategory="all";favoritesOnly=false;sortMode="default";document.getElementById("sortSelect").value="default";document.getElementById("favoritesToggle").classList.remove("active");renderCategories();renderCards()}
+function clearFilters(){query="";activeCategory="all";favoritesOnly=false;sortMode="default";document.getElementById("sortSelect").value="default";document.getElementById("engineeringSearch")?.setAttribute("value","");if(document.getElementById("engineeringSearch"))document.getElementById("engineeringSearch").value="";document.getElementById("favoritesToggle").classList.remove("active");renderCategories();renderCards()}
 function toggleFavorite(id){favorites=favorites.includes(id)?favorites.filter(x=>x!==id):[...favorites,id];localStorage.setItem("MOBILE_RND_FAVORITES_V1",JSON.stringify(favorites));renderCards();toast(favorites.includes(id)?"Added to favorites.":"Removed from favorites.","info")}
 async function toggleFullscreen(){try{if(!document.fullscreenElement)await document.documentElement.requestFullscreen();else await document.exitFullscreen()}catch{toast("Fullscreen is not available.","error")}}
 function customModels(){return readJson(CUSTOM_MODELS_KEY,[]).filter(x=>x&&x.code&&data[x.code])}
@@ -530,9 +541,10 @@ async function addModel(e){
     if(code!==oldCode){
       data[code]=model;delete data[oldCode];
       const custom=readJson(CUSTOM_MODELS_KEY,[]),idx=custom.findIndex(x=>x.code===oldCode);if(idx>=0)custom[idx]={...custom[idx],code,name,processor,modelYear,sielHwPic:pic,rfNetwork:rf,modelType};else custom.push({code,name,processor,modelYear,sielHwPic:pic,rfNetwork:rf,modelType});
+      const renamed=renamedModelMap();if(MODEL_ORDER.includes(oldCode))renamed[oldCode]=code;
       await migrateFilePrefix(oldCode,code);
       if(currentModel===oldCode){currentModel=code;localStorage.setItem("MOBILE_RND_LAST_MODEL_V1",code)}
-      localStorage.setItem(CUSTOM_MODELS_KEY,JSON.stringify(custom));
+      localStorage.setItem(CUSTOM_MODELS_KEY,JSON.stringify(custom));if(MODEL_ORDER.includes(oldCode))localStorage.setItem(RENAMED_MODELS_KEY,JSON.stringify(renamed));
       saveData();closeModal("addModelModal");populateUploadModels(currentModel);renderAll();renderModelPicker("");const picker=document.getElementById("modelPickerInput");if(picker)picker.value=currentModel;toast(`${oldCode} renamed to ${code} and stored document keys migrated.`,'success');addAudit("MODEL_RENAME",{from:oldCode,to:code,name,processor,modelYear,sielHwPic:pic,rfNetwork:rf,modelType});return;
     }
     const custom=readJson(CUSTOM_MODELS_KEY,[]),idx=custom.findIndex(x=>x.code===oldCode);if(idx>=0)custom[idx]={...custom[idx],code,name,processor,modelYear,sielHwPic:pic,rfNetwork:rf,modelType};else custom.push({code,name,processor,modelYear,sielHwPic:pic,rfNetwork:rf,modelType});localStorage.setItem(CUSTOM_MODELS_KEY,JSON.stringify(custom));saveData();closeModal("addModelModal");populateUploadModels(currentModel);renderAll();renderModelPicker("");toast(`${code} model details updated.`,'success');addAudit("MODEL_EDIT",{model:code,name,processor,modelYear,sielHwPic:pic,rfNetwork:rf,modelType});return;
@@ -542,7 +554,7 @@ async function addModel(e){
   for(const item of Object.values(model.items)){if(item.filename)item.filename=item.filename.replaceAll("A576",code);item.subItems?.forEach(sub=>{if(sub.filename)sub.filename=sub.filename.replaceAll("A576",code)});item.mergedSources?.forEach(src=>{if(src.filename)src.filename=src.filename.replaceAll("A576",code)})}
   data[code]=model;const custom=readJson(CUSTOM_MODELS_KEY,[]);custom.push({code,name,processor,modelYear,sielHwPic:pic,rfNetwork:rf,modelType});localStorage.setItem(CUSTOM_MODELS_KEY,JSON.stringify(custom));saveData();closeModal("addModelModal");populateUploadModels(currentModel);renderAll();renderModelPicker("");toast(`${code} added to the model selection list.`,'success');addAudit("MODEL_ADD",{model:code,name,processor,modelYear,sielHwPic:pic,rfNetwork:rf,modelType});
 }
-async function deleteSelectedModel(){if(!isAdmin)return;const code=document.getElementById("editModelSelect")?.value||"";if(!code||!data[code]){toast("Select a model to delete.","error");return}const custom=readJson(CUSTOM_MODELS_KEY,[]);if(!custom.some(x=>x.code===code)){toast("Built-in models cannot be deleted from the admin panel.","error");return}if(!confirm(`Delete model ${code} and all locally stored documents for this model? This cannot be undone.`))return;await deleteFilePrefix(code);delete data[code];localStorage.setItem(CUSTOM_MODELS_KEY,JSON.stringify(custom.filter(x=>x.code!==code)));saveData();const models=modelList();currentModel=models[0]||"";localStorage.setItem("MOBILE_RND_LAST_MODEL_V1",currentModel);closeModal("addModelModal");populateUploadModels(currentModel);renderCategories();renderAll();renderModelPicker("");toast(`${code} deleted.`,'success');addAudit("MODEL_DELETE",{model:code})}
+async function deleteSelectedModel(){if(!isAdmin)return;const code=document.getElementById("editModelSelect")?.value||"";if(!code||!data[code]){toast("Select a model to delete.","error");return}const custom=readJson(CUSTOM_MODELS_KEY,[]);if(!custom.some(x=>x.code===code)){toast("Built-in models cannot be deleted from the admin panel.","error");return}if(!confirm(`Delete model ${code} and all locally stored documents for this model? This cannot be undone.`))return;await deleteFilePrefix(code);const renamed=renamedModelMap(),original=Object.entries(renamed).find(([,newCode])=>newCode===code)?.[0];delete data[code];if(original&&MODEL_ORDER.includes(original)){delete renamed[original];data[original]=createDefaultData()[original]}localStorage.setItem(CUSTOM_MODELS_KEY,JSON.stringify(custom.filter(x=>x.code!==code)));localStorage.setItem(RENAMED_MODELS_KEY,JSON.stringify(renamed));saveData();const models=modelList();currentModel=models[0]||"";localStorage.setItem("MOBILE_RND_LAST_MODEL_V1",currentModel);closeModal("addModelModal");populateUploadModels(currentModel);renderCategories();renderAll();renderModelPicker("");toast(original?`${code} removed and ${original} restored.`:`${code} deleted.`,'success');addAudit("MODEL_DELETE",{model:code,restoredModel:original||""})}
 
 function login(e){e.preventDefault();const input=document.getElementById("passwordInput");const error=document.getElementById("loginError");if(input.value==="admin123"){isAdmin=true;sessionStorage.setItem(AUTH_KEY,"true");closeModal("loginModal");document.getElementById("passwordInput").value="";renderAuth();renderCards();document.dispatchEvent(new Event("rnd-auth-changed"));toast("Admin session authenticated.","success");addAudit("LOGIN")}else{error.classList.remove("hidden");input.classList.add("input-error");input.focus();setTimeout(()=>input.classList.remove("input-error"),700)}}
 function selectFiles(fileList){if(!isAdmin){toast("Admin authentication is required to upload documents.","error");return}const files=[...(fileList||[])];if(!files.length)return;const valid=[];const rejected=[];for(const file of files){const ext=file.name.split(".").pop().toLowerCase();if(!ALLOWED.includes(ext)){rejected.push(`${file.name}: unsupported type`);continue}if(file.size>MAX_FILE_SIZE){rejected.push(`${file.name}: exceeds 500 MB`);continue}valid.push(file)}selectedFiles=[...selectedFiles,...valid];const name=document.getElementById("fileName");if(name)name.textContent=selectedFiles.length?selectedFiles.map(f=>`${f.name} (${formatBytes(f.size)})`).join(" • "):"Drop files here or click to browse";const status=document.getElementById("uploadStatus");if(status)status.textContent=rejected.length?`${selectedFiles.length} file${selectedFiles.length===1?"":"s"} ready. ${rejected.join("; ")}`:`${selectedFiles.length} file${selectedFiles.length===1?"":"s"} ready for upload.`}
@@ -569,7 +581,7 @@ async function upload(e){
         throw err;
       }
       if(source){source.uploadedFilename=file.name;source.uploadedSize=formatBytes(file.size);source.updatedAt=new Date().toISOString();if(note)source.detail=note}
-      else {item.filename=file.name;item.size=formatBytes(file.size);item.uploadedFilename=file.name;item.uploadedSize=formatBytes(file.size);if(note)item.tags=[note]}
+      else {item.filename=file.name;item.size=formatBytes(file.size);item.uploadedFilename=file.name;item.uploadedSize=formatBytes(file.size);item.updatedAt=new Date().toISOString();if(note)item.note=note}
       try{await addAudit("UPLOAD",{model,key,subpart:source?.name||"",filename:file.name,size:file.size,versionKey:saved.key})}
       catch(auditErr){console.warn("File saved but audit logging failed",auditErr)}
     }
@@ -582,10 +594,19 @@ async function upload(e){
   }finally{btn.disabled=false;setTimeout(()=>progressWrap.classList.add("hidden"),300)}
 }
 
+function parseStorageIdentity(storageKey){
+  const value=String(storageKey||"");
+  const model=[...modelList()].sort((a,b)=>b.length-a.length).find(m=>value===m||value.startsWith(`${m}_`))||currentModel;
+  const rest=value===model?"":value.slice(model.length+1);
+  const key=rest.split("::v::")[0].split("_")[0]||"";
+  const suffix=rest.includes("_")?rest.slice(rest.indexOf("_")+1):"";
+  return {model,key,subpart:suffix};
+}
+
 async function downloadRecord(storageKey,filename){
   try{
     let record=await getFile(storageKey),resolvedKey=storageKey;
-    const parts=storageKey.split("_"),model=parts[0],key=parts[1];
+    const {model,key}=parseStorageIdentity(storageKey);
     if(key==="T"||key==="U"){
       const primaryMatches=record?.blob && ((key==="T"&&!isKoreaMemberFile(record))||(key==="U"&&isKoreaMemberFile(record)));
       if(!primaryMatches){
@@ -598,7 +619,7 @@ async function downloadRecord(storageKey,filename){
     if(record?.blob){
       const ok=downloadBlob(record.blob,record.filename||filename);
       if(ok){
-        const resolvedParts=resolvedKey.split("_"),resolvedModel=resolvedParts[0],resolvedRecord=resolvedParts[1],subpart=resolvedParts.length>2?resolvedParts.slice(2).join("_"):"";
+        const parsed= parseStorageIdentity(resolvedKey),resolvedModel=parsed.model,resolvedRecord=parsed.key,subpart=parsed.subpart;
         await addAudit("DOWNLOAD",{model:resolvedModel,key:resolvedRecord,subpart,filename:record.filename||filename});
         toast("Download started.","success");
         return;
@@ -612,13 +633,15 @@ async function downloadRecord(storageKey,filename){
 async function previewStoredFile(storageKey,filename){
   try{
     const record=await getFile(storageKey);if(!record?.blob){toast("No uploaded file is available for preview.","info");return;}
-    const objectUrl=URL.createObjectURL(record.blob),body=document.getElementById("filePreviewBody"),title=document.getElementById("filePreviewTitle"),meta=document.getElementById("filePreviewMeta");
+    const body=document.getElementById("filePreviewBody"),title=document.getElementById("filePreviewTitle"),meta=document.getElementById("filePreviewMeta");
+    const previousUrl=body?.dataset?.objectUrl;if(previousUrl)URL.revokeObjectURL(previousUrl);
+    const objectUrl=URL.createObjectURL(record.blob);if(body)body.dataset.objectUrl=objectUrl;
     if(title)title.textContent=record.filename||filename||"Engineering file";
     if(meta)meta.textContent=`${currentModel} · ${formatBytes(record.size||record.blob.size)} · ${record.blob.type||"unknown type"}`;
     if(body){const name=record.filename||filename||"file",ext=name.split(".").pop().toLowerCase();
-      if(record.blob.type?.startsWith("image/")||["png","jpg","jpeg","webp","gif"].includes(ext)) body.innerHTML=`<img class="file-preview-image" src="${objectUrl}" alt="${escapeHtml(name)}">`;
+      if(record.blob.type?.startsWith("image/")||["png","jpg","jpeg","webp","gif","svg"].includes(ext)) body.innerHTML=`<img class="file-preview-image" src="${objectUrl}" alt="${escapeHtml(name)}">`;
       else if(record.blob.type==="application/pdf"||ext==="pdf") body.innerHTML=`<iframe class="file-preview-frame" src="${objectUrl}" title="PDF preview"></iframe>`;
-      else if(record.blob.type?.startsWith("text/")||["csv","txt"].includes(ext)){const text=await record.blob.text();body.innerHTML=`<pre class="file-preview-text">${escapeHtml(text.slice(0,200000))}</pre>`;}
+      else if(record.blob.type?.startsWith("text/")||["csv","txt","log","md"].includes(ext)){const text=await record.blob.text();body.innerHTML=`<pre class="file-preview-text">${escapeHtml(text.slice(0,200000))}</pre>`;}
       else body.innerHTML=`<div class="file-preview-unsupported"><i class="fa-solid fa-file-lines"></i><strong>Preview is not available for this file type.</strong><span>Use Download to open the original file in its native application.</span><button type="button" class="btn btn-dark" id="inlinePreviewDownload"><i class="fa-solid fa-download"></i> Download</button></div>`;
       document.getElementById("inlinePreviewDownload")?.addEventListener("click",()=>downloadRecord(storageKey,name));
     }
@@ -634,16 +657,16 @@ function exportModel(){downloadText(JSON.stringify(data[currentModel],null,2),`$
 async function exportReport(){
   const m=data[currentModel].meta,entries=filteredEntries();
   const rows=await Promise.all(entries.map(async([k,i])=>{
-    if(k==="M"){
-      const subs=Array.isArray(i.subItems)?i.subItems:[];
-      const subRows=await Promise.all(subs.map(async(s,index)=>{
-        const stored=await getFile(keyForSubpart(currentModel,k,s,index));
-        return `  - ${s.name} | ${stored?.filename||"MISSING"} | ${stored?formatBytes(stored.size):"MISSING"}`;
-      }));
-      return [`${k} | ${i.title} | ${i.category}`,...subRows].join("\n");
-    }
-    let stored=await getFile(`${currentModel}_${k}`);
-    return `${k} | ${i.title} | ${i.category} | ${stored?.filename||"MISSING"} | ${stored?formatBytes(stored.size):"MISSING"}`;
+    const slots=[];
+    if(Array.isArray(i.mergedSources))i.mergedSources.forEach(src=>slots.push({baseKey:`${currentModel}_${src.key}`,label:src.name}));
+    else if(Array.isArray(i.subItems))i.subItems.forEach((sub,index)=>slots.push({baseKey:keyForSubpart(currentModel,k,sub,index),label:sub.name}));
+    else slots.push({baseKey:`${currentModel}_${k}`,label:i.title});
+    const slotRows=await Promise.all(slots.map(async slot=>{
+      const versions=await listFileVersions(slot.baseKey);
+      const latest=versions[versions.length-1]||await getFile(slot.baseKey);
+      return `  - ${slot.label} | ${latest?.filename||"MISSING"} | ${latest?.size?formatBytes(latest.size):"MISSING"} | ${versions.length|| (latest?1:0)} version(s)`;
+    }));
+    return [`${k} | ${i.title} | ${i.category}`,...slotRows].join("\n");
   }));
   const text=`MOBILE R&D ENGINEERING REPORT
 ================================
@@ -662,9 +685,9 @@ Generated: ${new Date().toISOString()}`;
   downloadText(text,`${currentModel}_Engineering_Report.txt`,"text/plain");
   toast("Engineering report exported.","success");
 }
-function openPresentation(key){const i=recordData(key);if(!i)return;const entries=expandedFileMap.get(key)||[];document.getElementById("presentationContent").innerHTML=`<div class="presentation-code">${currentModel} · ${escapeHtml(i.title)}</div><h2>${escapeHtml(i.title)}</h2><div class="presentation-category">${escapeHtml(i.category)}</div><div class="presentation-tags">${(i.tags||[]).map(t=>`<span class="tag">${escapeHtml(t)}</span>`).join("")}</div><div class="presentation-file">${entries.map(x=>`<strong>${escapeHtml(x.name)}</strong><span class="${x.present?"status-present":"status-missing"}">${x.present?"PRESENT":"MISSING"}</span><strong>File</strong><span>${escapeHtml(x.filename)}</span><strong>Size</strong><span>${escapeHtml(x.size)}</span>`).join("")}</div>`;openModal("presentationModal")}
-function navigateRecord(delta){const arr=RECORD_ORDER.filter(k=>currentItems()[k]),idx=arr.indexOf(location.hash.split("/").pop()),next=arr[Math.max(0,Math.min(arr.length-1,(idx<0?0:idx)+delta))];if(next)openRecord(next)}
-async function resetData(){if(!confirm("Reset all local dashboard data and stored files? This cannot be undone."))return;data=createDefaultData();saveData();await deleteAllFiles();await deleteAuditLogs();uploadedFiles=new Map();uploadedKeys=new Set();favorites=[];recentlyViewed=[];expandedCards.clear();localStorage.removeItem("MOBILE_RND_FAVORITES_V1");localStorage.removeItem("MOBILE_RND_RECENT_V1");localStorage.removeItem(CUSTOM_MODELS_KEY);currentModel=modelList()[0];activeCategory="all";query="";renderCategories();populateUploadModels(currentModel);renderAll();closeModal("settingsModal");toast("Local data reset to default dataset.","success")}
+function openPresentation(key){const i=recordData(key);if(!i)return;document.getElementById("presentationModal")?.setAttribute("data-presentation-key",key);const entries=expandedFileMap.get(key)||[];document.getElementById("presentationContent").innerHTML=`<div class="presentation-code">${currentModel} · ${escapeHtml(i.title)}</div><h2>${escapeHtml(i.title)}</h2><div class="presentation-category">${escapeHtml(i.category)}</div><div class="presentation-tags">${(i.tags||[]).map(t=>`<span class="tag">${escapeHtml(t)}</span>`).join("")}</div><div class="presentation-file">${entries.map(x=>`<strong>${escapeHtml(x.name)}</strong><span class="${x.present?"status-present":"status-missing"}">${x.present?"PRESENT":"MISSING"}</span><strong>File</strong><span>${escapeHtml(x.filename)}</span><strong>Size</strong><span>${escapeHtml(x.size)}</span>`).join("")}</div>`;openModal("presentationModal")}
+function navigateRecord(delta){const arr=RECORD_ORDER.filter(k=>currentItems()[k]),modal=document.getElementById("presentationModal"),activeKey=modal?.classList.contains("hidden")?location.hash.split("/").pop():modal.dataset.presentationKey,idx=arr.indexOf(activeKey),next=arr[Math.max(0,Math.min(arr.length-1,(idx<0?0:idx)+delta))];if(!next)return;if(modal&&!modal.classList.contains("hidden")){openRecord(next);openPresentation(next)}else openRecord(next)}
+async function resetData(){if(!confirm("Reset all local dashboard data and stored files? This cannot be undone."))return;try{await deleteAllFiles();await deleteAuditLogs();data=createDefaultData();localStorage.removeItem(CUSTOM_MODELS_KEY);localStorage.removeItem(RENAMED_MODELS_KEY);saveData();uploadedFiles=new Map();uploadedKeys=new Set();favorites=[];recentlyViewed=[];expandedCards.clear();localStorage.removeItem("MOBILE_RND_FAVORITES_V1");localStorage.removeItem("MOBILE_RND_RECENT_V1");currentModel=modelList()[0];activeCategory="all";query="";renderCategories();populateUploadModels(currentModel);renderAll();closeModal("settingsModal");toast("Local data reset to default dataset.","success")}catch(err){console.error("Reset failed",err);toast(`Reset failed: ${err?.message||String(err)}`,"error")}}
 function dateStamp(){return new Date().toISOString().slice(0,10).replaceAll("-","")}
 function restoreSidebarState(){if(localStorage.getItem("MOBILE_RND_SIDEBAR_V1")==="collapsed"){document.body.classList.add("sidebar-collapsed");document.getElementById("sidebarCollapseBtn").innerHTML='<i class="fa-solid fa-angles-right"></i>'}}
 

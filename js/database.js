@@ -88,6 +88,18 @@ export async function saveFile(key,file,onProgress){
   }finally{try{db.close()}catch{}}
 }
 
+export async function listFileMetadata(){
+  const db=await openDB();
+  try{
+    return await new Promise((resolve,reject)=>{
+      const tx=db.transaction(FILE_STORE,"readonly"),req=tx.objectStore(FILE_STORE).openCursor(),out=[];
+      req.onsuccess=()=>{const cursor=req.result;if(!cursor){resolve(out);return}const r=cursor.value;if(r&&(r.status==="complete"||!r.status)){const {blob,...meta}=r;out.push({key:String(cursor.primaryKey),...meta})}cursor.continue()};
+      req.onerror=()=>reject(req.error||new Error("File metadata lookup failed"));
+      tx.onerror=()=>reject(tx.error||new Error("File metadata lookup failed"));
+    });
+  }finally{try{db.close()}catch{}}
+}
+
 export async function getFiles(keys=[]){
   const wanted=[...new Set((keys||[]).filter(Boolean))];
   if(!wanted.length)return new Map();
@@ -132,28 +144,26 @@ export async function getFile(key){
 }
 
 
-export async function listFileVersions(baseKey){
+export async function listFileVersionsForBases(baseKeys=[]){
+  const wanted=[...new Set((baseKeys||[]).filter(Boolean).map(String))];
+  const out=new Map(wanted.map(k=>[k,[]]));
+  if(!wanted.length)return out;
   const db=await openDB();
   try{
-    const keys=await new Promise((resolve,reject)=>{
-      const tx=db.transaction(FILE_STORE,"readonly"),req=tx.objectStore(FILE_STORE).getAllKeys();
-      req.onsuccess=()=>resolve(req.result||[]);
+    await new Promise((resolve,reject)=>{
+      const tx=db.transaction(FILE_STORE,"readonly"),req=tx.objectStore(FILE_STORE).openCursor();
+      req.onsuccess=()=>{const cursor=req.result;if(!cursor){resolve();return}const record=cursor.value;if(record&&(record.status==="complete"||!record.status)){const key=String(cursor.primaryKey),base=String(record.baseKey||key.split("::v::")[0]);if(out.has(base)){const {blob,...meta}=record;out.get(base).push({key,...meta})}}cursor.continue()};
       req.onerror=()=>reject(req.error||new Error("File version lookup failed"));
       tx.onerror=()=>reject(tx.error||new Error("File version lookup failed"));
     });
-    const matching=keys.filter(k=>typeof k==="string"&&(k===baseKey||k.startsWith(baseKey+"::v::")));
-    const out=[];
-    for(const key of matching){
-      const record=await new Promise((resolve,reject)=>{
-        const tx=db.transaction(FILE_STORE,"readonly"),req=tx.objectStore(FILE_STORE).get(key);
-        req.onsuccess=()=>resolve(req.result||null);req.onerror=()=>reject(req.error||new Error("File version read failed"));
-        tx.onerror=()=>reject(tx.error||new Error("File version read failed"));
-      });
-      if(record&&(record.status==="complete"||!record.status)) out.push({key,...record,blob:record.chunked?null:record.blob});
-    }
-    out.sort((a,b)=>String(a.updatedAt||"").localeCompare(String(b.updatedAt||"")));
+    for(const list of out.values())list.sort((a,b)=>String(a.updatedAt||"").localeCompare(String(b.updatedAt||"")));
     return out;
-  }finally{db.close()}
+  }finally{try{db.close()}catch{}}
+}
+
+export async function listFileVersions(baseKey){
+  const map=await listFileVersionsForBases([baseKey]);
+  return map.get(String(baseKey))||[];
 }
 
 export async function saveFileVersion(baseKey,file,options={},onProgress){
