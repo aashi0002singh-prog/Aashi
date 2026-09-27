@@ -1,7 +1,7 @@
 /* Record system: one layout contract for All Cards, Group Cards and Preview. */
 .records-grid{
   display:grid;
-  grid-template-columns:repeat(auto-fit,minmax(210px,1fr));
+  grid-template-columns:repeat(auto-fit,minmax(250px,1fr));
   gap:12px;
   align-items:start;
   grid-auto-rows:max-content;
@@ -29,7 +29,7 @@ body[data-record-view="group"] .records-grid{grid-template-columns:repeat(3,minm
   min-width:0;
   height:60px;
   display:grid;
-  grid-template-columns:32px minmax(0,1fr) auto 28px 14px;
+  grid-template-columns:32px minmax(0,1fr) 28px 14px;
   align-items:center;
   gap:7px;
   padding:0 9px;
@@ -55,7 +55,9 @@ body[data-record-view="group"] .records-grid{grid-template-columns:repeat(3,minm
   font-size:8px;
   line-height:1.2;
 }
-.record-status{min-width:0;display:flex;align-items:center;gap:5px;font-size:7px;font-weight:800;white-space:nowrap}
+.record-subtitle-status{display:inline-flex;vertical-align:middle;margin-right:4px}
+.record-subtitle-status .status-dot{width:5px;height:5px;flex-basis:5px}
+.record-status{display:none}
 .status-dot{width:7px;height:7px;flex:0 0 7px;border-radius:50%;background:#dc3545}.status-dot.present{background:#18a56e}
 .record-status.all-present{color:var(--success)}.record-status.all-missing{color:var(--danger)}.record-status.partial{color:var(--warning)}
 .favorite-btn{width:28px;height:28px;padding:0;display:grid;place-items:center;border:1px solid transparent;border-radius:7px;background:transparent;color:#94a3b8}
@@ -68,15 +70,15 @@ body[data-record-view="group"] .records-grid{grid-template-columns:repeat(3,minm
 .card-action:hover,.card-action:focus-visible,.card-preview-action{border-color:#9cc8d7;background:#edf8fb;color:#075985}
 
 .record-expanded-panel{min-width:0;display:flex;flex-direction:column;padding:10px;border-top:1px solid #edf1f5}
-.record-detail-summary{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px;margin-bottom:8px}
+.record-detail-summary{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:6px;margin-bottom:8px}.record-detail-summary>div:first-child{grid-column:1/-1}
 .record-detail-summary>div{min-width:0;padding:7px 8px;border:1px solid #e0e7ef;border-radius:7px;background:#f8fafc}
 .detail-label{display:block;color:#8a98a8;font:800 6.5px/1.2 "JetBrains Mono",monospace;letter-spacing:.08em}
 .record-detail-summary strong{display:block;margin-top:3px;color:#334155;font-size:8.5px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .record-detail-summary strong.all-present{color:#16815c}.record-detail-summary strong.all-missing{color:#c43f4a}.record-detail-summary strong.partial{color:#a66b00}
 .expanded-file-list{display:flex;flex-direction:column;gap:7px;min-width:0}
-.expanded-file-row{min-width:0;display:flex;align-items:flex-start;gap:9px;padding:8px;border:1px solid #e0e7ef;border-radius:8px;background:#f8fafc}
+.expanded-file-row{min-width:0;display:grid;grid-template-columns:minmax(0,1fr);gap:7px;padding:8px;border:1px solid #e0e7ef;border-radius:8px;background:#f8fafc}
 .expanded-file-main{min-width:0;flex:1 1 auto}.expanded-file-title{display:flex;align-items:center;gap:6px;min-width:0;font-size:9px;font-weight:800}.expanded-file-title span:first-of-type{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.expanded-file-meta{display:flex;flex-wrap:wrap;gap:5px 8px;margin-top:3px;color:#718096;font-size:7.5px;line-height:1.35}.expanded-file-meta span:first-child{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.expanded-file-actions{display:flex;flex-wrap:wrap;justify-content:flex-end;gap:5px;flex:0 0 auto}.text-action{min-height:25px;padding:0 8px;display:inline-flex;align-items:center;justify-content:center;gap:5px;border:1px solid var(--line);border-radius:6px;background:#fff;color:#475569;font-size:8px;font-weight:800;white-space:nowrap}.text-action:hover{background:#edf7fb;border-color:#9ec7d6;color:#075985}.text-action.primary{background:#0b6d84;color:#fff;border-color:#0b6d84}.expanded-status,.version-count{font-size:8px;font-weight:800;white-space:nowrap}.expanded-empty{padding:12px;border:1px dashed #ccd8e4;border-radius:8px;color:#7a899a;text-align:center;font-size:8px}
+.expanded-file-actions{display:flex;flex-wrap:wrap;justify-content:flex-start;gap:5px;width:100%;min-width:0}.text-action{min-height:25px;padding:0 8px;display:inline-flex;align-items:center;justify-content:center;gap:5px;border:1px solid var(--line);border-radius:6px;background:#fff;color:#475569;font-size:8px;font-weight:800;white-space:nowrap}.text-action:hover{background:#edf7fb;border-color:#9ec7d6;color:#075985}.text-action.primary{background:#0b6d84;color:#fff;border-color:#0b6d84}.expanded-status,.version-count{font-size:8px;font-weight:800;white-space:nowrap}.expanded-empty{padding:12px;border:1px dashed #ccd8e4;border-radius:8px;color:#7a899a;text-align:center;font-size:8px}
 .expanded-footer{display:flex;align-items:center;gap:6px;flex-wrap:wrap;width:100%;min-width:0;margin-top:9px;padding-top:8px;border-top:1px solid #edf1f5}
 
 /* Dedicated Preview workspace. Cards never contain the full file manager. */
@@ -91,7 +93,7 @@ body[data-record-view="group"] .records-grid{grid-template-columns:repeat(3,minm
 .preview-file-list{display:grid;gap:5px}.preview-file-item{width:100%;min-width:0;display:grid;grid-template-columns:28px minmax(0,1fr) auto;align-items:center;gap:7px;padding:7px;border:1px solid #e0e7ef;border-radius:7px;background:#f8fafc;text-align:left}.preview-file-item:hover,.preview-file-item.active{border-color:#8bbfd0;background:#edf8fb}.preview-file-item.missing{opacity:.7}.preview-file-icon{display:grid;place-items:center;color:#0b6d84}.preview-file-copy{min-width:0}.preview-file-copy strong,.preview-file-copy small{display:block;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.preview-file-copy strong{font-size:8px;color:#26384e}.preview-file-copy small{margin-top:2px;color:#7c8b9d;font-size:6.8px}.preview-file-state{font-size:6.8px;color:#718096;white-space:nowrap}.preview-bottom-actions{margin-top:10px}.preview-bottom-actions .btn{width:100%}
 .record-preview-viewer{min-width:0;min-height:0;display:flex;flex-direction:column;background:#f2f6f9}.preview-viewer-head{height:38px;flex:0 0 38px;display:flex;align-items:center;justify-content:space-between;gap:10px;padding:0 11px;border-bottom:1px solid #dce5ed;background:#fff;color:#53667b;font-size:8px;font-weight:800}.preview-viewer-head span:first-child{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.preview-viewer-head span:last-child{color:#8a98a8;font:700 7px "JetBrains Mono",monospace;white-space:nowrap}.preview-viewer-canvas{min-width:0;min-height:0;flex:1;display:grid;place-items:center;overflow:auto;padding:14px}.record-preview-image{max-width:100%;max-height:100%;object-fit:contain}.record-preview-frame{width:100%;height:100%;min-height:480px;border:0;background:#fff}.record-preview-text{width:100%;height:100%;overflow:auto;margin:0;padding:12px;white-space:pre-wrap;overflow-wrap:anywhere;font:8px/1.5 "JetBrains Mono",monospace;color:#334155;background:#fff}.preview-placeholder{display:grid;place-items:center;gap:7px;max-width:440px;padding:36px;text-align:center;color:#7b8798;font-size:8px}.preview-placeholder i{font-size:28px;color:#8da3b5}.preview-placeholder strong{color:#42536a;font-size:11px}.preview-placeholder span{line-height:1.5}
 
-@media (min-width:1500px){.records-grid{grid-template-columns:repeat(auto-fit,minmax(220px,1fr))}}
+
 @media (max-width:900px){
   .records-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
   body[data-record-view="group"] .records-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
@@ -114,3 +116,36 @@ body[data-theme="dark"] .record-title-only,body[data-theme="dark"] .record-detai
 body[data-theme="dark"] .record-card-subtitle,body[data-theme="dark"] .expanded-file-meta,body[data-theme="dark"] .preview-info-grid span,body[data-theme="dark"] .preview-file-copy small{color:#9aabbd}
 body[data-theme="dark"] .record-preview-info,body[data-theme="dark"] .preview-viewer-head{background:var(--surface)}
 body[data-theme="dark"] .record-preview-viewer{background:#0b1522}
+
+/* Empty/filter state belongs to the record grid. */
+.empty-state{grid-column:1/-1;display:grid;place-items:center;padding:48px 20px;border:1px dashed #c9d5e1;border-radius:12px;background:#f8fafc;color:#7b8798;text-align:center}
+
+/* System theme follows the browser when the dashboard theme is set to System. */
+@media (prefers-color-scheme:dark){
+  body[data-theme="system"] .record-card{background:var(--surface);border-color:var(--line)}
+  body[data-theme="system"] .expanded-file-row,
+  body[data-theme="system"] .record-detail-summary>div,
+  body[data-theme="system"] .preview-info-grid,
+  body[data-theme="system"] .preview-file-item{background:var(--surface-2);border-color:var(--line)}
+  body[data-theme="system"] .record-title-only,
+  body[data-theme="system"] .record-detail-summary strong,
+  body[data-theme="system"] .preview-info-grid strong,
+  body[data-theme="system"] .preview-file-copy strong{color:#edf3f8}
+  body[data-theme="system"] .record-card-subtitle,
+  body[data-theme="system"] .expanded-file-meta,
+  body[data-theme="system"] .preview-info-grid span,
+  body[data-theme="system"] .preview-file-copy small{color:#9aabbd}
+  body[data-theme="system"] .record-preview-info,
+  body[data-theme="system"] .preview-viewer-head{background:var(--surface)}
+  body[data-theme="system"] .record-preview-viewer{background:#0b1522}
+  body[data-theme="system"] .empty-state{background:var(--surface-2);border-color:var(--line)}
+}
+
+
+/* V5 user-facing document state: never expose slot ratios or artificial capacity counters. */
+.record-document-state{font-weight:850;letter-spacing:.01em}
+.record-document-state.all-present{color:#16815c}
+.record-document-state.all-missing{color:#c43f4a}
+.missing-label{color:#c43f4a;font-size:8px;font-weight:850}
+body[data-record-view="group"] .record-card{height:auto}
+body[data-record-view="group"] .record-card .record-expanded-panel{display:flex}
