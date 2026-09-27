@@ -46,48 +46,47 @@ export async function saveFile(key,file,onProgress){
   const db=await openDB();
   const total=Math.max(1,Math.ceil(file.size/CHUNK_SIZE));
   const now=new Date().toISOString();
-  const metadata={filename:file.name,size:file.size,type:file.type||"application/octet-stream",updatedAt:now,chunked:true,chunkCount:total,status:"writing"};
-  const old=await new Promise((resolve,reject)=>{
-    const tx=db.transaction(FILE_STORE,"readonly"),req=tx.objectStore(FILE_STORE).get(key);
-    req.onsuccess=()=>resolve(req.result||null); req.onerror=()=>reject(req.error||new Error("File lookup failed"));
-    tx.onerror=()=>reject(tx.error||new Error("File lookup failed"));
-  });
+  const metadata={filename:file.name,size:file.size,type:file.type||"application/octet-stream",updatedAt:now,chunked:true,chunkCount:total,status:"complete"};
   try{
+    // One logical file commit: old chunks are replaced and the final metadata is
+    // written in the same IndexedDB transaction. If anything fails, IndexedDB
+    // rolls the whole transaction back instead of leaving a partial upload.
     await new Promise((resolve,reject)=>{
+      let settled=false;
+      const finish=(fn,value)=>{if(settled)return;settled=true;fn(value)};
       const tx=db.transaction([FILE_STORE,CHUNK_STORE],"readwrite");
-      tx.objectStore(FILE_STORE).put(metadata,key);
-      if(old?.chunked&&old.chunkCount){for(let i=0;i<old.chunkCount;i++)tx.objectStore(CHUNK_STORE).delete([key,i]);}
-      tx.oncomplete=resolve; tx.onerror=()=>reject(tx.error||new Error("File preparation failed")); tx.onabort=()=>reject(tx.error||new Error("File preparation aborted"));
+      const files=tx.objectStore(FILE_STORE);
+      const chunks=tx.objectStore(CHUNK_STORE);
+      const oldReq=files.get(key);
+      oldReq.onerror=()=>finish(reject,oldReq.error||new Error("Existing file lookup failed"));
+      oldReq.onsuccess=()=>{
+        const old=oldReq.result;
+        if(old?.chunked&&old.chunkCount){
+          for(let i=0;i<old.chunkCount;i++) chunks.delete([key,i]);
+        }
+        files.put(metadata,key);
+        for(let i=0;i<total;i++){
+          const start=i*CHUNK_SIZE;
+          const end=Math.min(file.size,start+CHUNK_SIZE);
+          chunks.put(file.slice(start,end),[key,i]);
+        }
+        // Keep a lightweight progress indicator without opening one transaction per chunk.
+        if(typeof onProgress==='function') onProgress(100,total,total);
+      };
+      tx.oncomplete=()=>finish(resolve);
+      tx.onerror=()=>finish(reject,tx.error||new Error("IndexedDB file commit failed"));
+      tx.onabort=()=>finish(reject,tx.error||new Error("IndexedDB file commit aborted"));
     });
-    for(let i=0;i<total;i++){
-      const start=i*CHUNK_SIZE,end=Math.min(file.size,start+CHUNK_SIZE),chunk=file.slice(start,end);
-      await new Promise((resolve,reject)=>{
-        const tx=db.transaction(CHUNK_STORE,"readwrite");
-        tx.objectStore(CHUNK_STORE).put(chunk,[key,i]);
-        tx.oncomplete=resolve; tx.onerror=()=>reject(tx.error||new Error("File chunk save failed")); tx.onabort=()=>reject(tx.error||new Error("File chunk save aborted"));
-      });
-      if(typeof onProgress==="function")onProgress(Math.round(((i+1)/total)*100),i+1,total);
-      await new Promise(r=>setTimeout(r,0));
-    }
-    metadata.status="complete";
-    await new Promise((resolve,reject)=>{
-      const tx=db.transaction(FILE_STORE,"readwrite");
-      tx.objectStore(FILE_STORE).put(metadata,key);
-      tx.oncomplete=resolve; tx.onerror=()=>reject(tx.error||new Error("File finalize failed")); tx.onabort=()=>reject(tx.error||new Error("File finalize aborted"));
-    });
+    return metadata;
   }catch(err){
-    try{
-      await new Promise(resolve=>{
-        const tx=db.transaction([FILE_STORE,CHUNK_STORE],"readwrite");
-        tx.objectStore(FILE_STORE).delete(key);
-        for(let i=0;i<total;i++)tx.objectStore(CHUNK_STORE).delete([key,i]);
-        tx.oncomplete=resolve; tx.onerror=resolve; tx.onabort=resolve;
-      });
-    }catch{}
-    throw err;
-  }finally{db.close()}
+    const name=err?.name||"IndexedDBError";
+    const message=err?.message||"The browser rejected the file transaction.";
+    const wrapped=new Error(`${name}: ${message}`);
+    wrapped.name=name;
+    wrapped.cause=err;
+    throw wrapped;
+  }finally{try{db.close()}catch{}}
 }
-
 
 export async function getFiles(keys=[]){
   const wanted=[...new Set((keys||[]).filter(Boolean))];
