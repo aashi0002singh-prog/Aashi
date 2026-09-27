@@ -1,4 +1,4 @@
-import {MODEL_ORDER, RECORD_ORDER, createDefaultData, storageKeyFor, modelCodesFromData} from "../data/models.js";
+import {MODEL_ORDER, RECORD_ORDER, createDefaultData} from "../data/models.js";
 import {getFile, getAuditLogs, addAudit, listFileMetadata} from "./database.js";
 import {downloadBlob, formatBytes, escapeHtml} from "./ui.js";
 
@@ -8,7 +8,7 @@ import {downloadBlob, formatBytes, escapeHtml} from "./ui.js";
   upload handlers, or existing click handlers. It only owns its own modal and button.
 */
 
-const DATA_KEY = "MOBILE_RND_DATA";
+const DATA_KEY = "MOBILE_RND_DB_DATA_V10";
 let rows = [];
 let objectUrl = null;
 
@@ -27,7 +27,7 @@ function keyForSubpart(model, key, sub, index) {
 }
 
 function modelCodes(data) {
-  return modelCodesFromData(data);
+  return Object.keys(data || {});
 }
 
 async function collectRecords() {
