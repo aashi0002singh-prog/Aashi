@@ -384,8 +384,9 @@ function renderCards(){
   document.body.dataset.recordView=groupView?"group":"all";
   document.body.dataset.activeRecordCategory=activeCategory;
   document.getElementById("recordCount").textContent=groupView?`${entries.length} records • Full detail view`:`${entries.length} of ${total} records • Compact view`;
-  document.getElementById("activeFilters").classList.toggle("hidden",!(query||activeCategory!=="all"||favoritesOnly||sortMode!=="default"));
-  document.getElementById("activeFilters").innerHTML=`${query?`<span class="filter-chip">Search: ${escapeHtml(query)}</span>`:""}${activeCategory!=="all"?`<span class="filter-chip">Category: ${escapeHtml(activeCategory)}</span>`:""}${favoritesOnly?`<span class="filter-chip">Favorites only</span>`:""}${sortMode!=="default"?`<span class="filter-chip">Sort: ${escapeHtml(sortMode)}</span>`:""}`;
+  const hasSecondaryFilters=Boolean(query||favoritesOnly||sortMode!=="default");
+  document.getElementById("activeFilters").classList.toggle("hidden",!hasSecondaryFilters);
+  document.getElementById("activeFilters").innerHTML=`${query?`<span class="filter-chip">Search: ${escapeHtml(query)}</span>`:""}${favoritesOnly?`<span class="filter-chip">Favorites only</span>`:""}${sortMode!=="default"?`<span class="filter-chip">Sort: ${escapeHtml(sortMode)}</span>`:""}`;
   // V64.2 unified engineering grid: Schematics is a filter/category only.
   // A = Block Diagram, B = Circuit Diagram, C = SOC Table remain three
   // independent cards and participate in the same unified grid as every record.
@@ -458,15 +459,17 @@ function renderRecent(){const wrap=document.getElementById("recentList");if(!wra
 
 function bindEvents(){
   const summaryToggle=document.getElementById("fileSummaryToggle"),summaryBoard=document.querySelector(".file-summary-board"),summaryHidden=localStorage.getItem("MOBILE_RND_FILE_SUMMARY_HIDDEN_V1")==="1";
-  const engineeringTabsToggle=document.getElementById("engineeringTabsToggle"),engineeringTabsRow=document.getElementById("engineeringRecordsTabsRow"),engineeringTabsHidden=localStorage.getItem(ENGINEERING_TABS_HIDDEN_KEY)==="1";
+  const engineeringTabsToggle=document.getElementById("engineeringTabsToggle"),engineeringTabsRow=document.getElementById("engineeringRecordsTabsRow"),engineeringTabsHidden=false;
   const applyEngineeringTabsState=(hidden)=>{
     engineeringTabsRow?.classList.toggle("tabs-hidden",hidden);
     engineeringTabsToggle?.setAttribute("aria-expanded",String(!hidden));
     if(engineeringTabsToggle)engineeringTabsToggle.innerHTML=`<i class="fa-solid fa-eye${hidden?"":"-slash"}"></i><span>${hidden?"Show Tabs":"Hide Tabs"}</span>`;
     engineeringTabsToggle?.setAttribute("title",hidden?"Show Engineering Records category tabs":"Hide Engineering Records category tabs");
   };
-  applyEngineeringTabsState(engineeringTabsHidden);
-  engineeringTabsToggle?.addEventListener("click",()=>{const hidden=!engineeringTabsRow?.classList.contains("tabs-hidden");localStorage.setItem(ENGINEERING_TABS_HIDDEN_KEY,hidden?"1":"0");applyEngineeringTabsState(hidden)});
+  localStorage.removeItem(ENGINEERING_TABS_HIDDEN_KEY);
+  applyEngineeringTabsState(false);
+  engineeringTabsToggle?.setAttribute("aria-hidden","true");
+  engineeringTabsToggle?.classList.add("tabs-control-disabled");
   if(summaryBoard&&summaryToggle){summaryBoard.classList.toggle("summary-hidden",summaryHidden);summaryToggle.setAttribute("aria-expanded",String(!summaryHidden));summaryToggle.innerHTML=`<i class="fa-solid fa-eye${summaryHidden?"":"-slash"}"></i> ${summaryHidden?"Show":"Hide"}`;summaryToggle.addEventListener("click",()=>{const hidden=summaryBoard.classList.toggle("summary-hidden");localStorage.setItem("MOBILE_RND_FILE_SUMMARY_HIDDEN_V1",hidden?"1":"0");summaryToggle.setAttribute("aria-expanded",String(!hidden));summaryToggle.innerHTML=`<i class="fa-solid fa-eye${hidden?"":"-slash"}"></i> ${hidden?"Show":"Hide"}`})}
   document.getElementById("sidebarCollapseBtn")?.addEventListener("click",()=>{document.body.classList.toggle("sidebar-collapsed");const collapsed=document.body.classList.contains("sidebar-collapsed");localStorage.setItem("MOBILE_RND_SIDEBAR_V1",collapsed?"collapsed":"expanded");document.getElementById("sidebarCollapseBtn").innerHTML=`<i class="fa-solid fa-angles-${collapsed?"right":"left"}"></i>`});
   document.getElementById("categoryTabs").addEventListener("click",e=>{const b=e.target.closest("[data-cat]");if(b){activeCategory=b.dataset.cat;expandedCards.clear();renderCategories();renderCards()}});
