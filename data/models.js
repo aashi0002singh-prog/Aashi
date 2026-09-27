@@ -20,33 +20,33 @@ export const CATEGORY_COLORS = {
 
 const base = {
   A:{title:"Block Diagram",category:"Schematics",icon:"fa-sitemap",tags:["Block Diagram"],subItems:[
-    {id:"ap-block-diagram",name:"AP Block Diagram",filename:"A576_AP_Block_Diagram.pdf",size:"25.0 MB"},
-    {id:"rf-block-diagram",name:"RF Block Diagram",filename:"A576_RF_Block_Diagram.pdf",size:"25.1 MB"}]},
+    {id:"ap-block-diagram",name:"AP Block Diagram",filename:"A576_AP_Block_Diagram.pdf",size:"—"},
+    {id:"rf-block-diagram",name:"RF Block Diagram",filename:"A576_RF_Block_Diagram.pdf",size:"—"}]},
   B:{title:"Circuit Diagram",category:"Schematics",icon:"fa-diagram-project",tags:["Circuit Diagram"],subItems:[
-    {id:"main-pba",name:"Main PBA",filename:"A576_Main_PBA_Schematic.pdf",size:"34.2 MB"},
-    {id:"sub-pba",name:"Sub PBA",filename:"A576_Sub_PBA_Schematic.pdf",size:"34.3 MB"}]},
-  C:{title:"SOC Table",category:"Schematics",icon:"fa-microchip",tags:["SOC Table"],filename:"A576_SOC_Pin_Table.xlsx",size:"28.3 MB"},
-  D:{title:"MIPI Table",category:"Schematics",icon:"fa-bars-staggered",tags:["MIPI Configuration"],filename:"A576_MIPI_Config.xlsx",size:"12.7 MB"},
-  E:{title:"RF Port Map",category:"RF & Wireless",icon:"fa-network-wired",tags:["RF Port Mapping"],filename:"A576_RF_Port_Mapping.pdf",size:"58.0 MB"},
-  F:{title:"Antenna Structure",category:"RF & Wireless",icon:"fa-tower-broadcast",tags:["MIMO LTE NR 2G WCDMA"],filename:"A576_Antenna_3D_Layout.dwg",size:"84.2 MB"},
-  G:{title:"Main and Roaming Bands Details",category:"RF & Wireless",icon:"fa-earth-americas",tags:["5G NR","LTE FDD/TDD","Global Bands"],filename:"A576_Bands_Master.xlsx",size:"9.2 MB"},
-  H:{title:"VSWR Graph",category:"RF & Wireless",icon:"fa-chart-line",tags:["VSWR","Return Loss","S-Parameter"],filename:"VSWR_Graph.pdf",size:"RF graph"},
-  I:{title:"TRP/TIS/SAR Offset Table",category:"RF & Wireless",icon:"fa-table-list",tags:["TRP","TIS","SAR","Offset","RF Performance"],filename:"A576_TRP_TIS_SAR_Offset_Table.xlsx",size:""},
+    {id:"main-pba",name:"Main PBA",filename:"A576_Main_PBA_Schematic.pdf",size:"—"},
+    {id:"sub-pba",name:"Sub PBA",filename:"A576_Sub_PBA_Schematic.pdf",size:"—"}]},
+  C:{title:"SOC Table",category:"Schematics",icon:"fa-microchip",tags:["SOC Table"],filename:"A576_SOC_Pin_Table.xlsx",size:"—"},
+  D:{title:"MIPI Table",category:"Schematics",icon:"fa-bars-staggered",tags:["MIPI Configuration"],filename:"A576_MIPI_Config.xlsx",size:"—"},
+  E:{title:"RF Port Map",category:"RF & Wireless",icon:"fa-network-wired",tags:["RF Port Mapping"],filename:"A576_RF_Port_Mapping.pdf",size:"—"},
+  F:{title:"Antenna Structure",category:"RF & Wireless",icon:"fa-tower-broadcast",tags:["MIMO LTE NR 2G WCDMA"],filename:"A576_Antenna_3D_Layout.dwg",size:"—"},
+  G:{title:"Main and Roaming Bands Details",category:"RF & Wireless",icon:"fa-earth-americas",tags:["5G NR","LTE FDD/TDD","Global Bands"],filename:"A576_Bands_Master.xlsx",size:"—"},
+  H:{title:"VSWR Graph",category:"RF & Wireless",icon:"fa-chart-line",tags:["VSWR","Return Loss","S-Parameter"],filename:"VSWR_Graph.pdf",size:"—"},
+  I:{title:"TRP/TIS/SAR Offset Table",category:"RF & Wireless",icon:"fa-table-list",tags:["TRP","TIS","SAR","Offset","RF Performance"],filename:"A576_TRP_TIS_SAR_Offset_Table.xlsx",size:"—"},
   J:{title:"Process Flow Chart",category:"Process & Tech",icon:"fa-arrows-split-up-and-left",tags:["Workflow","Assembly Nodes"],subItems:[
-    {name:"Sub Assembly",filename:"A576_Sub_Assembly_Flow.xlsx",size:"8.4 MB"},
-    {name:"Main Line",filename:"A576_Main_Line_SOP.xlsx",size:"14.1 MB"}]},
-  K:{title:"New Technology Introduced",category:"Process & Tech",icon:"fa-wand-magic-sparkles",tags:["Antenna Type","Graphite Layer","PMIC"],filename:"A576_New_Tech_Brief.pdf",size:"22.6 MB"},
-  L:{title:"OPST Sheet",category:"Process & Tech",icon:"fa-clipboard-check",tags:["Open Short Test"],filename:"A576_OPST_Master.xlsx",size:"11.5 MB"},
+    {name:"Sub Assembly",filename:"A576_Sub_Assembly_Flow.xlsx",size:"—"},
+    {name:"Main Line",filename:"A576_Main_Line_SOP.xlsx",size:"—"}]},
+  K:{title:"New Technology Introduced",category:"Process & Tech",icon:"fa-wand-magic-sparkles",tags:["Antenna Type","Graphite Layer","PMIC"],filename:"A576_New_Tech_Brief.pdf",size:"—"},
+  L:{title:"OPST Sheet",category:"Process & Tech",icon:"fa-clipboard-check",tags:["Open Short Test"],filename:"A576_OPST_Master.xlsx",size:"—"},
   N:{title:"Base Model / LPR / Development Stage Defect Summary",category:"Defect summary & SW process",icon:"fa-bug",tags:["Base Model","LPR","Development Stage","RCA","Subsidiary Defects"],mergedSources:[
-    {key:"N",name:"Base Model Defect History",icon:"fa-bug",filename:"A576_Base_Defects_RCA.xlsx",size:"31.2 MB",detail:"Predecessor failures + defect RCA"},
-    {key:"O",name:"LPR / Development Stage Defect Summary",icon:"fa-triangle-exclamation",filename:"A576_Subsidiary_Defects.xlsx",size:"19.7 MB",detail:"Korea Office / SEVT / SEV development-stage defects"}
+    {key:"N",name:"Base Model Defect History",icon:"fa-bug",filename:"A576_Base_Defects_RCA.xlsx",size:"—",detail:"Predecessor failures + defect RCA"},
+    {key:"O",name:"LPR / Development Stage Defect Summary",icon:"fa-triangle-exclamation",filename:"A576_Subsidiary_Defects.xlsx",size:"—",detail:"Korea Office / SEVT / SEV development-stage defects"}
   ]},
-  P:{title:"SW Log Process",category:"Defect summary & SW process",icon:"fa-terminal",tags:["Modem CP Dump","Kernel Panic","UART Guide"],filename:"A576_SW_Log_Guide.pdf",size:"17.4 MB"},
-  Q:{title:"Basic Model Details",category:"Specification",icon:"fa-circle-info",tags:["Dimensions","Battery Spec"],filename:"A576_Basic_Spec.pdf",size:"12.4 MB"},
-  R:{title:"Common and Exclusive Part Details",category:"Specification",icon:"fa-cubes",tags:["BOM Compare","Exclusive Part"],filename:"A576_Part_Matrix.xlsx",size:"15.8 MB"},
-  T:{title:"Hardware Checklist",category:"Specification",icon:"fa-clipboard-check",tags:["Hardware verification","Pre-S sign-off"],filename:"",size:""},
-  U:{title:"Korea Member Details",category:"Specification",icon:"fa-id-card",tags:["Korea Member Stage Wise"],filename:"A576_Korea_HQ_Roster.xlsx",size:"4.1 MB"},
-  V:{title:"Common",category:"Specification",icon:"fa-folder-tree",tags:["ECN Notices","Engineering Archive"],filename:"A576_Common_Archive.zip",size:"95.0 MB"}
+  P:{title:"SW Log Process",category:"Defect summary & SW process",icon:"fa-terminal",tags:["Modem CP Dump","Kernel Panic","UART Guide"],filename:"A576_SW_Log_Guide.pdf",size:"—"},
+  Q:{title:"Basic Model Details",category:"Specification",icon:"fa-circle-info",tags:["Dimensions","Battery Spec"],filename:"A576_Basic_Spec.pdf",size:"—"},
+  R:{title:"Common and Exclusive Part Details",category:"Specification",icon:"fa-cubes",tags:["BOM Compare","Exclusive Part"],filename:"A576_Part_Matrix.xlsx",size:"—"},
+  T:{title:"Hardware Checklist",category:"Specification",icon:"fa-clipboard-check",tags:["Hardware verification","Pre-S sign-off"],filename:"",size:"—"},
+  U:{title:"Korea Member Details",category:"Specification",icon:"fa-id-card",tags:["Korea Member Stage Wise"],filename:"A576_Korea_HQ_Roster.xlsx",size:"—"},
+  V:{title:"Common",category:"Specification",icon:"fa-folder-tree",tags:["ECN Notices","Engineering Archive"],filename:"A576_Common_Archive.zip",size:"—"}
 };
 
 const meta = {
@@ -57,6 +57,30 @@ const meta = {
   A085:{name:"Galaxy A085",ap:"Mobile Platform",modem:"LTE / 5G",status:"Development",modelType:"Development Model",leadKorea:"HQ R&D Team",swVersion:"A085XXU0AWA1",modelYear:"—",sielHwPic:"—",rfNetwork:"LTE / 5G"},
   S741:{name:"Galaxy S741",ap:"Mobile Platform",modem:"Sub-6GHz / MIMO",status:"Development",modelType:"Development Model",leadKorea:"HQ R&D Team",swVersion:"S741XXU0AWA1",modelYear:"—",sielHwPic:"—",rfNetwork:"Sub-6GHz / MIMO"}
 };
+
+export function modelCodesFromData(data){
+  return [...new Set([...MODEL_ORDER,...Object.keys(data||{})])].filter(Boolean);
+}
+
+export function resolveModelCode(value, data){
+  const raw=String(value||"").trim().toUpperCase();
+  if(!raw)return "";
+  return modelCodesFromData(data).sort((a,b)=>b.length-a.length).find(code=>raw===code||raw.startsWith(`${code}_`))||"";
+}
+
+export function subpartId(sub,index){
+  return String(sub?.id||sub?.name||`part-${index+1}`).trim().toLowerCase().replace(/[^a-z0-9]+/g,"-").replace(/^-+|-+$/g,"")||`part-${index+1}`;
+}
+
+export function slotBaseKey(model,key,sub,index){
+  return `${model}_${key}_${subpartId(sub,index)}`;
+}
+
+export function recordSlotKeys(model,key,item){
+  if(Array.isArray(item?.mergedSources))return item.mergedSources.map(src=>`${model}_${src.key}`);
+  if(Array.isArray(item?.subItems))return item.subItems.map((sub,index)=>slotBaseKey(model,key,sub,index));
+  return [`${model}_${key}`];
+}
 
 export function createDefaultData(){
   const out={};
