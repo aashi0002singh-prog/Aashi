@@ -217,27 +217,40 @@ export async function deleteAuditLogs(){
   });
 }
 
-export async function listStoredFileKeys(){
-  const db=await openDB();
-  try{return await new Promise((resolve,reject)=>{const tx=db.transaction(FILE_STORE,"readonly"),req=tx.objectStore(FILE_STORE).getAllKeys();req.onsuccess=()=>resolve(req.result||[]);req.onerror=()=>reject(req.error||new Error("File key lookup failed"));tx.onerror=()=>reject(tx.error||new Error("File key lookup failed"));})}
-  finally{db.close()}
-}
-
-export async function renameStoredFile(oldKey,newKey){
-  if(oldKey===newKey)return;
+export async function migrateFilePrefix(oldPrefix,newPrefix){
+  if(!oldPrefix||!newPrefix||oldPrefix===newPrefix)return;
   const db=await openDB();
   try{
-    const record=await new Promise((resolve,reject)=>{const tx=db.transaction(FILE_STORE,"readonly"),req=tx.objectStore(FILE_STORE).get(oldKey);req.onsuccess=()=>resolve(req.result||null);req.onerror=()=>reject(req.error||new Error("File lookup failed"));});
-    if(!record)return;
-    await new Promise((resolve,reject)=>{const tx=db.transaction([FILE_STORE,CHUNK_STORE],"readwrite");tx.objectStore(FILE_STORE).put(record,newKey);if(record.chunked&&record.chunkCount){for(let i=0;i<record.chunkCount;i++){const req=tx.objectStore(CHUNK_STORE).get([oldKey,i]);req.onsuccess=()=>{if(req.result)tx.objectStore(CHUNK_STORE).put(req.result,[newKey,i])}}}tx.oncomplete=resolve;tx.onerror=()=>reject(tx.error||new Error("File rename failed"));});
-    await new Promise((resolve,reject)=>{const tx=db.transaction([FILE_STORE,CHUNK_STORE],"readwrite");tx.objectStore(FILE_STORE).delete(oldKey);if(record.chunked&&record.chunkCount){for(let i=0;i<record.chunkCount;i++)tx.objectStore(CHUNK_STORE).delete([oldKey,i])}tx.oncomplete=resolve;tx.onerror=()=>reject(tx.error||new Error("Old file cleanup failed"));});
+    const records=await new Promise((resolve,reject)=>{
+      const tx=db.transaction(FILE_STORE,"readonly"),req=tx.objectStore(FILE_STORE).getAllKeys();
+      req.onsuccess=()=>resolve((req.result||[]).filter(k=>typeof k==="string"&&(k===oldPrefix||k.startsWith(oldPrefix+"_"))));
+      req.onerror=()=>reject(req.error||new Error("File key lookup failed"));
+    });
+    for(const oldKey of records){
+      const newKey=oldKey===oldPrefix?newPrefix:newPrefix+oldKey.slice(oldPrefix.length);
+      const record=await new Promise((resolve,reject)=>{const tx=db.transaction(FILE_STORE,"readonly"),req=tx.objectStore(FILE_STORE).get(oldKey);req.onsuccess=()=>resolve(req.result||null);req.onerror=()=>reject(req.error||new Error("File metadata read failed"));});
+      if(record){
+        await new Promise((resolve,reject)=>{const tx=db.transaction(FILE_STORE,"readwrite");const store=tx.objectStore(FILE_STORE);store.put(record,newKey);store.delete(oldKey);tx.oncomplete=resolve;tx.onerror=()=>reject(tx.error||new Error("File key migration failed"));tx.onabort=()=>reject(tx.error||new Error("File key migration aborted"));});
+      }
+      const chunkCount=Number(record?.chunkCount||0);
+      if(chunkCount){
+        for(let i=0;i<chunkCount;i++){
+          const chunk=await new Promise((resolve,reject)=>{const tx=db.transaction(CHUNK_STORE,"readonly"),req=tx.objectStore(CHUNK_STORE).get([oldKey,i]);req.onsuccess=()=>resolve(req.result||null);req.onerror=()=>reject(req.error||new Error("File chunk read failed"));});
+          if(chunk)await new Promise((resolve,reject)=>{const tx=db.transaction(CHUNK_STORE,"readwrite");const store=tx.objectStore(CHUNK_STORE);store.put(chunk,[newKey,i]);store.delete([oldKey,i]);tx.oncomplete=resolve;tx.onerror=()=>reject(tx.error||new Error("File chunk migration failed"));});
+        }
+      }
+    }
   }finally{db.close()}
 }
 
-export async function deleteStoredFile(key){
+export async function deleteFilePrefix(prefix){
+  if(!prefix)return;
   const db=await openDB();
   try{
-    const record=await new Promise((resolve,reject)=>{const tx=db.transaction(FILE_STORE,"readonly"),req=tx.objectStore(FILE_STORE).get(key);req.onsuccess=()=>resolve(req.result||null);req.onerror=()=>reject(req.error||new Error("File lookup failed"));});
-    await new Promise((resolve,reject)=>{const tx=db.transaction([FILE_STORE,CHUNK_STORE],"readwrite");tx.objectStore(FILE_STORE).delete(key);if(record?.chunked&&record.chunkCount){for(let i=0;i<record.chunkCount;i++)tx.objectStore(CHUNK_STORE).delete([key,i])}tx.oncomplete=resolve;tx.onerror=()=>reject(tx.error||new Error("File delete failed"));});
+    const keys=await new Promise((resolve,reject)=>{const tx=db.transaction(FILE_STORE,"readonly"),req=tx.objectStore(FILE_STORE).getAllKeys();req.onsuccess=()=>resolve((req.result||[]).filter(k=>typeof k==="string"&&(k===prefix||k.startsWith(prefix+"_"))));req.onerror=()=>reject(req.error||new Error("File key lookup failed"));});
+    for(const key of keys){
+      const record=await new Promise((resolve,reject)=>{const tx=db.transaction(FILE_STORE,"readonly"),req=tx.objectStore(FILE_STORE).get(key);req.onsuccess=()=>resolve(req.result||null);req.onerror=()=>reject(req.error||new Error("File metadata read failed"));});
+      await new Promise((resolve,reject)=>{const tx=db.transaction([FILE_STORE,CHUNK_STORE],"readwrite");tx.objectStore(FILE_STORE).delete(key);for(let i=0;i<Number(record?.chunkCount||0);i++)tx.objectStore(CHUNK_STORE).delete([key,i]);tx.oncomplete=resolve;tx.onerror=()=>reject(tx.error||new Error("File deletion failed"));});
+    }
   }finally{db.close()}
 }

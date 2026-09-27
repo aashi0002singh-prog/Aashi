@@ -166,11 +166,11 @@ async function previewRow(row) {
   if (meta) meta.textContent = `${row.model} · ${row.key} · ${formatBytes(record.blob.size)} · ${record.blob.type || "unknown type"}`;
   if (!body) return;
   const ext = extOf(record.filename || row.filename);
-  if (record.blob.type.startsWith("image/") || ["png", "jpg", "jpeg", "webp", "gif"].includes(ext)) {
+  if (record.blob.type.startsWith("image/") || ["png", "jpg", "jpeg", "webp", "gif", "svg"].includes(ext)) {
     body.innerHTML = `<img class="file-preview-image" src="${objectUrl}" alt="${escapeHtml(record.filename || row.filename)}">`;
   } else if (record.blob.type === "application/pdf" || ext === "pdf") {
     body.innerHTML = `<iframe class="file-preview-frame" src="${objectUrl}" title="PDF preview"></iframe>`;
-  } else if (record.blob.type.startsWith("text/") || ["csv", "txt", "log"].includes(ext)) {
+  } else if (record.blob.type.startsWith("text/") || ["csv", "txt", "log", "md"].includes(ext)) {
     const text = await record.blob.text();
     body.innerHTML = `<pre class="file-preview-text">${escapeHtml(text.slice(0, 200000))}</pre>`;
   } else {

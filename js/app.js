@@ -1,12 +1,12 @@
 import {MODEL_ORDER,RECORD_ORDER,CATEGORIES,CATEGORY_COLORS,createDefaultData} from "../data/models.js";
-import {saveFile,getFile,getFiles,listFileVersions,deleteAllFiles,deleteAuditLogs,addAudit,listStoredFileKeys,renameStoredFile,deleteStoredFile} from "./database.js";
+import {saveFile,getFile,getFiles,listFileVersions,deleteAllFiles,deleteAuditLogs,addAudit,migrateFilePrefix,deleteFilePrefix} from "./database.js";
 import {toast,escapeHtml,formatBytes,downloadBlob,downloadText} from "./ui.js";
 
 const STORAGE_KEY="MOBILE_RND_DB_DATA_V10";
 const PREF_KEY="MOBILE_RND_PREFS_V3";
 const AUTH_KEY="RND_AUTH_V3";
 const MAX_FILE_SIZE=500*1024*1024;
-const ALLOWED=["pdf","xlsx","xls","zip","bin","dwg","csv","doc","docx","ppt","pptx","png","jpg","jpeg","webp","gif","svg","txt","log"];
+const ALLOWED=["pdf","xlsx","xls","zip","bin","dwg","csv","doc","docx","ppt","pptx","txt","log","md","jpg","jpeg","png","webp","gif","svg"];
 const LEGACY_RECORD_MAP={S:"A",B:"B",I:"C",P:"D",K:"E",L:"F",M:"G",T:"H",C:"I",E:"J",H:"K",F:"L",G:"M",Q:"N",J:"O",A:"P",D:"Q",N:"R",O:"S",R:"U",U:"T",VSWR:"H",HWC:"T"};
 const HARDWARE_DEFAULT={title:"Hardware Checklist",category:"Specification",icon:"fa-clipboard-check",tags:["Hardware verification","Pre-S sign-off"],filename:"",size:""};
 const CUSTOM_MODELS_KEY="MOBILE_RND_CUSTOM_MODELS_V1";
@@ -331,7 +331,6 @@ async function hydrateInlinePreviews(entries){
       host.innerHTML=`<div class="inline-preview-empty"><i class="fa-solid fa-triangle-exclamation"></i><span>Unable to load the inline preview. Use Preview or Download.</span></div>`;
     }
   }
-  
 }
 
 function renderVersionHistory(entry,color){
@@ -398,17 +397,15 @@ function renderCard(key,item){
   const favKey=`${currentModel}:${key}`,isFav=favorites.includes(favKey);
   const entries=expandedFileMap.get(key)||[];
   const presentCount=entries.filter(x=>x.present).length;
-  const totalSlots=entries.length||1;
+  const totalSlots=entries.length;
   const versionTotal=entries.reduce((sum,x)=>sum+(x.versionCount||0),0);
   const groupView=activeCategory!=="all";
   const expanded=groupView||expandedCards.has(key);
-  const statusClass=presentCount===totalSlots?"all-present":presentCount>0?"partial":"all-missing";
-  const statusText=totalSlots===1?(presentCount?"FILE PRESENT":"FILE MISSING"):(presentCount===totalSlots?`${totalSlots}/${totalSlots} REQUIRED PRESENT`:presentCount?`${presentCount}/${totalSlots} REQUIRED PRESENT`:`0/${totalSlots} REQUIRED MISSING`);
-  const detail=expanded?`<div class="record-expanded-panel"><div class="expanded-summary"><span><i class="fa-solid fa-database"></i> ${presentCount}/${totalSlots} required document${totalSlots===1?"":"s"} present</span><span><i class="fa-solid fa-layer-group"></i> ${versionTotal} uploaded version${versionTotal===1?"":"s"}</span><span><i class="fa-solid fa-circle-info"></i> Document details</span></div><div class="inline-preview" data-inline-preview><div class="inline-preview-loading"><i class="fa-solid fa-spinner"></i><span>Loading document preview…</span></div></div><div class="expanded-file-list">${renderExpandedFiles(key,item)}</div><div class="expanded-footer"><button class="text-action" data-copy-record="${escapeHtml(key)}"><i class="fa-regular fa-copy"></i> Copy details</button><button class="text-action" data-link-record="${escapeHtml(key)}"><i class="fa-solid fa-link"></i> Copy link</button><button class="text-action" data-open-record="${escapeHtml(key)}"><i class="fa-solid fa-up-right-and-down-left-from-center"></i> Open details</button></div></div>`:"";
+  const statusClass=presentCount===0?"all-missing":presentCount===totalSlots?"all-present":"partial";
+  const statusText=presentCount===0?"DOCUMENTS MISSING":presentCount===totalSlots?"DOCUMENTS PRESENT":"DOCUMENTS PARTIAL";
+  const detail=expanded?`<div class="record-expanded-panel"><div class="expanded-summary"><span><i class="fa-solid fa-database"></i> ${escapeHtml(statusText)}</span><span><i class="fa-solid fa-layer-group"></i> ${versionTotal} uploaded version${versionTotal===1?"":"s"}</span><span><i class="fa-solid fa-circle-info"></i> Document details</span></div><div class="inline-preview" data-inline-preview><div class="inline-preview-loading"><i class="fa-solid fa-spinner"></i><span>Loading document preview…</span></div></div><div class="expanded-file-list">${renderExpandedFiles(key,item)}</div><div class="expanded-footer"><button class="text-action" data-copy-record="${escapeHtml(key)}"><i class="fa-regular fa-copy"></i> Copy details</button><button class="text-action" data-link-record="${escapeHtml(key)}"><i class="fa-solid fa-link"></i> Copy link</button><button class="text-action" data-open-record="${escapeHtml(key)}"><i class="fa-solid fa-up-right-and-down-left-from-center"></i> Open details</button></div></div>`:"";
   return `<article id="record-${escapeHtml(key)}" class="record-card ${expanded?"is-expanded":""} ${groupView?"is-group-view":""} ${isFav?"is-favorite":""}" style="--record-accent:${color}" data-record="${escapeHtml(key)}" tabindex="0" aria-expanded="${expanded}"><div class="record-stripe" style="background:${color}"></div><div class="record-collapsed-face"><div class="record-icon" style="background:${color}"><i class="fa-solid ${escapeHtml(item.icon)}"></i></div><div class="record-title-only">${escapeHtml(item.title)}</div><div class="record-status ${statusClass}"><span class="status-dot ${presentCount?"present":"missing"}"></span><span>${escapeHtml(statusText)}</span></div><button class="favorite-btn ${isFav?"active":""}" data-favorite="${escapeHtml(favKey)}" title="Favorite"><i class="fa-${isFav?"solid":"regular"} fa-star"></i></button><span class="expand-cue"><i class="fa-solid fa-chevron-down"></i></span></div>${detail}</article>`;
 }
-
-function syncGroupCardHeight(){}
 
 function renderAuth(){const slot=document.getElementById("adminAuthSlot");slot.innerHTML=isAdmin?`<div class="flex gap-1"><button id="uploadBtn" class="btn btn-cyan"><i class="fa-solid fa-cloud-arrow-up"></i> Upload</button><button id="addModelBtn" class="btn btn-dark"><i class="fa-solid fa-plus"></i> Model</button><button id="editModelBtn" class="btn btn-dark"><i class="fa-solid fa-pen-to-square"></i> Edit</button><button id="logoutBtn" class="header-icon-btn" title="Logout"><i class="fa-solid fa-right-from-bracket"></i></button></div>`:`<button id="loginBtn" class="btn btn-dark"><i class="fa-solid fa-lock"></i> Admin • Shivam</button>`;document.getElementById(isAdmin?"uploadBtn":"loginBtn").addEventListener("click",()=>isAdmin?openUploadModal():openModal("loginModal"));if(isAdmin)document.getElementById("addModelBtn")?.addEventListener("click",openAddModelModal);document.getElementById("editModelBtn")?.addEventListener("click",openEditModelModal);if(isAdmin)document.getElementById("logoutBtn").addEventListener("click",()=>{isAdmin=false;sessionStorage.removeItem(AUTH_KEY);renderAuth();renderCards();document.dispatchEvent(new Event("rnd-auth-changed"));toast("Admin session ended.","info")})}
 function populateUploadModels(selected=currentModel){const el=document.getElementById("uploadModel");if(!el)return;el.innerHTML=modelList().map(m=>`<option value="${m}">${m} • ${escapeHtml(data[m].meta.name)}</option>`).join("");el.value=modelList().includes(selected)?selected:currentModel;populateUploadRecords(el.value)}
@@ -431,7 +428,8 @@ function updateSubpartSelector(preferredIndex=""){
 }
 function openUploadModal(recordKey="",subpartIndex=""){if(!isAdmin){toast("Admin authentication is required to upload documents.","error");return}const model=currentModel;populateUploadModels(model);populateUploadRecords(model,recordKey);updateSubpartSelector(subpartIndex);resetSelectedFile();openModal("uploadModal")}
 
-function resetSelectedFile(){selectedFiles=[];const input=document.getElementById("fileInput");if(input)input.value="";const name=document.getElementById("fileName");if(name)name.textContent="Drop file here or click to browse";const status=document.getElementById("uploadStatus");if(status)status.textContent="";const rev=document.getElementById("uploadRevision");if(rev)rev.value="";const note=document.getElementById("uploadNote");if(note)note.value=""}
+function resetSelectedFile(){selectedFiles=[];const input=document.getElementById("fileInput");if(input)input.value="";const name=document.getElementById("fileName");if(name)name.textContent="Drop files here or click to browse";const status=document.getElementById("uploadStatus");if(status)status.textContent="";const rev=document.getElementById("uploadRevision");if(rev)rev.value="";const note=document.getElementById("uploadNote");if(note)note.value=""}
+
 function openModal(id){document.getElementById(id)?.classList.remove("hidden")}
 function closeModal(id){document.getElementById(id)?.classList.add("hidden");if(id==="uploadModal")resetSelectedFile()}
 function findModel(value){const v=String(value||"").trim().toUpperCase();return modelList().find(m=>m===v)||modelList().find(m=>m.toUpperCase()===v)||null}
@@ -493,7 +491,7 @@ function bindEvents(){
   document.getElementById("prevRecordBtn").addEventListener("click",()=>navigateRecord(-1));document.getElementById("nextRecordBtn").addEventListener("click",()=>navigateRecord(1));document.getElementById("presentationBtn").addEventListener("click",()=>{const k=filteredEntries()[0]?.[0];if(k)openPresentation(k)});
   document.getElementById("recentList").addEventListener("click",e=>{const b=e.target.closest("[data-recent-key]");if(b){setModel(b.dataset.recentModel);setTimeout(()=>openRecord(b.dataset.recentKey),50)}});
   document.querySelectorAll("[data-close]").forEach(b=>b.addEventListener("click",()=>closeModal(b.dataset.close)));document.querySelectorAll(".modal-backdrop").forEach(b=>b.addEventListener("click",()=>b.parentElement.classList.add("hidden")));
-  document.getElementById("loginForm").addEventListener("submit",login);document.getElementById("deleteModelBtn")?.addEventListener("click",deleteCurrentModel);document.getElementById("addModelForm")?.addEventListener("submit",addModel);document.getElementById("editModelSelect")?.addEventListener("change",e=>loadEditModelFields(e.target.value));
+  document.getElementById("loginForm").addEventListener("submit",login);document.getElementById("addModelForm")?.addEventListener("submit",addModel);document.getElementById("editModelSelect")?.addEventListener("change",e=>loadEditModelFields(e.target.value));
   const passwordToggle=document.getElementById("passwordToggle");
   passwordToggle?.addEventListener("click",()=>{const input=document.getElementById("passwordInput"); const showing=input.type==="text"; input.type=showing?"password":"text"; passwordToggle.innerHTML=showing?'<i class="fa-solid fa-eye"></i>':'<i class="fa-solid fa-eye-slash"></i>'; passwordToggle.setAttribute("aria-label",showing?"Show password":"Hide password"); passwordToggle.title=showing?"Show password":"Hide password"});
   document.getElementById("uploadModel").addEventListener("change",e=>{populateUploadRecords(e.target.value);const first=document.getElementById("uploadRecord")?.value;if(first)document.getElementById("uploadRecord").value=first;updateSubpartSelector()});document.getElementById("uploadRecord").addEventListener("change",()=>updateSubpartSelector());
@@ -513,99 +511,57 @@ function customModels(){return readJson(CUSTOM_MODELS_KEY,[]).filter(x=>x&&x.cod
 function editableModels(){return modelList()}
 function openAddModelModal(){if(!isAdmin){toast("Admin authentication is required.","error");return}setModelAdminFormMode("add");document.getElementById("addModelForm")?.reset();document.getElementById("addModelError")?.classList.add("hidden");openModal("addModelModal")}
 function openEditModelModal(){if(!isAdmin){toast("Admin authentication is required.","error");return}const models=editableModels();if(!models.length){toast("No editable model is available.","info");return}setModelAdminFormMode("edit");populateEditModelSelect(models[0]);openModal("addModelModal")}
-function setModelAdminFormMode(mode){const edit=mode==="edit",deleteBtn=document.getElementById("deleteModelBtn"),title=document.getElementById("addModelTitle"),desc=document.querySelector("#addModelModal .modal-description"),submit=document.getElementById("addModelSubmit"),icon=document.querySelector("#addModelModal .modal-icon i"),wrap=document.getElementById("editModelSelectWrap"),code=document.getElementById("newModelCode"),help=document.getElementById("addModelHelp");if(title)title.textContent=edit?"Edit Existing Model":"Add New Model";if(desc)desc.textContent=edit?"Admin-only model update. Existing engineering records and uploaded files are preserved.":"Admin-only model registration. New models appear automatically in the model selector.";if(submit)submit.innerHTML=edit?'<i class="fa-solid fa-floppy-disk"></i> Save Updated Model':'<i class="fa-solid fa-plus"></i> Add Model';if(icon)icon.className=`fa-solid ${edit?"fa-pen-to-square":"fa-square-plus"}`;wrap?.classList.toggle("hidden",!edit);deleteBtn?.classList.toggle("hidden",!edit);if(code)code.readOnly=false;if(help)help.innerHTML=edit?'<i class="fa-solid fa-database"></i> Updated model details are stored locally in this browser and survive page reloads.':'<i class="fa-solid fa-database"></i> Model registration is stored locally in this browser and survives page reloads.';["newModelName","newModelProcessor","newModelYear","newModelPic","newModelRf","newModelType"].forEach(id=>document.getElementById(id)?.toggleAttribute("required",!edit||id!=="newModelPic"));document.getElementById("addModelForm")?.setAttribute("data-mode",mode)}
+function setModelAdminFormMode(mode){const edit=mode==="edit",title=document.getElementById("addModelTitle"),desc=document.querySelector("#addModelModal .modal-description"),submit=document.getElementById("addModelSubmit"),icon=document.querySelector("#addModelModal .modal-icon i"),wrap=document.getElementById("editModelSelectWrap"),code=document.getElementById("newModelCode"),help=document.getElementById("addModelHelp");if(title)title.textContent=edit?"Edit Existing Model":"Add New Model";if(desc)desc.textContent=edit?"Admin-only model update. Model code can be changed safely and associated stored files are migrated.":"Admin-only model registration. New models appear automatically in the model selector.";if(submit)submit.innerHTML=edit?'<i class="fa-solid fa-floppy-disk"></i> Save Updated Model':'<i class="fa-solid fa-plus"></i> Add Model';if(icon)icon.className=`fa-solid ${edit?"fa-pen-to-square":"fa-square-plus"}`;wrap?.classList.toggle("hidden",!edit);if(code)code.readOnly=false;const del=document.getElementById("deleteModelBtn");if(del){del.classList.toggle("hidden",!edit);del.onclick=deleteSelectedModel;}if(help)help.innerHTML=edit?'<i class="fa-solid fa-database"></i> Model code is editable. Stored document/version keys are migrated automatically.':'<i class="fa-solid fa-database"></i> Model registration is stored locally in this browser and survives page reloads.';["newModelName","newModelProcessor","newModelYear","newModelPic","newModelRf","newModelType"].forEach(id=>document.getElementById(id)?.toggleAttribute("required",!edit||id!=="newModelPic"));document.getElementById("addModelForm")?.setAttribute("data-mode",mode)}
 function populateEditModelSelect(selected=""){const el=document.getElementById("editModelSelect");if(!el)return;const models=editableModels();el.innerHTML=models.map(code=>`<option value="${escapeHtml(code)}">${escapeHtml(code)} • ${escapeHtml(data[code]?.meta?.name||code)}</option>`).join("");if(selected&&models.includes(selected))el.value=selected;loadEditModelFields(el.value)}
 function loadEditModelFields(code){const model=data[code];if(!model)return;document.getElementById("newModelCode").value=code;document.getElementById("newModelName").value=model.meta?.name||"";document.getElementById("newModelProcessor").value=model.meta?.ap||"";document.getElementById("newModelYear").value=model.meta?.modelYear||"";document.getElementById("newModelPic").value=model.meta?.sielHwPic||model.meta?.leadKorea||"";document.getElementById("newModelRf").value=model.meta?.rfNetwork||model.meta?.modem||"";document.getElementById("newModelType").value=model.meta?.modelType||(model.meta?.status==="Mass Production"?"Mass Production Model":"Development Model")}
-async function migrateStoredModelKeys(oldCode,newCode){
-  const keys=(await listStoredFileKeys()).filter(k=>typeof k==="string"&&k.startsWith(oldCode+"_"));
-  for(const oldKey of keys){const newKey=newCode+oldKey.slice(oldCode.length);await renameStoredFile(oldKey,newKey)}
-}
-async function deleteCurrentModel(){
-  if(!isAdmin)return;
-  const selected=document.getElementById("editModelSelect")?.value;
-  if(!selected)return;
-  const custom=readJson(CUSTOM_MODELS_KEY,[]);
-  if(!custom.some(x=>x.code===selected)){toast("Built-in models are protected and cannot be deleted.","info");return}
-  if(!confirm(`Delete custom model ${selected}? Its engineering records and uploaded files will also be removed from this browser.`))return;
-  const matches=(await listStoredFileKeys()).filter(k=>typeof k==="string"&&k.startsWith(selected+"_"));
-  for(const key of matches)await deleteStoredFile(key);
-  delete data[selected];
-  localStorage.setItem(CUSTOM_MODELS_KEY,JSON.stringify(custom.filter(x=>x.code!==selected)));
-  if(currentModel===selected)currentModel=MODEL_ORDER.find(x=>data[x])||MODEL_ORDER[0];
-  saveData();closeModal("addModelModal");renderAuth();populateUploadModels(currentModel);renderAll();renderModelPicker("");
-  const picker=document.getElementById("modelPickerInput");if(picker)picker.value=currentModel;
-  toast(`${selected} deleted.`,'success');addAudit("MODEL_DELETE",{model:selected});
-}
-
 async function addModel(e){
   e.preventDefault();if(!isAdmin)return;
-  const form=document.getElementById("addModelForm"),mode=form?.dataset.mode||"add",code=document.getElementById("newModelCode").value.trim().toUpperCase(),name=document.getElementById("newModelName").value.trim(),processor=document.getElementById("newModelProcessor").value.trim(),modelYear=document.getElementById("newModelYear").value.trim(),pic=document.getElementById("newModelPic").value.trim(),rf=document.getElementById("newModelRf").value.trim(),modelType=document.getElementById("newModelType").value,err=document.getElementById("addModelError");
+  const form=document.getElementById("addModelForm"),mode=form?.dataset.mode||"add",oldCode=document.getElementById("editModelSelect")?.value||"",code=document.getElementById("newModelCode").value.trim().toUpperCase(),name=document.getElementById("newModelName").value.trim(),processor=document.getElementById("newModelProcessor").value.trim(),modelYear=document.getElementById("newModelYear").value.trim(),pic=document.getElementById("newModelPic").value.trim(),rf=document.getElementById("newModelRf").value.trim(),modelType=document.getElementById("newModelType").value,err=document.getElementById("addModelError");
   const fail=msg=>{err.textContent=msg;err.classList.remove("hidden")};
   if(!/^[A-Z][A-Z0-9_-]{1,23}$/.test(code))return fail("Use a valid model code (2–24 characters, letters/numbers/_/-). ");
   if(!name||!processor||!modelYear||!rf||!["Development Model","Mass Production Model"].includes(modelType)||(mode!=="edit"&&!pic))return fail("Complete all required model information fields.");
   if(mode==="edit"){
-    const selectedOriginal=document.getElementById("editModelSelect")?.value||code;
-    if(!modelList().includes(selectedOriginal)||!data[selectedOriginal])return fail("Select a valid existing model to edit.");
-    const custom=readJson(CUSTOM_MODELS_KEY,[]),customIndex=custom.findIndex(x=>x.code===selectedOriginal);
-    if(customIndex<0 && code!==selectedOriginal)return fail("Built-in model codes cannot be renamed. Use a custom model for code editing.");
-    if(code!==selectedOriginal && modelList().includes(code))return fail("That model code already exists.");
-    const model=data[selectedOriginal];
-    if(code!==selectedOriginal){
-      data[code]=model;delete data[selectedOriginal];
-      custom[customIndex]={...custom[customIndex],code,name,processor,modelYear,sielHwPic:pic,rfNetwork:rf,modelType};
-      await migrateStoredModelKeys(selectedOriginal,code);
-      if(currentModel===selectedOriginal)currentModel=code;
-    }else custom[customIndex]={...custom[customIndex],code,name,processor,modelYear,sielHwPic:pic,rfNetwork:rf,modelType};
-    data[code].meta={...data[code].meta,name,ap:processor,modelYear,sielHwPic:pic,rfNetwork:rf,modem:rf,leadKorea:pic,modelType,status:modelType==="Mass Production Model"?"Mass Production":"Development"};
-    localStorage.setItem(CUSTOM_MODELS_KEY,JSON.stringify(custom));saveData();closeModal("addModelModal");populateUploadModels(currentModel);renderAll();renderModelPicker("");const picker=document.getElementById("modelPickerInput");if(picker)picker.value=currentModel;toast(`${code} model details updated.`,'success');addAudit("MODEL_EDIT",{model:selectedOriginal,newModel:code,name,processor,modelYear,sielHwPic:pic,rfNetwork:rf,modelType});return;
+    if(!oldCode||!modelList().includes(oldCode)||!data[oldCode])return fail("Select a valid existing model to edit.");
+    if(code!==oldCode&&modelList().includes(code))return fail("That model code already exists. Choose another code.");
+    const model=data[oldCode];model.meta={...model.meta,name,ap:processor,modelYear,sielHwPic:pic,rfNetwork:rf,modem:rf,leadKorea:pic,modelType,status:modelType==="Mass Production Model"?"Mass Production":"Development"};
+    if(code!==oldCode){
+      data[code]=model;delete data[oldCode];
+      const custom=readJson(CUSTOM_MODELS_KEY,[]),idx=custom.findIndex(x=>x.code===oldCode);if(idx>=0)custom[idx]={...custom[idx],code,name,processor,modelYear,sielHwPic:pic,rfNetwork:rf,modelType};else custom.push({code,name,processor,modelYear,sielHwPic:pic,rfNetwork:rf,modelType});
+      await migrateFilePrefix(oldCode,code);
+      if(currentModel===oldCode){currentModel=code;localStorage.setItem("MOBILE_RND_LAST_MODEL_V1",code)}
+      localStorage.setItem(CUSTOM_MODELS_KEY,JSON.stringify(custom));
+      saveData();closeModal("addModelModal");populateUploadModels(currentModel);renderAll();renderModelPicker("");const picker=document.getElementById("modelPickerInput");if(picker)picker.value=currentModel;toast(`${oldCode} renamed to ${code} and stored document keys migrated.`,'success');addAudit("MODEL_RENAME",{from:oldCode,to:code,name,processor,modelYear,sielHwPic:pic,rfNetwork:rf,modelType});return;
+    }
+    const custom=readJson(CUSTOM_MODELS_KEY,[]),idx=custom.findIndex(x=>x.code===oldCode);if(idx>=0)custom[idx]={...custom[idx],code,name,processor,modelYear,sielHwPic:pic,rfNetwork:rf,modelType};else custom.push({code,name,processor,modelYear,sielHwPic:pic,rfNetwork:rf,modelType});localStorage.setItem(CUSTOM_MODELS_KEY,JSON.stringify(custom));saveData();closeModal("addModelModal");populateUploadModels(currentModel);renderAll();renderModelPicker("");toast(`${code} model details updated.`,'success');addAudit("MODEL_EDIT",{model:code,name,processor,modelYear,sielHwPic:pic,rfNetwork:rf,modelType});return;
   }
   if(modelList().includes(code))return fail("This model code already exists. Use Edit Model to update its details.");
   const defaults=createDefaultData().A576,model=clone(defaults);model.meta={...model.meta,name,ap:processor,modelYear,sielHwPic:pic,rfNetwork:rf,modem:rf,leadKorea:pic,modelType,status:modelType==="Mass Production Model"?"Mass Production":"Development"};
   for(const item of Object.values(model.items)){if(item.filename)item.filename=item.filename.replaceAll("A576",code);item.subItems?.forEach(sub=>{if(sub.filename)sub.filename=sub.filename.replaceAll("A576",code)});item.mergedSources?.forEach(src=>{if(src.filename)src.filename=src.filename.replaceAll("A576",code)})}
   data[code]=model;const custom=readJson(CUSTOM_MODELS_KEY,[]);custom.push({code,name,processor,modelYear,sielHwPic:pic,rfNetwork:rf,modelType});localStorage.setItem(CUSTOM_MODELS_KEY,JSON.stringify(custom));saveData();closeModal("addModelModal");populateUploadModels(currentModel);renderAll();renderModelPicker("");toast(`${code} added to the model selection list.`,'success');addAudit("MODEL_ADD",{model:code,name,processor,modelYear,sielHwPic:pic,rfNetwork:rf,modelType});
 }
-function login(e){e.preventDefault();const input=document.getElementById("passwordInput");const error=document.getElementById("loginError");if(input.value==="admin123"){isAdmin=true;sessionStorage.setItem(AUTH_KEY,"true");closeModal("loginModal");document.getElementById("passwordInput").value="";renderAuth();renderCards();document.dispatchEvent(new Event("rnd-auth-changed"));toast("Admin session authenticated.","success");addAudit("LOGIN")}else{error.classList.remove("hidden");input.classList.add("input-error");input.focus();setTimeout(()=>input.classList.remove("input-error"),700)}}
-function selectFiles(fileList){
-  if(!isAdmin){toast("Admin authentication is required to upload documents.","error");return}
-  const files=[...fileList||[]];
-  if(!files.length)return;
-  const invalid=files.find(f=>!ALLOWED.includes((f.name.split(".").pop()||"").toLowerCase()));
-  if(invalid){toast(`File type .${(invalid.name.split(".").pop()||"").toLowerCase()} is not supported.`,"error");return}
-  const oversized=files.find(f=>f.size>MAX_FILE_SIZE);
-  if(oversized){toast(`${oversized.name} exceeds the 500 MB per-file limit.`,"error");return}
-  selectedFiles=files;
-  const name=document.getElementById("fileName");
-  if(name)name.textContent=files.length===1?`${files[0].name} (${formatBytes(files[0].size)})`:`${files.length} files selected (${formatBytes(files.reduce((n,f)=>n+f.size,0))} total)`;
-  const status=document.getElementById("uploadStatus");
-  if(status)status.textContent=`${files.length} file${files.length===1?"":"s"} ready for upload.`;
-}
-function selectFile(file){selectFiles(file?[file]:[])}
+async function deleteSelectedModel(){if(!isAdmin)return;const code=document.getElementById("editModelSelect")?.value||"";if(!code||!data[code]){toast("Select a model to delete.","error");return}const custom=readJson(CUSTOM_MODELS_KEY,[]);if(!custom.some(x=>x.code===code)){toast("Built-in models cannot be deleted from the admin panel.","error");return}if(!confirm(`Delete model ${code} and all locally stored documents for this model? This cannot be undone.`))return;await deleteFilePrefix(code);delete data[code];localStorage.setItem(CUSTOM_MODELS_KEY,JSON.stringify(custom.filter(x=>x.code!==code)));saveData();const models=modelList();currentModel=models[0]||"";localStorage.setItem("MOBILE_RND_LAST_MODEL_V1",currentModel);closeModal("addModelModal");populateUploadModels(currentModel);renderCategories();renderAll();renderModelPicker("");toast(`${code} deleted.`,'success');addAudit("MODEL_DELETE",{model:code})}
 
+function login(e){e.preventDefault();const input=document.getElementById("passwordInput");const error=document.getElementById("loginError");if(input.value==="admin123"){isAdmin=true;sessionStorage.setItem(AUTH_KEY,"true");closeModal("loginModal");document.getElementById("passwordInput").value="";renderAuth();renderCards();document.dispatchEvent(new Event("rnd-auth-changed"));toast("Admin session authenticated.","success");addAudit("LOGIN")}else{error.classList.remove("hidden");input.classList.add("input-error");input.focus();setTimeout(()=>input.classList.remove("input-error"),700)}}
+function selectFiles(fileList){if(!isAdmin){toast("Admin authentication is required to upload documents.","error");return}const files=[...(fileList||[])];if(!files.length)return;const valid=[];const rejected=[];for(const file of files){const ext=file.name.split(".").pop().toLowerCase();if(!ALLOWED.includes(ext)){rejected.push(`${file.name}: unsupported type`);continue}if(file.size>MAX_FILE_SIZE){rejected.push(`${file.name}: exceeds 500 MB`);continue}valid.push(file)}selectedFiles=[...selectedFiles,...valid];const name=document.getElementById("fileName");if(name)name.textContent=selectedFiles.length?selectedFiles.map(f=>`${f.name} (${formatBytes(f.size)})`).join(" • "):"Drop files here or click to browse";const status=document.getElementById("uploadStatus");if(status)status.textContent=rejected.length?`${selectedFiles.length} file${selectedFiles.length===1?"":"s"} ready. ${rejected.join("; ")}`:`${selectedFiles.length} file${selectedFiles.length===1?"":"s"} ready for upload.`}
 async function upload(e){
-  e.preventDefault();
-  if(!selectedFiles.length){toast("Please select at least one file first.","error");return}
+  e.preventDefault();if(!selectedFiles.length){toast("Please select at least one file first.","error");return}
   const model=document.getElementById("uploadModel").value,key=document.getElementById("uploadRecord").value,note=document.getElementById("uploadNote").value.trim(),revision=document.getElementById("uploadRevision")?.value.trim()||"",item=data[model]?.items?.[key];
   if(!item){toast("Upload target is not available.","error");return}
   const selector=document.getElementById("uploadSubPart"),sourceValue=selector?.value||"";
   let storageKey=`${model}_${key}`,targetLabel=item.title,source=null;
-  if(Array.isArray(item.mergedSources)&&item.mergedSources.length){source=item.mergedSources.find(x=>String(x.key)===String(sourceValue))||item.mergedSources[0];storageKey=`${model}_${source.key}`;targetLabel=`${item.title} / ${source.name}`;}
+  if(Array.isArray(item.mergedSources)&&item.mergedSources.length){source=item.mergedSources.find(x=>String(x.key)===String(sourceValue))||item.mergedSources[0];storageKey=`${model}_${source.key}`;targetLabel=`${item.title} / ${source.name}`}
   else if(Array.isArray(item.subItems)&&item.subItems.length){const idx=Number(sourceValue);source=item.subItems[idx];if(!source){toast("Select a document entry first.","error");return}storageKey=keyForSubpart(model,key,source,idx);targetLabel=`${item.title} / ${source.name}`}
-  const files=[...selectedFiles],btn=document.getElementById("saveUploadBtn"),progressWrap=document.getElementById("uploadProgressWrap"),progress=document.getElementById("uploadProgress"),status=document.getElementById("uploadStatus");
-  btn.disabled=true;progressWrap.classList.remove("hidden");
+  const files=[...selectedFiles],btn=document.getElementById("saveUploadBtn"),progressWrap=document.getElementById("uploadProgressWrap"),progress=document.getElementById("uploadProgress"),status=document.getElementById("uploadStatus");btn.disabled=true;progressWrap.classList.remove("hidden");progress.style.width="0%";
   try{
-    for(let index=0;index<files.length;index++){
-      const file=files[index];
-      const pctBase=Math.round(index/files.length*100);progress.style.width=`${pctBase}%`;if(status)status.textContent=`Uploading ${index+1}/${files.length}: ${file.name}`;
-      const saved=await saveFileVersion(storageKey,file,{revision:revision||`Batch ${index+1}/${files.length}`,note},(pct)=>{progress.style.width=`${Math.round((index*100+pct)/files.length)}%`;});
-      if(source){source.uploadedFilename=file.name;source.uploadedSize=formatBytes(file.size);source.updatedAt=new Date().toISOString();if(note)source.detail=note;}
-      else {item.filename=file.name;item.size=formatBytes(file.size);item.uploadedFilename=file.name;item.uploadedSize=formatBytes(file.size);if(note)item.tags=[note];}
+    for(let i=0;i<files.length;i++){
+      const file=files[i];if(status)status.textContent=`Saving ${i+1} of ${files.length}: ${file.name}`;
+      const saved=await saveFileVersion(storageKey,file,{revision,note},(pct,part,total)=>{progress.style.width=`${pct}%`;if(status)status.textContent=`Saving ${file.name}… ${pct}% (${part}/${total} chunks)`});
+      if(source){source.uploadedFilename=file.name;source.uploadedSize=formatBytes(file.size);source.updatedAt=new Date().toISOString();if(note)source.detail=note}
+      else {item.filename=file.name;item.size=formatBytes(file.size);item.uploadedFilename=file.name;item.uploadedSize=formatBytes(file.size);if(note)item.tags=[note]}
       await addAudit("UPLOAD",{model,key,subpart:source?.name||"",filename:file.name,size:file.size,versionKey:saved.key});
     }
-    saveData();
-    if(status)status.textContent=`${files.length} file${files.length===1?"":"s"} uploaded successfully.`;
-    expandedCards.add(key);await refreshUploadedFlags(currentModel);renderAll();closeModal("uploadModal");toast(`${files.length} file${files.length===1?"":"s"} saved to ${targetLabel}.`,`success`);
-    selectedFiles=[];document.getElementById("uploadForm").reset();document.getElementById("uploadModel").value=currentModel;populateUploadRecords(currentModel);document.getElementById("fileName").textContent="Drop file here or click to browse";updateSubpartSelector();
-  }catch(err){console.error("File upload failed",err);if(status)status.textContent="Upload failed. No further files were committed.";toast("Could not save the file to IndexedDB. Check available browser storage and try again.","error")}finally{btn.disabled=false;setTimeout(()=>progressWrap.classList.add("hidden"),300)}
+    saveData();expandedCards.add(key);await refreshUploadedFlags(currentModel);renderAll();closeModal("uploadModal");toast(`${files.length} file${files.length===1?"":"s"} saved to ${targetLabel}.`,`success`);resetSelectedFile();document.getElementById("uploadModel").value=currentModel;populateUploadRecords(currentModel);updateSubpartSelector();
+  }catch(err){console.error("Large file upload failed",err);if(status)status.textContent="Upload failed. The file was not committed.";toast("Could not save the file to IndexedDB. Check available browser storage and try again.","error")}finally{btn.disabled=false;setTimeout(()=>progressWrap.classList.add("hidden"),300)}
 }
 
 async function downloadRecord(storageKey,filename){
