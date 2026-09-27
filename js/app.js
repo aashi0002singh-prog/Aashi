@@ -2,13 +2,11 @@ import {MODEL_ORDER,RECORD_ORDER,CATEGORIES,CATEGORY_COLORS,createDefaultData} f
 import {saveFile,saveFileVersion,getFile,getFiles,listFileVersions,listFileVersionsForBases,deleteAllFiles,deleteAuditLogs,addAudit,migrateFilePrefix,deleteFilePrefix} from "./database.js";
 import {toast,escapeHtml,formatBytes,downloadBlob,downloadText} from "./ui.js";
 
-const STORAGE_KEY="MOBILE_RND_DB_DATA_V10";
+const STORAGE_KEY="MOBILE_RND_DB_DATA_V1";
 const PREF_KEY="MOBILE_RND_PREFS_V3";
 const AUTH_KEY="RND_AUTH_V3";
 const MAX_FILE_SIZE=500*1024*1024;
 const ALLOWED=["pdf","xlsx","xls","zip","bin","dwg","csv","doc","docx","ppt","pptx","txt","log","md","jpg","jpeg","png","webp","gif","svg"];
-const LEGACY_RECORD_MAP={S:"A",B:"B",I:"C",P:"D",K:"E",L:"F",M:"G",T:"H",C:"I",E:"J",H:"K",F:"L",G:"M",Q:"N",J:"O",A:"P",D:"Q",N:"R",O:"S",R:"U",U:"T",VSWR:"H",HWC:"T"};
-const HARDWARE_DEFAULT={title:"Hardware Checklist",category:"Specification",icon:"fa-clipboard-check",tags:["Hardware verification","Pre-S sign-off"],filename:"",size:""};
 const CUSTOM_MODELS_KEY="MOBILE_RND_CUSTOM_MODELS_V1";
 const RENAMED_MODELS_KEY="MOBILE_RND_RENAMED_MODELS_V1";
 function customModelCodes(){return readJson(CUSTOM_MODELS_KEY,[]).map(x=>String(x?.code||"").trim().toUpperCase()).filter(Boolean)}
@@ -16,150 +14,6 @@ function renamedModelMap(){return readJson(RENAMED_MODELS_KEY,{});}
 function modelList(){const renamed=renamedModelMap();return [...MODEL_ORDER,...customModelCodes()].filter((m,i,a)=>a.indexOf(m)===i&&!renamed[m]&&data?.[m])}
 
 function clone(value){return structuredClone(value)}
-
-function migrateRecordKeys(raw){
-  const defaults=createDefaultData();
-  if(!raw||typeof raw!=="object") return defaults;
-  let changed=false;
-  const renamed=renamedModelMap();
-  for(const [oldCode,newCode] of Object.entries(renamed)){
-    if(raw[oldCode]&&!raw[newCode]){raw[newCode]=raw[oldCode];delete raw[oldCode];changed=true;}
-    else if(raw[oldCode]&&raw[newCode]){delete raw[oldCode];changed=true;}
-  }
-  const modelCodes=[...MODEL_ORDER,...customModelCodes()].filter((m,i,a)=>a.indexOf(m)===i&&!renamed[m]);
-  for(const model of modelCodes){
-    const defaultModel=defaults[model]||defaults.A576;
-    if(!raw[model]||typeof raw[model]!=="object"){
-      raw[model]=clone(defaultModel); changed=true; continue;
-    }
-    const block=raw[model];
-    if(!block.meta) { block.meta=clone(defaultModel.meta); changed=true; }
-    if(!block.items||typeof block.items!=="object") { block.items=clone(defaultModel.items); changed=true; continue; }
-    const items=block.items;
-    const legacyLayout=items.A?.title==="Basic Model Details" || items.S?.title==="Block Diagram" || items.P?.title==="MIPI Table";
-    const v632KeyPartsLayout=items.I?.title==="Process Flow Chart" && items.O?.title==="Key Parts Details";
-    const v641OldLayout=items.P?.title==="Key Parts Details" && items.M?.title==="Base Model Defect History" && items.O?.title==="SW Log Process";
-    const v64OldLayout=items.I?.title==="Key Parts Details" && items.P?.title==="Basic Model Details";
-    if(v641OldLayout){
-      const old={...items};
-      const reordered={};
-      ["A","B","C","D","E","F","G","H","I","J","K","L"].forEach(k=>reordered[k]=old[k]);
-      reordered.M=clone(old.P);
-      reordered.N=clone(old.M);
-      reordered.O=clone(old.N);
-      reordered.P=clone(old.O);
-      ["Q","R","S","T","U","V"].forEach(k=>reordered[k]=old[k]);
-      block.items=reordered; changed=true;
-    }
-    else if(v64OldLayout){
-      const old={...items};
-      const reordered={};
-      ["A","B","C","D","E","F","G","H"].forEach(k=>reordered[k]=old[k]);
-      reordered.I=clone(defaultModel.items.I);
-      reordered.J=clone(old.J); reordered.K=clone(old.K); reordered.L=clone(old.L); reordered.M=clone(old.M); reordered.N=clone(old.N); reordered.O=clone(old.O);
-      reordered.P=clone(old.I); reordered.Q=clone(old.P); reordered.R=clone(old.Q); reordered.S=clone(old.R); reordered.T=clone(old.S); reordered.U=clone(old.T); reordered.V=clone(old.U);
-      block.items=reordered; changed=true;
-    }
-    else if(v632KeyPartsLayout){
-      const reordered={};
-      for(const key of RECORD_ORDER) reordered[key]=items[key];
-      reordered.I=clone(items.O);
-      reordered.J=clone(items.I);
-      reordered.K=clone(items.J);
-      reordered.L=clone(items.K);
-      reordered.M=clone(items.L);
-      reordered.N=clone(items.M);
-      reordered.O=clone(items.N);
-      block.items=reordered;
-      changed=true;
-    }
-    else if(legacyLayout){
-      const migrated={};
-      for(const [oldKey,newKey] of Object.entries(LEGACY_RECORD_MAP)){
-        if(items[oldKey] && !migrated[newKey]) migrated[newKey]=clone(items[oldKey]);
-      }
-      block.items=migrated;
-      changed=true;
-    }
-    // V64.2 dashboard restructuring: Schematics are grouped as a section, but
-    // Block Diagram (A), Circuit Diagram (B), and SOC Table (C) remain separate cards.
-    // Preserve each card independently while keeping N/O as the combined defect summary.
-    const legacyA=items.A, legacyB=items.B, legacyC=items.C, legacyN=items.N, legacyO=items.O;
-    // V64.2 schematic integrity: A/B/C must always exist as three independent records.
-    // Recover missing B/C from the canonical defaults without touching their independent file keys.
-    for(const schematicKey of ["A","B","C"]){
-      if(!items[schematicKey]){ items[schematicKey]=clone(defaultModel.items[schematicKey]); changed=true; }
-      items[schematicKey].category="Schematics";
-    }
-    const defaultA=clone(defaultModel.items.A);
-    if(legacyA && !Array.isArray(legacyA.mergedSources)){
-      Object.assign(defaultA,clone(legacyA));
-      if(legacyA.uploadedFilename||legacyA.filename) defaultA.filename=legacyA.uploadedFilename||legacyA.filename;
-      if(legacyA.uploadedSize||legacyA.size) defaultA.size=legacyA.uploadedSize||legacyA.size;
-      if(Array.isArray(legacyA.tags)&&legacyA.tags.length) defaultA.tags=clone(legacyA.tags);
-    }
-    items.A=defaultA;
-    if(items.N?.title!==defaultModel.items.N?.title || !Array.isArray(items.N?.mergedSources)){
-      const merged=clone(defaultModel.items.N);
-      const sourceByKey=new Map((merged.mergedSources||[]).map(x=>[x.key,x]));
-      for(const old of [legacyN,legacyO]){
-        const oldKey=old===legacyN?"N":"O";
-        const target=sourceByKey.get(oldKey); if(!target||!old) continue;
-        Object.assign(target,{filename:old.uploadedFilename||old.filename||target.filename,size:old.uploadedSize||old.size||target.size});
-        if(Array.isArray(old.tags)&&old.tags.length) target.detail=old.tags.join(" • ");
-      }
-      items.N=merged; changed=true;
-    }
-    // Records removed from the visual information architecture are intentionally no longer rendered.
-    ["M","O","S"].forEach(k=>{if(items[k]){delete items[k];changed=true;}});
-    // V64.1.9 canonical T/U mapping: T = Hardware Checklist, U = Korea Member Details.
-    // Older V64 builds could force the Korea-member record into T, leaving both T and U
-    // with the Hardware Checklist title. Move the record metadata back to its canonical slot.
-    const t=block.items.T, u=block.items.U;
-    const tLooksLikeKorea=String(t?.title||"").trim()==="Korea Member Details" || (t?.tags||[]).some(x=>String(x).toLowerCase().includes("korea member")) || String(t?.filename||"").includes("Korea_HQ_Roster");
-    const uLooksLikeHardware=String(u?.title||"").trim()==="Hardware Checklist" || (u?.tags||[]).some(x=>String(x).toLowerCase().includes("hardware verification"));
-    if(tLooksLikeKorea && uLooksLikeHardware){
-      block.items.T=clone(u);
-      block.items.U=clone(t);
-      changed=true;
-    }
-    if(block.items.HWC && !block.items.T){
-      block.items.T={...clone(block.items.HWC),...clone(HARDWARE_DEFAULT)};
-      block.items.T.uploadedFilename=block.items.HWC.uploadedFilename||block.items.HWC.filename||"";
-      block.items.T.uploadedSize=block.items.HWC.uploadedSize||block.items.HWC.size||"";
-      delete block.items.HWC; changed=true;
-    }
-    if(block.items.VSWR && !block.items.H){
-      block.items.H={...clone(defaultModel.items.H),...clone(block.items.VSWR)};
-      delete block.items.VSWR; changed=true;
-    }
-    for(const key of RECORD_ORDER){
-      if(!block.items[key]){ block.items[key]=clone(defaultModel.items[key]); changed=true; }
-      const d=defaultModel.items[key];
-      const item=block.items[key];
-      if(item.title!==d.title) { item.title=d.title; changed=true; }
-      if(item.category!==d.category) { item.category=d.category; changed=true; }
-      if(item.icon!==d.icon) { item.icon=d.icon; changed=true; }
-      if(key==="T" || key==="U"){
-        const canonicalTags=clone(d.tags||[]);
-        if(JSON.stringify(item.tags||[])!==JSON.stringify(canonicalTags)){ item.tags=canonicalTags; changed=true; }
-      } else if(!Array.isArray(item.tags)) { item.tags=clone(d.tags||[]); changed=true; }
-      if(key==="T" && item.title!==HARDWARE_DEFAULT.title){ item.title=HARDWARE_DEFAULT.title; item.category=HARDWARE_DEFAULT.category; item.icon=HARDWARE_DEFAULT.icon; item.tags=clone(HARDWARE_DEFAULT.tags); changed=true; }
-      if(["A","B","J","M"].includes(key)) {
-        const defaultsSub=Array.isArray(d.subItems)?d.subItems:[];
-        const existingSub=Array.isArray(item.subItems)?item.subItems:[];
-        const byName=new Map(existingSub.filter(Boolean).map(s=>[String(s.name||"").trim().toLowerCase(),s]));
-        const merged=defaultsSub.map(ds=>{
-          const old=byName.get(String(ds.name||"").trim().toLowerCase());
-          return old?{...clone(ds),...clone(old)}:clone(ds);
-        });
-        if(JSON.stringify(item.subItems||[])!==JSON.stringify(merged)){item.subItems=merged;changed=true;}
-      }
-    }
-  }
-  if(changed){try{localStorage.setItem(STORAGE_KEY,JSON.stringify(raw))}catch{} }
-  return raw;
-}
 
 let data=loadData();
 let prefs=loadPrefs();
@@ -179,12 +33,8 @@ let expandedCards=new Set();
 function readJson(key,fallback){try{const value=JSON.parse(localStorage.getItem(key)||"null");return value??fallback}catch{return fallback}}
 function loadData(){
   try{
-    const raw=JSON.parse(localStorage.getItem(STORAGE_KEY)||"null")||createDefaultData();
-    const renamed=renamedModelMap();
-    for(const [oldCode,newCode] of Object.entries(renamed)){
-      if(raw[oldCode]&&!raw[newCode]){raw[newCode]=raw[oldCode];delete raw[oldCode];}
-      else if(raw[oldCode]&&raw[newCode])delete raw[oldCode];
-    }
+    const stored=JSON.parse(localStorage.getItem(STORAGE_KEY)||"null");
+    const raw=stored&&typeof stored==="object"?stored:createDefaultData();
     const defaults=createDefaultData();
     customModelCodes().forEach(code=>{
       if(!raw[code]){
@@ -198,7 +48,7 @@ function loadData(){
         raw[code]=template;
       }
     });
-    return migrateRecordKeys(raw);
+    return raw;
   }catch{return createDefaultData()}
 }
 function saveData(){localStorage.setItem(STORAGE_KEY,JSON.stringify(data))}
@@ -307,45 +157,6 @@ async function refreshUploadedFlags(model=currentModel){
 
 function subpartId(sub,index){return String(sub?.id||sub?.name||`part-${index+1}`).trim().toLowerCase().replace(/[^a-z0-9]+/g,"-").replace(/^-+|-+$/g,"")||`part-${index+1}`}
 function keyForSubpart(model,key,sub,index){const storageKey=key==="M"?"O":key;return `${model}_${storageKey}_${subpartId(sub,index)}`}
-async function hydrateInlinePreviews(entries){
-  const modelAtStart=currentModel;
-  const expandedKeys=new Set(expandedCards);
-  for(const [key,item] of entries){
-    if(!(expandedKeys.has(key)||activeCategory!=="all")) continue;
-    const host=document.querySelector(`#record-${CSS.escape(key)} [data-inline-preview]`);
-    if(!host) continue;
-    const files=expandedFileMap.get(key)||[];
-    const entry=files.find(x=>x.present);
-    if(!entry){host.innerHTML=`<div class="inline-preview-empty"><i class="fa-solid fa-file-circle-xmark"></i><span>No uploaded document is available for inline preview.</span></div>`;continue;}
-    try{
-      const record=await getFile(entry.storageKey);
-      if(modelAtStart!==currentModel||!expandedCards.has(key)) continue;
-      if(!record?.blob){host.innerHTML=`<div class="inline-preview-empty"><i class="fa-solid fa-file-circle-xmark"></i><span>Document metadata is configured, but no stored binary is available.</span></div>`;continue;}
-      const blob=record.blob;
-      const previousUrl=host.dataset.objectUrl;if(previousUrl)URL.revokeObjectURL(previousUrl);
-      const name=entry.filename||record.filename||"document";
-      const ext=(name.split(".").pop()||"").toLowerCase();
-      const url=URL.createObjectURL(blob);
-      host.dataset.objectUrl=url;
-      if(blob.type?.startsWith("image/")||["png","jpg","jpeg","webp","gif","svg"].includes(ext)){
-        host.innerHTML=`<div class="inline-preview-toolbar"><span><i class="fa-solid fa-image"></i> IMAGE PREVIEW</span><span>${escapeHtml(name)}</span></div><div class="inline-preview-canvas"><img src="${url}" alt="${escapeHtml(name)}" loading="lazy"></div>`;
-      }else if(blob.type==="application/pdf"||ext==="pdf"){
-        host.innerHTML=`<div class="inline-preview-toolbar"><span><i class="fa-solid fa-file-pdf"></i> PDF PREVIEW</span><span>${escapeHtml(name)}</span></div><iframe class="inline-preview-frame" src="${url}" title="PDF preview of ${escapeHtml(name)}"></iframe>`;
-      }else if(blob.type?.startsWith("text/")||["csv","txt","log"].includes(ext)){
-        const text=await blob.text();
-        if(modelAtStart!==currentModel||!expandedCards.has(key)) return;
-        host.innerHTML=`<div class="inline-preview-toolbar"><span><i class="fa-solid fa-file-lines"></i> TEXT PREVIEW</span><span>${escapeHtml(name)}</span></div><pre class="inline-preview-text">${escapeHtml(text.slice(0,120000))}</pre>`;
-      }else{
-        const typeLabel=ext?ext.toUpperCase():"FILE";
-        host.innerHTML=`<div class="inline-preview-unsupported"><i class="fa-solid fa-file-circle-check"></i><div><strong>${escapeHtml(typeLabel)} document ready</strong><span>Browser inline rendering is not available for this engineering file type. Use Download to inspect the native document.</span></div></div>`;
-      }
-    }catch(err){
-      console.error("Inline preview failed",err);
-      host.innerHTML=`<div class="inline-preview-empty"><i class="fa-solid fa-triangle-exclamation"></i><span>Unable to load the inline preview. Use Preview or Download.</span></div>`;
-    }
-  }
-}
-
 function renderVersionHistory(entry,color){
   if(!entry.present||!entry.versions?.length)return "";
   const rows=[...entry.versions].reverse().map(v=>`<div class="version-row"><span class="version-badge">${escapeHtml(v.versionLabel||"Version")}</span><span class="version-name" title="${escapeHtml(v.filename||"")}">${escapeHtml(v.filename||"Uploaded document")}</span><span class="version-size">${escapeHtml(v.size||"—")}</span><span class="version-note">${escapeHtml(v.note||"")}</span><span class="version-actions"><button type="button" class="mini-file-action" style="--action-color:${color}" data-preview-file="${escapeHtml(v.key)}" data-filename="${escapeHtml(v.filename||"")}" title="Preview"><i class="fa-solid fa-eye"></i></button><button type="button" class="mini-file-action" style="--action-color:${color}" data-download="${escapeHtml(v.key)}" data-filename="${escapeHtml(v.filename||"")}" title="Download"><i class="fa-solid fa-download"></i></button></span></div>`).join("");
@@ -400,11 +211,7 @@ function renderCards(){
   const hasSecondaryFilters=Boolean(query||favoritesOnly||sortMode!=="default");
   document.getElementById("activeFilters").classList.toggle("hidden",!hasSecondaryFilters);
   document.getElementById("activeFilters").innerHTML=`${query?`<span class="filter-chip">Search: ${escapeHtml(query)}</span>`:""}${favoritesOnly?`<span class="filter-chip">Favorites only</span>`:""}${sortMode!=="default"?`<span class="filter-chip">Sort: ${escapeHtml(sortMode)}</span>`:""}`;
-  // V64.2 unified engineering grid: Schematics is a filter/category only.
-  // A = Block Diagram, B = Circuit Diagram, C = SOC Table remain three
-  // independent cards and participate in the same unified grid as every record.
-  grid.innerHTML=entries.map(([k,i])=>renderCard(k,i)).join("") || `<div class="empty-state"><i class="fa-solid fa-filter-circle-xmark"></i><h3 class="font-bold mt-3">No records found</h3><p class="text-xs mt-1">Adjust the search or filters.</p><button class="btn btn-light mt-3" data-clear-filters>Clear filters</button></div>`;
-  if(entries.length) hydrateInlinePreviews(entries);
+    grid.innerHTML=entries.map(([k,i])=>renderCard(k,i)).join("") || `<div class="empty-state"><i class="fa-solid fa-filter-circle-xmark"></i><h3 class="font-bold mt-3">No records found</h3><p class="text-xs mt-1">Adjust the search or filters.</p><button class="btn btn-light mt-3" data-clear-filters>Clear filters</button></div>`;
 }
 function renderCard(key,item){
   const color=CATEGORY_COLORS[item.category]||CATEGORY_COLORS.Specification;
@@ -417,8 +224,126 @@ function renderCard(key,item){
   const expanded=groupView||expandedCards.has(key);
   const statusClass=presentCount===0?"all-missing":presentCount===totalSlots?"all-present":"partial";
   const statusText=presentCount===0?"DOCUMENTS MISSING":presentCount===totalSlots?"DOCUMENTS PRESENT":"DOCUMENTS PARTIAL";
-  const detail=expanded?`<div class="record-expanded-panel"><div class="expanded-summary"><span><i class="fa-solid fa-database"></i> ${escapeHtml(statusText)}</span><span><i class="fa-solid fa-layer-group"></i> ${versionTotal} uploaded version${versionTotal===1?"":"s"}</span><span><i class="fa-solid fa-circle-info"></i> Document details</span></div><div class="inline-preview" data-inline-preview><div class="inline-preview-loading"><i class="fa-solid fa-spinner"></i><span>Loading document preview…</span></div></div><div class="expanded-file-list">${renderExpandedFiles(key,item)}</div><div class="expanded-footer"><button class="text-action" data-copy-record="${escapeHtml(key)}"><i class="fa-regular fa-copy"></i> Copy details</button><button class="text-action" data-link-record="${escapeHtml(key)}"><i class="fa-solid fa-link"></i> Copy link</button><button class="text-action" data-open-record="${escapeHtml(key)}"><i class="fa-solid fa-up-right-and-down-left-from-center"></i> Open details</button></div></div>`:"";
-  return `<article id="record-${escapeHtml(key)}" class="record-card ${expanded?"is-expanded":""} ${groupView?"is-group-view":""} ${isFav?"is-favorite":""}" style="--record-accent:${color}" data-record="${escapeHtml(key)}" tabindex="0" aria-expanded="${expanded}"><div class="record-stripe" style="background:${color}"></div><div class="record-collapsed-face"><div class="record-icon" style="background:${color}"><i class="fa-solid ${escapeHtml(item.icon)}"></i></div><div class="record-title-only">${escapeHtml(item.title)}</div><div class="record-status ${statusClass}"><span class="status-dot ${presentCount?"present":"missing"}"></span><span>${escapeHtml(statusText)}</span></div><button class="favorite-btn ${isFav?"active":""}" data-favorite="${escapeHtml(favKey)}" title="Favorite"><i class="fa-${isFav?"solid":"regular"} fa-star"></i></button><span class="expand-cue"><i class="fa-solid fa-chevron-down"></i></span></div>${detail}</article>`;
+  const summary=entries.length
+    ? `${presentCount}/${totalSlots} document${totalSlots===1?"":"s"} present · ${versionTotal} version${versionTotal===1?"":"s"}`
+    : "No document slots configured";
+  const detail=expanded?`<div class="record-expanded-panel">
+    <div class="record-detail-summary">
+      <div><span class="detail-label">STATUS</span><strong class="${statusClass}">${escapeHtml(statusText)}</strong></div>
+      <div><span class="detail-label">DOCUMENTS</span><strong>${presentCount}/${totalSlots}</strong></div>
+      <div><span class="detail-label">VERSIONS</span><strong>${versionTotal}</strong></div>
+    </div>
+    <div class="expanded-file-list">${renderExpandedFiles(key,item)}</div>
+    <div class="expanded-footer">
+      <button class="text-action primary" data-preview-record="${escapeHtml(key)}"><i class="fa-solid fa-eye"></i> Preview</button>
+      <button class="text-action" data-copy-record="${escapeHtml(key)}"><i class="fa-regular fa-copy"></i> Copy details</button>
+      <button class="text-action" data-link-record="${escapeHtml(key)}"><i class="fa-solid fa-link"></i> Copy link</button>
+    </div>
+  </div>`:"";
+  return `<article id="record-${escapeHtml(key)}" class="record-card ${expanded?"is-expanded":""} ${groupView?"is-group-view":""} ${isFav?"is-favorite":""}" style="--record-accent:${color}" data-record="${escapeHtml(key)}" tabindex="0" aria-expanded="${expanded}">
+    <div class="record-stripe" style="background:${color}"></div>
+    <div class="record-collapsed-face">
+      <div class="record-icon" style="background:${color}"><i class="fa-solid ${escapeHtml(item.icon)}"></i></div>
+      <div class="record-card-identity">
+        <div class="record-title-only" title="${escapeHtml(item.title)}">${escapeHtml(item.title)}</div>
+        <div class="record-card-subtitle">${escapeHtml(item.category)} · ${escapeHtml(summary)}</div>
+      </div>
+      <div class="record-status ${statusClass}"><span class="status-dot ${presentCount?"present":"missing"}"></span><span>${escapeHtml(statusText)}</span></div>
+      <button class="favorite-btn ${isFav?"active":""}" data-favorite="${escapeHtml(favKey)}" title="Favorite" aria-label="Favorite"><i class="fa-${isFav?"solid":"regular"} fa-star"></i></button>
+      <span class="expand-cue"><i class="fa-solid fa-chevron-down"></i></span>
+    </div>
+    <div class="record-card-actions">
+      <button type="button" class="card-action card-preview-action" data-preview-record="${escapeHtml(key)}"><i class="fa-solid fa-eye"></i><span>Preview</span></button>
+      ${presentCount?`<button type="button" class="card-action" data-download-latest="${escapeHtml(key)}"><i class="fa-solid fa-download"></i><span>Download</span></button>`:""}
+      ${isAdmin?`<button type="button" class="card-action" data-open-upload="${escapeHtml(key)}" data-subpart-index=""><i class="fa-solid fa-cloud-arrow-up"></i><span>Upload</span></button>`:""}
+    </div>
+    ${detail}
+  </article>`;
+}
+
+async function previewRecord(key){
+  const item=currentItems()?.[key];
+  if(!item)return;
+  const entries=expandedFileMap.get(key)||[];
+  const title=document.getElementById("filePreviewTitle");
+  const meta=document.getElementById("filePreviewMeta");
+  const body=document.getElementById("filePreviewBody");
+  if(!body)return;
+  const previousUrl=body.dataset.objectUrl;
+  if(previousUrl)URL.revokeObjectURL(previousUrl);
+  delete body.dataset.objectUrl;
+  const color=CATEGORY_COLORS[item.category]||CATEGORY_COLORS.Specification;
+  title.textContent=`${item.title} — Preview`;
+  meta.textContent=`${currentModel} · ${item.category} · ${entries.filter(x=>x.present).length}/${entries.length} documents present`;
+  body.innerHTML=`<div class="record-preview-workspace">
+    <aside class="record-preview-info">
+      <div class="preview-section-title">RECORD INFORMATION</div>
+      <div class="preview-info-grid">
+        <span>Model</span><strong>${escapeHtml(currentModel)}</strong>
+        <span>Record</span><strong>${escapeHtml(key)}</strong>
+        <span>Category</span><strong>${escapeHtml(item.category)}</strong>
+        <span>Status</span><strong>${escapeHtml(item.status||"Engineering record")}</strong>
+        <span>Documents</span><strong>${entries.filter(x=>x.present).length} / ${entries.length}</strong>
+        <span>Versions</span><strong>${entries.reduce((n,x)=>n+(x.versionCount||0),0)}</strong>
+      </div>
+      <div class="preview-section-title">FILES</div>
+      <div class="preview-file-list">
+        ${entries.length?entries.map((entry,i)=>`<button type="button" class="preview-file-item ${entry.present?"present":"missing"}" data-preview-slot="${i}">
+          <span class="preview-file-icon"><i class="fa-solid ${entry.present?"fa-file-circle-check":"fa-file-circle-xmark"}"></i></span>
+          <span class="preview-file-copy"><strong>${escapeHtml(entry.name)}</strong><small>${escapeHtml(entry.present?entry.filename:"No uploaded document")}</small></span>
+          <span class="preview-file-state">${entry.present?escapeHtml(entry.size):"MISSING"}</span>
+        </button>`).join(""):"<div class='preview-empty'>No document slots configured.</div>"}
+      </div>
+      <div class="preview-bottom-actions">
+        <button type="button" class="btn btn-dark" id="previewDownloadAll"><i class="fa-solid fa-download"></i> Download All Files</button>
+      </div>
+    </aside>
+    <section class="record-preview-viewer">
+      <div class="preview-viewer-head"><span id="previewViewerLabel">Select a file</span><span id="previewViewerMeta">Preview</span></div>
+      <div id="previewViewerCanvas" class="preview-viewer-canvas"><div class="preview-placeholder"><i class="fa-solid fa-eye"></i><strong>Select a file from the list</strong><span>Preview is isolated from the dashboard card so the card layout remains stable.</span></div></div>
+    </section>
+  </div>`;
+  document.getElementById("filePreviewModal")?.classList.remove("hidden");
+  document.getElementById("previewDownloadAll")?.addEventListener("click",()=>downloadAllRecordFiles(key));
+  body.querySelectorAll("[data-preview-slot]").forEach(btn=>btn.addEventListener("click",()=>previewRecordSlot(key,Number(btn.dataset.previewSlot))));
+  const firstPresent=entries.findIndex(x=>x.present);
+  if(firstPresent>=0)await previewRecordSlot(key,firstPresent);
+}
+
+async function previewRecordSlot(key,index){
+  const entries=expandedFileMap.get(key)||[];
+  const entry=entries[index];
+  const canvas=document.getElementById("previewViewerCanvas");
+  const label=document.getElementById("previewViewerLabel");
+  const meta=document.getElementById("previewViewerMeta");
+  if(!canvas||!entry)return;
+  document.querySelectorAll(".preview-file-item").forEach((el,i)=>el.classList.toggle("active",i===index));
+  if(!entry.present){label.textContent=entry.name;meta.textContent="No uploaded file";canvas.innerHTML=`<div class="preview-placeholder"><i class="fa-solid fa-file-circle-xmark"></i><strong>No file uploaded</strong><span>This document slot is currently missing.</span></div>`;return;}
+  try{
+    const record=await getFile(entry.storageKey);
+    if(!record?.blob){canvas.innerHTML=`<div class="preview-placeholder"><i class="fa-solid fa-triangle-exclamation"></i><strong>Stored binary unavailable</strong><span>The document metadata exists but the binary is not available.</span></div>`;return;}
+    const name=record.filename||entry.filename||"document",ext=name.split(".").pop().toLowerCase(),url=URL.createObjectURL(record.blob);
+    const body=document.getElementById("filePreviewBody");const previous=body?.dataset?.objectUrl;if(previous)URL.revokeObjectURL(previous);if(body)body.dataset.objectUrl=url;
+    label.textContent=name;meta.textContent=`${entry.versionLabel||"Latest"} · ${entry.size||formatBytes(record.size||record.blob.size)}`;
+    if(record.blob.type?.startsWith("image/")||["png","jpg","jpeg","webp","gif","svg"].includes(ext))canvas.innerHTML=`<img class="record-preview-image" src="${url}" alt="${escapeHtml(name)}">`;
+    else if(record.blob.type==="application/pdf"||ext==="pdf")canvas.innerHTML=`<iframe class="record-preview-frame" src="${url}" title="PDF preview"></iframe>`;
+    else if(record.blob.type?.startsWith("text/")||["csv","txt","log","md"].includes(ext)){const text=await record.blob.text();canvas.innerHTML=`<pre class="record-preview-text">${escapeHtml(text.slice(0,250000))}</pre>`;}
+    else canvas.innerHTML=`<div class="preview-placeholder"><i class="fa-solid fa-file-lines"></i><strong>${escapeHtml(ext.toUpperCase()||"FILE")} document</strong><span>Browser preview is unavailable for this file type.</span><button type="button" class="btn btn-dark" id="previewSelectedDownload"><i class="fa-solid fa-download"></i> Download File</button></div>`;
+    document.getElementById("previewSelectedDownload")?.addEventListener("click",()=>downloadRecord(entry.storageKey,name));
+  }catch(err){console.error("Record preview failed",err);canvas.innerHTML=`<div class="preview-placeholder"><i class="fa-solid fa-triangle-exclamation"></i><strong>Preview failed</strong><span>Use Download File to open the original document.</span></div>`}
+}
+
+async function downloadAllRecordFiles(key){
+  const entries=expandedFileMap.get(key)||[];
+  const present=entries.filter(x=>x.present);
+  if(!present.length){toast("No uploaded files are available for this record.","info");return;}
+  for(const entry of present){await downloadRecord(entry.storageKey,entry.filename);}
+  toast(`${present.length} file${present.length===1?"":"s"} queued for download.`,"success");
+}
+
+async function downloadLatestForRecord(key){
+  const entry=(expandedFileMap.get(key)||[]).find(x=>x.present);
+  if(entry) await downloadRecord(entry.storageKey,entry.filename);
 }
 
 function renderAuth(){const slot=document.getElementById("adminAuthSlot");slot.innerHTML=isAdmin?`<div class="flex gap-1"><button id="uploadBtn" class="btn btn-cyan"><i class="fa-solid fa-cloud-arrow-up"></i> Upload</button><button id="addModelBtn" class="btn btn-dark"><i class="fa-solid fa-plus"></i> Model</button><button id="editModelBtn" class="btn btn-dark"><i class="fa-solid fa-pen-to-square"></i> Edit</button><button id="logoutBtn" class="header-icon-btn" title="Logout"><i class="fa-solid fa-right-from-bracket"></i></button></div>`:`<button id="loginBtn" class="btn btn-dark"><i class="fa-solid fa-lock"></i> Admin • Shivam</button>`;document.getElementById(isAdmin?"uploadBtn":"loginBtn").addEventListener("click",()=>isAdmin?openUploadModal():openModal("loginModal"));if(isAdmin)document.getElementById("addModelBtn")?.addEventListener("click",openAddModelModal);document.getElementById("editModelBtn")?.addEventListener("click",openEditModelModal);if(isAdmin)document.getElementById("logoutBtn").addEventListener("click",()=>{isAdmin=false;sessionStorage.removeItem(AUTH_KEY);renderAuth();renderCards();document.dispatchEvent(new Event("rnd-auth-changed"));toast("Admin session ended.","info")})}
@@ -485,7 +410,9 @@ function bindEvents(){
   document.getElementById("cardsGrid").addEventListener("click",e=>{
     const up=e.target.closest("[data-open-upload]");if(up){openUploadModal(up.dataset.openUpload,up.dataset.subpartIndex||"");return}
     const fav=e.target.closest("[data-favorite]");if(fav){toggleFavorite(fav.dataset.favorite);return}
+    const previewRecordBtn=e.target.closest("[data-preview-record]");if(previewRecordBtn){previewRecord(previewRecordBtn.dataset.previewRecord);return}
     const preview=e.target.closest("[data-preview-file]");if(preview){previewStoredFile(preview.dataset.previewFile,preview.dataset.filename);return}
+    const latest=e.target.closest("[data-download-latest]");if(latest){downloadLatestForRecord(latest.dataset.downloadLatest);return}
     const d=e.target.closest("[data-download]");if(d){downloadRecord(d.dataset.download,d.dataset.filename);return}
     const o=e.target.closest("[data-open-record]");if(o){openRecord(o.dataset.openRecord);openPresentation(o.dataset.openRecord);return}
     const c=e.target.closest("[data-copy-record]");if(c){copyRecord(c.dataset.copyRecord);return}
