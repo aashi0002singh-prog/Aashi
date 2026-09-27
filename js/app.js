@@ -33,22 +33,44 @@ function readJson(key,fallback){try{const value=JSON.parse(localStorage.getItem(
 function loadData(){
   try{
     const stored=JSON.parse(localStorage.getItem(STORAGE_KEY)||"null");
-    const raw=stored&&typeof stored==="object"?stored:createDefaultData();
     const defaults=createDefaultData();
-    customModelCodes().forEach(code=>{
-      if(!raw[code]){
-        const template=clone(defaults.A576);
-        template.meta={...template.meta,name:code,modelYear:"—",sielHwPic:"—",rfNetwork:"—"};
-        for(const item of Object.values(template.items)){
-          if(item.filename)item.filename=item.filename.replaceAll("A576",code);
-          item.subItems?.forEach(sub=>{if(sub.filename)sub.filename=sub.filename.replaceAll("A576",code)});
-          item.mergedSources?.forEach(src=>{if(src.filename)src.filename=src.filename.replaceAll("A576",code)});
-        }
-        raw[code]=template;
+    const raw=stored&&typeof stored==="object"?stored:{};
+    const normalized={};
+    const modelCodes=[...new Set([...MODEL_ORDER,...customModelCodes(),...Object.keys(raw).filter(k=>raw[k]?.meta)])];
+
+    for(const code of modelCodes){
+      const saved=raw[code]&&typeof raw[code]==="object"?raw[code]:{};
+      const template=defaults[code]||clone(defaults.A576);
+      const templateItems=template.items||{};
+      const savedItems=saved.items&&typeof saved.items==="object"?saved.items:{};
+      const items={};
+
+      for(const key of Object.keys(templateItems)){
+        const baseItem=templateItems[key]||{};
+        const savedItem=savedItems[key]&&typeof savedItems[key]==="object"?savedItems[key]:{};
+        items[key]={...clone(baseItem),...clone(savedItem)};
+        if(baseItem.subItems && !Array.isArray(savedItem.subItems)) items[key].subItems=clone(baseItem.subItems);
+        if(baseItem.tags && !Array.isArray(savedItem.tags)) items[key].tags=clone(baseItem.tags);
       }
-    });
-    return raw;
-  }catch{return createDefaultData()}
+
+      for(const key of Object.keys(savedItems)){
+        if(!items[key]) items[key]=clone(savedItems[key]);
+      }
+
+      const meta={...clone(template.meta||{}),...clone(saved.meta||{})};
+      if(!meta.name) meta.name=`Galaxy ${code}`;
+      normalized[code]={meta,items};
+    }
+
+    // Repair legacy/incomplete localStorage records in-place. This preserves
+    // uploaded document metadata while restoring any missing default records.
+    const normalizedJson=JSON.stringify(normalized);
+    if(JSON.stringify(raw)!==normalizedJson) localStorage.setItem(STORAGE_KEY,normalizedJson);
+    return normalized;
+  }catch(error){
+    console.warn("Stored dashboard data could not be normalized; using defaults.",error);
+    return createDefaultData();
+  }
 }
 function saveData(){localStorage.setItem(STORAGE_KEY,JSON.stringify(data))}
 function loadPrefs(){try{return {...{theme:"light",accent:"cyan",density:"comfortable",motion:true},...JSON.parse(localStorage.getItem(PREF_KEY)||"{}")}}catch{return {theme:"light",accent:"cyan",density:"comfortable",motion:true}}}
