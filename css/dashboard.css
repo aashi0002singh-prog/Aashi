@@ -31,7 +31,7 @@ body{font-family:Inter,system-ui,sans-serif;background:#f3f6fa}
 @media(max-width:600px){.header-inner{padding-top:8px;padding-bottom:8px}.brand-title{font-size:12px}.model-picker{max-width:115px}.model-picker select{max-width:82px}.header-search{width:150px}.telemetry-grid{grid-template-columns:1fr 1fr}.form-grid-2{grid-template-columns:1fr}.footer-inner{height:auto;padding-top:10px;padding-bottom:10px;flex-direction:column;gap:5px}.settings-danger{flex-direction:column;align-items:stretch}}
 @media(prefers-reduced-motion:reduce){*,*::before,*::after{animation-duration:.01ms!important;transition-duration:.01ms!important;scroll-behavior:auto!important}}
 
-/* v3 workspace customization */
+
 :root{--accent:#0891b2;--accent-soft:#ecfeff;--accent-border:#a5f3fc}
 body{background:#f3f6fa;color:#1e293b;transition:background .2s,color .2s}
 body[data-accent="blue"]{--accent:#2563eb;--accent-soft:#eff6ff;--accent-border:#bfdbfe}
@@ -75,14 +75,14 @@ body[data-density="compact"] .tag{padding:3px 5px}
 @media(max-width:820px){.header-inner{align-items:flex-start;padding-top:10px;padding-bottom:10px;flex-wrap:wrap}.brand{width:100%}.header-actions{width:100%;overflow:auto}.hero-layout{grid-template-columns:1fr}.active-model{border-right:0;border-bottom:1px solid rgba(148,163,184,.16);padding:0 0 12px}.telemetry-grid{grid-template-columns:repeat(2,1fr)}.dashboard-toolbar{align-items:flex-start;flex-direction:column}.toolbar-main{width:100%;flex-direction:column;align-items:flex-start}.category-tabs{width:100%}.toolbar-status{width:100%;justify-content:flex-end}.shortcut-hint{display:none}}
 @media(max-width:560px){.app-container{padding-left:12px;padding-right:12px}.brand-title{font-size:12px}.header-actions{flex-wrap:wrap}.model-picker{flex:1}.header-search{width:100%;order:5}.telemetry-grid{grid-template-columns:1fr}.hero-actions{flex-wrap:wrap}.hero-actions .btn{flex:1}.form-grid-2{grid-template-columns:1fr}.shortcut-grid{grid-template-columns:1fr}.modal-panel{padding:18px}}
 
-/* v4 data-preserving productivity tools */
+
 .data-tools{display:flex;justify-content:space-between;gap:10px;align-items:center;margin:10px 0;padding:9px 10px;background:#fff;border:1px solid #e2e8f0;border-radius:10px;box-shadow:0 4px 14px rgba(15,23,42,.04)}
 .tool-group{display:flex;align-items:center;gap:7px;flex-wrap:wrap}.tool-btn{height:31px;padding:0 9px;border:1px solid #cbd5e1;border-radius:7px;background:#fff;color:#334155;font-size:9px;font-weight:800;cursor:pointer}.tool-btn:hover,.tool-btn.active{border-color:var(--accent);color:var(--accent);background:var(--accent-soft)}.tool-select{display:flex;align-items:center;gap:5px;font-size:9px;font-weight:800;color:#64748b}.tool-select select{height:31px;border:1px solid #cbd5e1;border-radius:7px;background:#fff;padding:0 7px;font-size:9px;font-weight:700;color:#334155}.selection-bar{display:flex;align-items:center;gap:10px;padding:8px 10px;margin:9px 0;background:var(--accent-soft);border:1px solid var(--accent-border);border-radius:9px;font-size:9px;color:#475569}.selection-bar>strong{color:#0f172a}.selection-actions{margin-left:auto;display:flex;gap:6px}.selection-actions .btn{height:28px;padding:0 9px;font-size:9px}.record-check{margin-right:2px;accent-color:var(--accent)}.text-action{border:0;background:none;padding:0;color:#64748b;font-size:9px;font-weight:800;cursor:pointer}.text-action:hover{color:var(--accent)}.record-focus{animation:recordPulse 1.1s ease}.recent-panel{margin:18px 0;padding:12px;background:#fff;border:1px solid #e2e8f0;border-radius:10px}.recent-heading{display:flex;justify-content:space-between;align-items:center;font-size:10px;font-weight:800;color:#334155;margin-bottom:8px}.recent-heading i{color:var(--accent);margin-right:5px}.recent-heading small{font-size:8px;color:#94a3b8}.recent-list{display:flex;gap:7px;overflow:auto}.recent-item{min-width:190px;text-align:left;padding:8px;border:1px solid #e2e8f0;background:#f8fafc;border-radius:8px;cursor:pointer}.recent-item:hover{border-color:var(--accent);background:var(--accent-soft)}.recent-item span,.recent-item strong{display:block}.recent-item span{font:700 8px "JetBrains Mono";color:var(--accent)}.recent-item strong{font-size:9px;color:#334155;margin-top:3px}.presentation-panel{max-width:900px;width:min(900px,calc(100vw - 32px));min-height:420px;display:flex;flex-direction:column;justify-content:space-between}.presentation-content{display:flex;flex-direction:column;justify-content:center;min-height:340px}.presentation-code{font:800 11px "JetBrains Mono";color:var(--accent);letter-spacing:.12em}.presentation-content h2{font-size:32px;line-height:1.1;margin:15px 0 8px;color:#0f172a}.presentation-category{font-size:11px;font-weight:800;color:#64748b;text-transform:uppercase}.presentation-tags{display:flex;gap:6px;flex-wrap:wrap;margin:20px 0}.presentation-file{display:flex;justify-content:space-between;padding:15px;border:1px solid #e2e8f0;background:#f8fafc;border-radius:9px;font-size:10px}.presentation-nav{display:flex;justify-content:space-between;border-top:1px solid #e2e8f0;padding-top:12px}@keyframes recordPulse{0%,100%{box-shadow:0 0 0 0 rgba(8,145,178,0)}30%{box-shadow:0 0 0 5px rgba(8,145,178,.18)}}
 body[data-theme="dark"] .data-tools,body[data-theme="dark"] .recent-panel,body[data-theme="dark"] .tool-btn,body[data-theme="dark"] .tool-select select,body[data-theme="dark"] .recent-item{background:#111827;border-color:#334155;color:#cbd5e1}body[data-theme="dark"] .selection-bar{color:#cbd5e1}body[data-theme="dark"] .selection-bar>strong,body[data-theme="dark"] .recent-heading,body[data-theme="dark"] .recent-item strong,body[data-theme="dark"] .presentation-content h2{color:#f8fafc}body[data-theme="dark"] .presentation-nav{border-color:#243244}body[data-theme="dark"] .compare-table th,body[data-theme="dark"] .compare-table td{border-color:#334155}body[data-theme="dark"] .compare-table thead th,body[data-theme="dark"] .compare-table tr.same td{background:#172033}body[data-theme="dark"] .compare-table tr.different td{background:#30270f}body[data-theme="dark"] .presentation-file{background:#172033;border-color:#334155}
 @media(prefers-color-scheme:dark){body[data-theme="system"] .data-tools,body[data-theme="system"] .recent-panel{background:#111827;border-color:#334155;color:#cbd5e1}body[data-theme="system"] .tool-btn,body[data-theme="system"] .tool-select select,body[data-theme="system"] .recent-item{background:#111827;border-color:#334155;color:#cbd5e1}}
 @media(max-width:700px){.data-tools{align-items:stretch;flex-direction:column}.tool-group{width:100%}.selection-bar{align-items:flex-start;flex-wrap:wrap}.selection-actions{margin-left:0;width:100%}.selection-actions .btn{flex:1}.compare-controls{flex-direction:column}.presentation-content h2{font-size:24px}.recent-item{min-width:170px}}
 
-/* v5 laptop-first engineering workspace: complete active-model row moved to left sidebar */
+
 .workspace-shell{display:grid;grid-template-columns:280px minmax(0,1fr);min-height:calc(100vh - 71px);align-items:stretch;background:#f3f6fa}
 .workspace-shell>.app-container{max-width:none;width:100%;padding:18px 22px 30px;min-width:0}
 .model-sidebar{position:sticky;top:71px;height:calc(100vh - 71px);overflow-y:auto;overflow-x:hidden;background:linear-gradient(180deg,#07101d 0%,#0b1423 55%,#0f1b2d 100%);border-right:1px solid #263449;color:#e2e8f0;padding:18px 15px 12px;display:flex;flex-direction:column;gap:14px;z-index:20;box-shadow:8px 0 24px rgba(2,8,23,.10)}
@@ -104,7 +104,7 @@ body[data-theme="dark"] .workspace-shell{border-color:#1e293b}
 @media(max-width:900px){.workspace-shell{display:block;min-height:0}.model-sidebar{position:relative;top:auto;height:auto;max-height:none;overflow:visible;border-right:0;border-bottom:1px solid #263449;padding:12px;display:block}.sidebar-top{display:grid;grid-template-columns:auto 1fr auto;align-items:center;gap:8px;padding-bottom:10px}.sidebar-kicker{grid-column:1/-1}.sidebar-model-code{font-size:25px;margin:0}.sidebar-model-name{margin:0}.model-sidebar .status-pill{margin:0}.sidebar-telemetry{grid-template-columns:repeat(4,minmax(0,1fr));margin-top:10px}.sidebar-actions{grid-template-columns:repeat(3,1fr);margin-top:8px}.model-nav{margin-top:10px}.model-nav-list{display:flex;overflow:auto}.model-nav-item{min-width:130px}.sidebar-footer{display:none}.workspace-shell>.app-container{padding:14px}.sidebar-collapsed .workspace-shell{display:block}.sidebar-collapsed .model-sidebar{padding:8px}.sidebar-collapsed .sidebar-top,.sidebar-collapsed .sidebar-telemetry,.sidebar-collapsed .sidebar-actions{display:none}.sidebar-collapsed .model-nav{margin:0}.sidebar-collapsed .model-nav-list{display:flex}.sidebar-collapsed .model-nav-item{min-width:75px}}
 @media(max-width:620px){.sidebar-telemetry{grid-template-columns:repeat(2,minmax(0,1fr))}.sidebar-actions{grid-template-columns:1fr}.workspace-shell>.app-container{padding:12px}.dashboard-toolbar{padding:10px}.toolbar-status{display:none}}
 
-/* v6 laptop-first visual refinement */
+
 :root{--sidebar-w:260px;--content-max:1900px;--surface:#fff;--surface-2:#f8fafc;--text:#0f172a;--line:#dbe3ec;--accent:#0891b2;--accent-soft:rgba(8,145,178,.09)}
 body{background:#eef2f6;color:var(--text)}
 .app-container{max-width:var(--content-max);padding-left:24px;padding-right:24px}
@@ -121,16 +121,13 @@ body{background:#eef2f6;color:var(--text)}
 .data-tools{margin:10px 0;padding:8px 10px;border-radius:9px}.tool-btn{height:30px}.tag{font-size:8px;padding:3px 5px}.download-btn{font-size:7px;padding:5px 7px}.text-action{font-size:8px}
 .recent-panel{margin:14px 0 0;padding:10px}.recent-item{min-width:180px}
 .app-footer{margin-top:0}
-/* Desktop/laptop breakpoints */
+
 @media(min-width:1700px){:root{--sidebar-w:280px}}
 @media(max-width:1250px) and (min-width:901px){:root{--sidebar-w:240px}.workspace-shell>.app-container{padding-left:18px;padding-right:18px}.header-search{width:250px}.brand-subtitle{display:none}}
 @media(max-width:900px){.workspace-shell{display:block}.model-sidebar{position:relative;top:auto;width:100%;height:auto;max-height:none;padding:12px;border-right:0;border-bottom:1px solid #263449}.workspace-shell>.app-container{padding:14px}.sidebar-top{display:grid;grid-template-columns:1fr auto auto;align-items:center}.sidebar-kicker{grid-column:1/-1}.sidebar-model-code{font-size:25px}.sidebar-telemetry{grid-template-columns:repeat(4,1fr)}.sidebar-actions{grid-template-columns:repeat(3,1fr)}.model-nav-list{flex-direction:row;overflow:auto}.model-nav-item{min-width:130px}.header-search{width:220px}}
 @media(max-width:600px){.app-header,.header-inner{height:auto;min-height:64px}.header-inner{padding-top:8px;padding-bottom:8px;flex-wrap:wrap}.brand{width:100%}.header-actions{width:100%;justify-content:flex-end}.header-search{width:100%;order:5}.sidebar-telemetry{grid-template-columns:1fr 1fr}.sidebar-actions{grid-template-columns:1fr}}
 
-/* ================================================================
-   v7 LAPTOP WORKSTATION UI
-   Final desktop-first visual layer. Existing data/modules unchanged.
-   ================================================================ */
+
 :root{
   --sidebar-w:258px;
   --page-bg:#eef2f7;
@@ -148,7 +145,7 @@ html,body{min-width:0}
 body{background:var(--page-bg);color:var(--ink);font-size:14px}
 .top-accent{height:2px;animation:none;background:linear-gradient(90deg,#f59e0b,#06b6d4,#6366f1)}
 
-/* Header: compact workstation command bar */
+
 .app-header{height:64px;background:#091321;border-bottom:1px solid #223249;box-shadow:0 5px 18px rgba(2,8,23,.18)}
 .header-inner{height:64px;min-height:64px;padding:0 18px;gap:18px}
 .brand{gap:10px}.brand-mark{width:34px;height:34px;border-radius:9px;background:#0c1a2b;border-color:#29405a;color:#22d3ee}
@@ -158,7 +155,7 @@ body{background:var(--page-bg);color:var(--ink);font-size:14px}
 .search-kbd{top:9px!important;right:9px!important;font-size:7px!important;background:#1b2a3d!important;border-color:#31445d!important;color:#8fa3ba!important}
 .header-icon-btn{width:34px;height:34px;border-radius:8px;background:#101e30;border-color:#2a3d55;font-size:11px}
 
-/* Main workstation shell */
+
 .workspace-shell{grid-template-columns:var(--sidebar-w) minmax(0,1fr);min-height:calc(100vh - 66px);background:#eef2f7}
 .model-sidebar{position:sticky;top:64px;height:calc(100vh - 64px);width:var(--sidebar-w);padding:16px 12px 10px;background:#091321;border-right:1px solid #223249;box-shadow:4px 0 18px rgba(2,8,23,.09);gap:10px}
 .sidebar-top{padding:2px 7px 11px;border-bottom:1px solid #203147}
@@ -172,37 +169,37 @@ body{background:var(--page-bg);color:var(--ink);font-size:14px}
 .model-nav-code{font-size:8px;color:#38bdf8}.model-nav-name{font-size:8px;color:#c5d2df}.model-nav-count{font-size:7px;color:#63778d}
 .sidebar-footer{padding-top:8px}.sidebar-collapse-btn{width:26px;height:26px;border-radius:6px}
 
-/* Content: maximize usable laptop width */
+
 .workspace-shell>.app-container{padding:16px 18px 26px;max-width:none;min-width:0}
 .dashboard-toolbar{min-height:58px;padding:9px 11px;border-radius:10px;box-shadow:0 1px 3px rgba(15,23,42,.05)}
 .toolbar-main{gap:12px}.section-heading{gap:8px}.section-icon{width:29px;height:29px;border-radius:7px}.section-heading h2{font-size:11px}.section-heading p{font-size:7px}.category-tabs{gap:4px}.cat-btn{padding:6px 8px;font-size:8px;border-radius:6px}.toolbar-status{font-size:7px}
 .data-tools{margin:8px 0;padding:7px 9px;border-radius:8px;box-shadow:none}.tool-btn,.tool-select select{height:29px;font-size:8px}.tool-select{font-size:8px}
 
-/* Engineering cards: denser, taller readability, less wasted space */
+
 
 .tag{font-size:7px;padding:3px 5px;border-radius:4px}
 .download-btn{font-size:6.5px;padding:5px 6px;border-radius:5px}.text-action{font-size:7px}
 .recent-panel{margin-top:12px;padding:9px;border-radius:8px}.recent-heading{font-size:8px}.recent-heading small{font-size:7px}.recent-item{min-width:165px;padding:7px}.recent-item span{font-size:7px}.recent-item strong{font-size:8px}
 
-/* Remove the visual feel of a mobile/tablet control deck on laptop */
+
 .shortcut-hint{font-size:6.5px;color:#94a3b8}
 
-/* Collapsed rail */
+
 .sidebar-collapsed .workspace-shell{grid-template-columns:58px minmax(0,1fr)}
 .sidebar-collapsed .model-sidebar{width:58px;padding:12px 6px}
 .sidebar-collapsed .sidebar-top,.sidebar-collapsed .sidebar-telemetry,.sidebar-collapsed .sidebar-actions,.sidebar-collapsed .model-nav-title,.sidebar-collapsed .sidebar-footer>span{display:none}
 .sidebar-collapsed .model-nav{margin-top:2px}.sidebar-collapsed .model-nav-list{gap:5px}.sidebar-collapsed .model-nav-item{display:grid;grid-template-columns:1fr;justify-items:center;min-height:40px;padding:6px 2px}.sidebar-collapsed .model-nav-code{font-size:7px}.sidebar-collapsed .model-nav-name,.sidebar-collapsed .model-nav-count{display:none}.sidebar-collapsed .sidebar-footer{border:0;justify-content:center}.sidebar-collapsed .sidebar-collapse-btn{margin-top:auto}
 
-/* Desktop breakpoints */
+
 @media(min-width:1650px){:root{--sidebar-w:270px}}
 @media(min-width:2100px){:root{--sidebar-w:282px}.workspace-shell>.app-container{padding-left:22px;padding-right:22px}}
 @media(max-width:1250px) and (min-width:901px){:root{--sidebar-w:236px}.workspace-shell>.app-container{padding-left:14px;padding-right:14px}.header-search{width:220px}.brand-subtitle,.env-badge{display:none}.sidebar-model-code{font-size:26px}}
 
-/* Mobile is a fallback, not the primary design */
+
 @media(max-width:900px){.app-header{height:auto}.header-inner{height:auto;min-height:64px;padding:8px 12px;flex-wrap:wrap}.brand{width:100%}.header-actions{width:100%;justify-content:flex-end}.header-search{width:220px}.workspace-shell{display:block;min-height:0}.model-sidebar{position:relative;top:auto;width:100%;height:auto;max-height:none;padding:12px;border-right:0;border-bottom:1px solid #223249}.workspace-shell>.app-container{padding:12px}.sidebar-top{display:grid;grid-template-columns:1fr auto auto;align-items:center}.sidebar-kicker{grid-column:1/-1}.sidebar-model-code{font-size:24px}.sidebar-telemetry{grid-template-columns:repeat(4,1fr)}.sidebar-actions{grid-template-columns:repeat(3,1fr)}.model-nav-list{display:flex;overflow:auto}.model-nav-item{min-width:125px}.sidebar-collapsed .workspace-shell{display:block}.sidebar-collapsed .model-sidebar{width:100%}.sidebar-collapsed .sidebar-top,.sidebar-collapsed .sidebar-telemetry,.sidebar-collapsed .sidebar-actions{display:none}.sidebar-collapsed .model-nav-list{display:flex}}
 @media(max-width:620px){.header-search{width:100%;order:5}.sidebar-telemetry{grid-template-columns:1fr 1fr}.sidebar-actions{grid-template-columns:1fr}.dashboard-toolbar{align-items:flex-start;flex-direction:column}.toolbar-main{width:100%;flex-direction:column;align-items:flex-start}.category-tabs{width:100%}.toolbar-status{display:none}}
 
-/* Dark workstation surfaces */
+
 body[data-theme="dark"]{background:#070d17}
 body[data-theme="dark"] .workspace-shell{background:#070d17}
 body[data-theme="dark"] .workspace-shell>.app-container{background:#070d17}
@@ -213,11 +210,11 @@ body[data-theme="dark"] .tool-btn,body[data-theme="dark"] .tool-select select{ba
 body[data-theme="dark"] .recent-item{background:#101d2d;border-color:#26394f}
 body[data-theme="dark"] .recent-item strong{color:#e2e8f0}
 
-/* System theme */
+
 @media(prefers-color-scheme:dark){body[data-theme="system"]{background:#070d17;color:#e2e8f0}body[data-theme="system"] .workspace-shell{background:#070d17}body[data-theme="system"] .dashboard-toolbar,body[data-theme="system"] .data-tools,body[data-theme="system"] .recent-panel{background:#0d1624;border-color:#1e2d40}body[data-theme="system"] .section-heading h2{color:#f1f5f9}}
 .model-picker-search{display:flex;align-items:center;gap:7px;height:36px;min-width:180px;padding:0 10px;border:1px solid #334155;border-radius:9px;background:#172033;color:#9ca3af}.model-picker-search input{width:120px;border:0;outline:0;background:transparent;color:#f8fafc;font:700 10px "JetBrains Mono"}
 
-/* Reliable searchable model picker */
+
 .model-picker-search{position:relative;overflow:visible;z-index:60}
 .model-picker-toggle{border:0;background:transparent;color:#94a3b8;cursor:pointer;padding:4px 2px}
 .model-picker-menu{position:absolute;top:calc(100% + 7px);right:0;width:320px;max-height:420px;overflow:auto;padding:6px;background:#111827;border:1px solid #334155;border-radius:10px;box-shadow:0 18px 45px rgba(15,23,42,.28)}
@@ -226,14 +223,10 @@ body[data-theme="dark"] .recent-item strong{color:#e2e8f0}
 .model-picker-code{font:800 10px "JetBrains Mono";color:#60a5fa}.model-picker-name{font-size:10px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.model-picker-empty{padding:16px;text-align:center;color:#94a3b8;font-size:10px}
 @media(max-width:700px){.model-picker-menu{position:fixed;top:62px;left:12px;right:12px;width:auto;max-height:55vh}.model-picker-search{min-width:150px}}
 
-/* Hardware Checklist is a first-class grid card immediately before S. */
+
 .hw-upload-btn{background:#64748b!important}
 
-/* =========================================================
-   V10 VISUAL UPDATE ONLY
-   Broader topmost section + larger fonts + new colors.
-   No data, record, grid, upload, or functionality changes.
-   ========================================================= */
+
 
 .app-header{
   min-height:76px;
@@ -257,24 +250,24 @@ body{font-size:14px;}
 .sidebar-kicker{font-size:10px;}
 
 :root{
-  --v10-navy:#101c33;
-  --v10-navy-2:#162642;
-  --v10-blue:#2f64c8;
-  --v10-blue-dark:#234d9e;
-  --v10-bg:#edf1f6;
-  --v10-card:#ffffff;
-  --v10-border:#d3dbe7;
-  --v10-text:#1d2939;
+  --portal-navy:#101c33;
+  --portal-navy-2:#162642;
+  --portal-blue:#2f64c8;
+  --portal-blue-dark:#234d9e;
+  --portal-bg:#edf1f6;
+  --portal-card:#ffffff;
+  --portal-border:#d3dbe7;
+  --portal-text:#1d2939;
 }
 
 body{
-  background:var(--v10-bg);
-  color:var(--v10-text);
+  background:var(--portal-bg);
+  color:var(--portal-text);
 }
 
 .app-header{
-  background:linear-gradient(180deg,var(--v10-navy),var(--v10-navy-2));
-  border-bottom-color:var(--v10-blue);
+  background:linear-gradient(180deg,var(--portal-navy),var(--portal-navy-2));
+  border-bottom-color:var(--portal-blue);
 }
 
 .model-sidebar{
@@ -282,17 +275,17 @@ body{
 }
 
 .btn-primary,.btn-cyan{
-  background:var(--v10-blue);
+  background:var(--portal-blue);
 }
 .btn-primary:hover,.btn-cyan:hover{
-  background:var(--v10-blue-dark);
+  background:var(--portal-blue-dark);
 }
 
 .header-search input,.model-picker-search,.model-picker{
   border-color:#405b86;
 }
 
-/* V10 animation enhancement */
+
 @keyframes portalFadeIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
 @keyframes portalRipple{to{transform:translate(-50%,-50%) scale(13);opacity:0}}
 @keyframes portalPop{0%{transform:scale(.97)}70%{transform:scale(1.015)}100%{transform:scale(1)}}
@@ -307,11 +300,7 @@ input:focus,select:focus,textarea:focus{box-shadow:0 0 0 3px rgba(47,100,200,.13
 .portal-click-ripple{position:absolute;width:12px;height:12px;border-radius:50%;pointer-events:none;background:rgba(255,255,255,.42);transform:translate(-50%,-50%) scale(0);animation:portalRipple .42s ease-out forwards}
 @media(prefers-reduced-motion:reduce){*,*::before,*::after{animation-duration:.01ms!important;transition-duration:.01ms!important}}
 
-/* =========================================================
-   V10 HEADER VISIBILITY FIX
-   Only top/header blocks: larger, wider, higher contrast.
-   No data, records, grid, uploads or other functionality changed.
-   ========================================================= */
+
 
 .app-header{
   min-height:92px !important;
@@ -351,7 +340,7 @@ input:focus,select:focus,textarea:focus{box-shadow:0 0 0 3px rgba(47,100,200,.13
 .header-icon-btn:hover{background:#1c4280 !important;border-color:#76a4ff !important;}
 .header-inner .btn,.header-inner button{min-height:48px !important;font-size:12px !important;font-weight:700 !important;}
 
-/* Engineering Records header block */
+
 .dashboard-toolbar{
   min-height:92px !important;
   padding:18px 20px !important;
@@ -363,7 +352,7 @@ input:focus,select:focus,textarea:focus{box-shadow:0 0 0 3px rgba(47,100,200,.13
 .section-heading h2{font-size:18px !important;font-weight:800 !important;color:#15243b !important;}
 .section-heading p{font-size:11px !important;color:#5d6b80 !important;}
 
-/* Category blocks */
+
 .cat-btn{
   min-height:38px !important;padding:9px 14px !important;
   font-size:11px !important;font-weight:700 !important;
@@ -376,17 +365,13 @@ input:focus,select:focus,textarea:focus{box-shadow:0 0 0 3px rgba(47,100,200,.13
   box-shadow:0 3px 9px rgba(36,93,204,.28) !important;
 }
 
-/* Toolbar buttons directly below the record header */
+
 .dashboard-toolbar .btn{
   min-height:38px !important;padding:8px 13px !important;
   font-size:11px !important;font-weight:700 !important;
 }
 
-/* =========================================================
-   V10 FINAL VISUAL POLISH
-   Lighter, softer dashboard + attractive category tabs.
-   No record/data/functionality changes.
-   ========================================================= */
+
 
 :root{
   --pleasant-bg:#f3f6fa;
@@ -430,13 +415,13 @@ html,body{
   box-shadow:0 4px 14px rgba(30,48,72,.055) !important;
 }
 
-/* Softer sidebar while keeping clear separation */
+
 .model-sidebar{
   background:linear-gradient(180deg,#102443 0%,#162d4c 100%) !important;
   border-right:1px solid #29476b !important;
 }
 
-/* Attractive category tabs */
+
 .category-tabs{
   gap:8px !important;
   padding:4px 0 !important;
@@ -498,7 +483,7 @@ html,body{
   box-shadow:0 0 0 3px rgba(255,255,255,.18) !important;
 }
 
-/* Make section icon and title more visible */
+
 .section-icon{
   width:40px !important;
   height:40px !important;
@@ -517,7 +502,7 @@ html,body{
   color:#66768b !important;
 }
 
-/* Keep dark header as a visual anchor */
+
 .app-header{
   background:linear-gradient(180deg,#0b1d38 0%,#132c4e 100%) !important;
 }
@@ -536,7 +521,7 @@ html,body{
   opacity:1;
 }
 
-/* v17: isolated File Command Center */
+
 .modal-xl{max-width:1180px;width:min(1180px,calc(100vw - 28px))}
 .file-center-panel,.file-preview-panel{max-height:calc(100vh - 28px);overflow:auto}
 .file-center-toolbar{display:grid;grid-template-columns:minmax(260px,1fr) 180px auto auto;gap:10px;align-items:center;margin:14px 0}
@@ -555,10 +540,7 @@ body[data-theme="dark"] .file-center-search,body[data-theme="dark"] .file-center
 @media(max-width:850px){.file-center-toolbar{grid-template-columns:1fr 1fr}.file-center-count{justify-self:start}.file-center-layout{grid-template-columns:1fr}.file-center-recent{order:-1}.file-center-row{grid-template-columns:38px minmax(0,1fr) auto}}
 @media(max-width:560px){.file-center-toolbar{grid-template-columns:1fr}.file-center-row{grid-template-columns:38px minmax(0,1fr);}.file-center-actions{grid-column:2}.file-center-panel,.file-preview-panel{width:calc(100vw - 16px);max-height:calc(100vh - 16px)}.file-preview-body{min-height:280px}.file-preview-frame,.file-preview-text{height:55vh}}
 
-/* =========================================================
-   V19 DESKTOP RECORDS OVERLAP FIX
-   Layout-only override. Existing data and JavaScript untouched.
-   ========================================================= */
+
 @media (min-width: 901px){
   .workspace-shell{
     display:grid !important;
@@ -574,8 +556,7 @@ body[data-theme="dark"] .file-center-search,body[data-theme="dark"] .file-center
     overflow:visible !important;
   }
 
-  /* Keep Engineering Records header from squeezing categories and status
-     into the same horizontal row. */
+  
   .dashboard-toolbar{
     display:grid !important;
     grid-template-columns:minmax(0,1fr) !important;
@@ -624,9 +605,9 @@ body[data-theme="dark"] .file-center-search,body[data-theme="dark"] .file-center
 
 }
 
-/* At laptop widths, use 3 columns before switching to the 4/5-column grid. */
 
-/* v20: clean Engineering Records layout — no shortcut/presentation clutter */
+
+
 .dashboard-toolbar{
   display:block !important;
   width:100%;
@@ -698,18 +679,18 @@ body[data-theme="dark"] .file-center-search,body[data-theme="dark"] .file-center
   .data-tools{flex-direction:row !important}
 }
 
-/* Desktop: show exactly five Engineering Record cards per row */
+
 @media (min-width: 1200px) {
   #cardsGrid,.cards-grid,.record-grid{
     grid-template-columns: repeat(5, minmax(0, 1fr)) !important;
   }
 }
 
-/* Desktop 5-column records: make five cards fit at normal 100% browser zoom. */
 
-/* v22: clean, uniform Engineering Record card layout */
 
-/* v24: isolated selected-model file summary; does not alter card layout */
+
+
+
 .file-summary-board{margin:0 0 16px;background:var(--surface,#fff);border:1px solid var(--line,#dce3ec);border-radius:10px;box-shadow:0 3px 12px rgba(15,23,42,.04);overflow:hidden}
 .file-summary-heading{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:11px 13px;border-bottom:1px solid var(--line,#dce3ec)}
 .file-summary-heading h3{margin:0;font-size:12px;font-weight:800;color:var(--ink,#0f172a)}
@@ -725,7 +706,7 @@ body[data-theme="dark"] .file-center-search,body[data-theme="dark"] .file-center
 .status-dot{display:inline-block;width:8px;height:8px;border-radius:50%;flex:0 0 8px}.status-dot.present{background:#16a34a}.status-dot.missing{background:#dc2626}.summary-checking{text-align:center!important;color:var(--muted,#64748b);padding:12px!important}
 @media(max-width:700px){.file-summary-heading{align-items:flex-start;flex-direction:column}.file-summary-table{min-width:620px}.summary-legend{align-self:flex-start}}
 
-/* Model File Summary: compact two-row board */
+
 .file-summary-board{margin:0 0 14px}
 .file-summary-heading{padding:9px 12px}
 .file-summary-heading h3{font-size:11px}
@@ -746,8 +727,7 @@ body[data-theme="dark"] .file-center-search,body[data-theme="dark"] .file-center
 .summary-checking{height:86px;text-align:center!important;color:var(--muted,#64748b)!important}
 @media(max-width:700px){.file-summary-table{min-width:980px}.file-summary-heading{align-items:center;flex-direction:row}}
 
-/* V26: compact engineering cards + category/color sequence.
-   DOM/data unchanged; visual order follows the dashboard category color sequence. */
+
 
 .tag{font-size:6.5px;padding:2px 4px;border-radius:3px}
 
@@ -755,47 +735,43 @@ body[data-theme="dark"] .file-center-search,body[data-theme="dark"] .file-center
 
 .text-action{font-size:6.5px}
 
-/* Category/color sequence: Block Diagram → Schematics → RF → Process → Quality → Key Parts → General → R/Common */
 
- /* S / Block Diagram */
- /* B,I,P / Schematics */
- /* K,L,M / RF & Wireless */
- /* C,E,H / Process & Tech */
- /* F,G,Q / Quality & SW */
- /* J / Key Parts */
- /* A,D,N,O,R / General */
- /* Hardware Checklist */
 
-/* v27: compact Model File Summary hide/show control */
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+
+
 .summary-heading-actions{display:flex;align-items:center;gap:10px;margin-left:auto}
 .summary-toggle{border:1px solid #d7e0ea;background:#fff;color:#475569;border-radius:6px;padding:4px 8px;font-size:8px;font-weight:800;cursor:pointer;white-space:nowrap}
 .summary-toggle:hover{background:#f1f5f9;border-color:#cbd5e1}
 .file-summary-board.summary-hidden .file-summary-table-wrap{display:none}
 .file-summary-board.summary-hidden .file-summary-heading{border-bottom:0}
 
-/* v27: six compact engineering cards per desktop row */
+
 
 @media(max-width:700px){.summary-heading-actions{width:100%;justify-content:space-between}.summary-toggle{padding:5px 9px}}
 
-/* v29: legacy note retained for history; canonical V64.1.9 mapping is T = Hardware Checklist, U = Korea Member Details. */
 
-/* Key Parts: two linked parts per row to reduce vertical height */
 
-/* Color-sequence layout: same-color/category cards stay together.
-   Block Diagram → Schematics → RF & Wireless → Process & Tech →
-   Defect summary & SW process → Key Parts → Specification. */
 
-/* v30: stable A-U category sequence. The record data is now numbered in the
-   same order as the visual category groups, so CSS must not re-sort the DOM.
-   Common is U and is intentionally the final card. */
 
-/* V31 FINAL: A-U DOM order is authoritative. Disable every legacy visual re-order rule. */
 
-/* V33: final category order and distinct Block Diagram / RF colors. */
 
-/* Keep Block Diagram visually distinct from RF & Wireless. */
 
-/* V35: settings Apply/OK workflow + expanded accent palette. */
+
+
+
+
+
+
+
+
 .settings-modal-actions{margin-top:12px;margin-bottom:0;justify-content:flex-end;gap:8px}
 .settings-modal-actions .btn{min-width:82px;justify-content:center}
 body[data-accent="rose"]{--accent:#e11d48;--accent-soft:#fff1f2;--accent-border:#fecdd3}
@@ -805,19 +781,16 @@ body[data-accent="teal"]{--accent:#0d9488;--accent-soft:#f0fdfa;--accent-border:
 body[data-accent="fuchsia"]{--accent:#c026d3;--accent-soft:#fdf4ff;--accent-border:#f5d0fe}
 body[data-accent="sky"]{--accent:#0284c7;--accent-soft:#f0f9ff;--accent-border:#bae6fd}
 
-/* V36: laptop-first six-card row. Keep the complete A-U sequence explicit and
-   remove the previous two-column Key Parts span so no sixth card slot is wasted. */
 
-/* V36: Ctrl+K is keyboard-only; do not show a search-corner badge. */
+
+
 .search-kbd{display:none !important;}
 
-/* V37 FINAL FIX: actual laptop layout + visible settings accent colors.
-   A-U order comes from RECORD_ORDER in the DOM. Key Parts (O) intentionally
-   spans two columns and keeps two linked parts per row. */
 
-/* Six cards across on laptop/desktop. */
 
-/* Make the Settings accent selection visibly affect the interface. */
+
+
+
 .btn-cyan,.btn-accent{background:var(--accent) !important;border-color:var(--accent) !important;color:#fff !important;}
 .btn-cyan:hover,.btn-accent:hover{filter:brightness(.94);}
 .cat-btn.active{border-color:var(--accent) !important;box-shadow:0 0 0 1px var(--accent) inset !important;}
@@ -826,7 +799,7 @@ body[data-accent="sky"]{--accent:#0284c7;--accent-soft:#f0f9ff;--accent-border:#
 .file-summary-heading h3 i,.summary-cell-top strong{color:var(--accent) !important;}
 .dashboard-toolbar .toolbar-status{border-top-color:var(--accent-border) !important;}
 
-/* Expanded accent palette */
+
 body[data-accent="cyan"]{--accent:#0891b2;--accent-soft:#ecfeff;--accent-border:#a5f3fc;}
 body[data-accent="blue"]{--accent:#2563eb;--accent-soft:#eff6ff;--accent-border:#bfdbfe;}
 body[data-accent="violet"]{--accent:#7c3aed;--accent-soft:#f5f3ff;--accent-border:#ddd6fe;}
@@ -839,18 +812,16 @@ body[data-accent="teal"]{--accent:#0d9488;--accent-soft:#f0fdfa;--accent-border:
 body[data-accent="fuchsia"]{--accent:#c026d3;--accent-soft:#fdf4ff;--accent-border:#f5d0fe;}
 body[data-accent="sky"]{--accent:#0284c7;--accent-soft:#f0f9ff;--accent-border:#bae6fd;}
 
-/* Ctrl+K remains a keyboard shortcut but is not displayed in the search box. */
+
 .search-kbd{display:none !important;}
 
-/* V48 FINAL OFFICE-LAPTOP GRID + COMPACT ENGINEERING RECORD TYPOGRAPHY
-   This block is intentionally last so older accumulated media rules cannot override it. */
 
-/* Compact Engineering Record typography for the laptop view. */
 
-/* V50 MASTER: authoritative A-U visual order and category colors.
-   This block is intentionally last. It overrides all legacy nth-child/order rules. */
 
-/* V51 FINAL THEME FIX: compatibility-safe solid colors. */
+
+
+
+
 :root{--portal-header:#0b1220;--portal-rail:#0b1728;--portal-control:#08101d;}
 body[data-accent="cyan"]{--portal-header:#075985;--portal-rail:#083344;--portal-control:#062b3a;}
 body[data-accent="blue"]{--portal-header:#1d4ed8;--portal-rail:#172554;--portal-control:#10204a;}
@@ -883,28 +854,23 @@ body[data-theme="dark"] .workspace-shell{background:#080f1c!important;}
 body[data-theme="dark"] .app-container{background:transparent!important;}
 body[data-theme="dark"] .dashboard-toolbar,body[data-theme="dark"] .data-tools,body[data-theme="dark"] .file-summary-board,body[data-theme="dark"] .recent-panel{background:#111827!important;border-color:#334155!important;color:#e2e8f0!important;}
 
-/* Authoritative laptop grid */
 
-/* Compact Engineering Record typography */
 
-/* V53 MASTER: authoritative record order. The DOM is the source of truth.
-   RECORD_ORDER in app.js emits A→U by default; CSS never re-sorts cards. */
 
-/* V53 MASTER: six visible cards with a wide Key Parts card.
-   O consumes two grid tracks, so seven tracks are used to show six cards. */
 
-/* V53 MASTER: compact Engineering Records typography. */
 
-/* V53 MASTER: category colors are tied to record identity, so reference data
-   cannot accidentally recolor a card. */
 
-/* V53 MASTER: document status styling. */
+
+
+
+
+
+
+
 .status-present{color:#059669;font-weight:800;}
 .status-missing{color:#dc2626;font-weight:800;}
 
-/* V54 CLEAN MASTER: final responsive contract. All earlier legacy layout rules
-   remain for backward compatibility, but these are the only authoritative
-   breakpoint values at the end of the stylesheet. */
+
 
 @media (min-width:601px) and (max-width:900px){
   .workspace-shell{display:block!important;}
@@ -921,19 +887,13 @@ body[data-theme="dark"] .dashboard-toolbar,body[data-theme="dark"] .data-tools,b
   .header-search{width:100%!important;order:5!important;}
 
 }
-/* V54: cache-independent identity colors. */
 
-/* V55 AUDITED MASTER: single authoritative record order, category colors and responsive grid. */
 
-/* =========================================================
-   V56 COMPLETE REBUILD FROM V55
-   A. Desktop workspace: header remains full width; sidebar and
-      Engineering Records scroll independently below the header.
-   B. Key Parts (O): each sub-part has its own binary upload/download
-      target and status. Mobile/tablet layout remains stacked.
-   ========================================================= */
+
+
+
 @media (min-width:901px){
-  /* V55 header is 92px high; the 3px top accent is outside it. */
+  
   .workspace-shell{
     display:grid !important;
     grid-template-columns:var(--sidebar-w) minmax(0,1fr) !important;
@@ -969,17 +929,14 @@ body[data-theme="dark"] .dashboard-toolbar,body[data-theme="dark"] .data-tools,b
   body.sidebar-collapsed .workspace-shell>.model-sidebar{width:58px !important;}
 }
 
-/* Key Parts sub-part rows. */
 
-/* =========================================================
-   V59 ENGINEERING UX PASS
-   Readability + cleaner first appearance + animated emphasis.
-   ========================================================= */
+
+
 :root{
-  --v59-cyan:#06b6d4;
-  --v59-blue:#3b82f6;
-  --v59-violet:#6366f1;
-  --v59-border:#cbd5e1;
+  --portal-cyan:#06b6d4;
+  --portal-blue:#3b82f6;
+  --portal-violet:#6366f1;
+  --portal-border:#cbd5e1;
 }
 body{font-size:14px;}
 .app-container{max-width:1920px;}
@@ -991,11 +948,11 @@ body{font-size:14px;}
 .cat-btn,.tool-btn{font-size:11px !important;}
 .toolbar-status{font-size:9px !important;}
 
-/* Keep secondary file availability out of the initial visual hierarchy. */
+
 .file-summary-board.summary-hidden .file-summary-table-wrap{display:none;}
 .file-summary-board.summary-hidden{padding-bottom:9px;}
 
-/* Cards: clear text and animated colour border + lift. */
+
 .dashboard-toolbar,.data-tools,.file-summary-board,.recent-panel,.sidebar-telemetry,.sidebar-actions,.sidebar-modules{
   position:relative;
   isolation:isolate;
@@ -1011,20 +968,20 @@ body{font-size:14px;}
   background-size:240% 240%;
   opacity:0;
   transition:opacity .22s ease;
-  animation:v59BorderFlow 2.8s linear infinite;
+  animation:portalBorderFlow 2.8s linear infinite;
   pointer-events:none;
 }
 .dashboard-toolbar:hover::before,.data-tools:hover::before,.file-summary-board:hover::before,.recent-panel:hover::before,.sidebar-telemetry:hover::before,.sidebar-actions:hover::before,.sidebar-modules:hover::before{opacity:1;}
-@keyframes v59BorderFlow{0%{background-position:0% 50%}50%{background-position:100% 50%}100%{background-position:0% 50%}}
+@keyframes portalBorderFlow{0%{background-position:0% 50%}50%{background-position:100% 50%}100%{background-position:0% 50%}}
 
 .dashboard-toolbar:hover,.data-tools:hover,.file-summary-board:hover,.recent-panel:hover{transform:translateY(-2px);border-color:transparent;box-shadow:0 10px 24px rgba(30,64,175,.08);}
 .sidebar-telemetry:hover,.sidebar-actions:hover,.sidebar-modules:hover{transform:translateY(-2px);border-color:rgba(34,211,238,.65);}
 
-/* Make the utility row feel secondary rather than competing with records. */
+
 .data-tools{padding:8px 10px !important;gap:8px !important;}
 .data-tools .tool-group{gap:6px !important;}
 
-/* Stronger typography for sidebar and table labels. */
+
 .sidebar-metric span{font-size:8px !important;}
 .sidebar-metric strong{font-size:10px !important;}
 .sidebar-action{font-size:9.5px !important;}
@@ -1040,7 +997,7 @@ body{font-size:14px;}
   .dashboard-toolbar::before,.data-tools::before,.file-summary-board::before,.recent-panel::before,.sidebar-telemetry::before,.sidebar-actions::before,.sidebar-modules::before{animation:none;}
 }
 
-/* V60: unified Engineering Records + Sort/Filter control block */
+
 .records-control-panel{
   background:rgba(255,255,255,.96);
   border:1px solid var(--border);
@@ -1084,14 +1041,9 @@ body[data-theme="dark"] .records-control-tools.data-tools{border-top-color:#2432
   .records-control-tools .tool-select select{width:100%}
 }
 
-/* ==========================================================================
-   V61 CLEAN LAYOUT CONTRACT
-   Purpose: final desktop stability, readable hierarchy, symmetric sidebar,
-   unified Engineering Records controls, and restrained interaction motion.
-   Keep this section authoritative for the V61 layout.
-   ========================================================================== */
 
-/* 1. Stable desktop geometry */
+
+
 html{ min-width: 320px; }
 .workspace-shell{
   grid-template-columns: var(--sidebar-w) minmax(0, 1fr);
@@ -1108,7 +1060,7 @@ html{ min-width: 320px; }
   box-sizing: border-box;
 }
 
-/* 2. Symmetric sidebar spacing */
+
 .model-sidebar > .sidebar-top,.model-sidebar > .sidebar-telemetry,.model-sidebar > .sidebar-actions,.model-sidebar > .sidebar-modules,.model-sidebar > .sidebar-footer{
   width: 100%;
   box-sizing: border-box;
@@ -1120,7 +1072,7 @@ html{ min-width: 320px; }
   align-content: start;
 }
 
-/* 3. One Engineering Records block */
+
 .records-control-panel{
   width: 100%;
   box-sizing: border-box;
@@ -1164,7 +1116,7 @@ html{ min-width: 320px; }
   min-height: 30px;
 }
 
-/* 4. Secondary exports: compact corner menu */
+
 .records-more-tools{
   position: relative;
   margin-left: auto;
@@ -1210,7 +1162,7 @@ html{ min-width: 320px; }
   text-align: left;
 }
 
-/* 5. Visible but restrained feature/card interaction */
+
 .sidebar-telemetry,.sidebar-actions,.sidebar-modules,.file-summary-board,.recent-panel{
   transition: transform .18s ease, box-shadow .18s ease, border-color .18s ease;
 }
@@ -1219,12 +1171,12 @@ html{ min-width: 320px; }
   transform: translateY(-2px);
 }
 
-/* 6. Readable desktop typography */
+
 .records-control-panel .section-heading h2{ font-size: 15px !important; }
 .records-control-panel .section-heading p{ font-size: 10px !important; }
 .records-control-panel .cat-btn,.records-control-panel .tool-btn,.records-control-panel .tool-select select{ font-size: 10px !important; }
 
-/* 7. Large-desktop layout: use the extra width without stretching controls */
+
 @media (min-width: 1600px) {
   .workspace-shell{ grid-template-columns: 280px minmax(0, 1fr); }
   .workspace-shell > .app-container{ padding-left: 24px; padding-right: 24px; }
@@ -1235,7 +1187,7 @@ html{ min-width: 320px; }
   .workspace-shell{ grid-template-columns: 300px minmax(0, 1fr); }
 }
 
-/* 8. Smaller desktop/tablet */
+
 @media (max-width: 1050px) and (min-width: 901px) {
   .records-control-main{ grid-template-columns: 1fr auto; }
   .records-control-main .category-tabs{ grid-column: 1 / -1; }
@@ -1258,7 +1210,7 @@ html{ min-width: 320px; }
   .sidebar-telemetry:hover,.sidebar-actions:hover,.sidebar-modules:hover{ transform: none; }
 }
 
-/* V62 AUTHORITY LAYER — readability, stable cards, layered tools and admin UX */
+
 .records-control-panel{position:relative;z-index:30;overflow:visible}
 .records-control-tools,.records-control-tools .tool-group{position:relative;z-index:40}
 .records-more-tools{z-index:100;position:relative}
@@ -1266,18 +1218,18 @@ html{ min-width: 320px; }
 .file-summary-board{position:relative;z-index:10}
 .file-summary-board .file-summary-table-wrap{position:relative;z-index:1}
 
-/* Engineering cards: let content determine height instead of forcing compressed rows. */
 
-/* Professional engineering interaction: restrained cyan-to-blue edge accent. */
+
+
 .sidebar-metric,.sidebar-action,.sidebar-modules,.file-summary-board,.recent-panel{transition:transform .2s ease,box-shadow .2s ease,border-color .2s ease,background-color .2s ease}
 
 .sidebar-metric:hover,.sidebar-action:hover,.sidebar-modules:hover,.file-summary-board:hover,.recent-panel:hover{transform:translateY(-2px);border-color:rgba(34,211,238,.55) !important;box-shadow:0 8px 20px rgba(8,145,178,.10)}
 
-/* More Tools must always paint above the file summary. */
+
 .records-more-menu{background:#fff;border-color:#b9c9d9;box-shadow:0 18px 40px rgba(2,8,23,.18)}
 .records-more-menu .tool-btn{position:relative;z-index:1}
 
-/* Admin authentication: cleaner, clearer, production-oriented presentation. */
+
 .password-field{position:relative}
 .password-field .form-input{padding-right:42px}
 .password-toggle{position:absolute;right:7px;top:5px;width:30px;height:27px;border:0;border-radius:6px;background:transparent;color:#64748b;cursor:pointer}
@@ -1300,14 +1252,9 @@ html{ min-width: 320px; }
   .sidebar-metric:hover,.sidebar-action:hover,.sidebar-modules:hover,.file-summary-board:hover,.recent-panel:hover{transform:none !important}
 }
 
-/* V62.3 SURGICAL RECORD CARD FIX
-   Scope: Engineering Record cards only.
-   Goals: compact card height, protected title/favorite area, content-driven grid rows. */
 
-/* ================================================================
-   ENGINEERING RECORDS — AUTHORITATIVE CARD SYSTEM
-   One component definition. No fixed-height stacking.
-   ================================================================ */
+
+
 .records-grid{
   display:grid;
   grid-template-columns:repeat(4,minmax(0,1fr));
@@ -1527,7 +1474,7 @@ html{ min-width: 320px; }
   line-height:1.2;
 }
 
-/* Controlled interaction: visible but restrained engineering accent. */
+
 .records-grid .record-card::after{
   content:"";
   position:absolute;
@@ -1587,10 +1534,7 @@ body[data-theme="system"] .records-grid .file-name{color:#e2e8f0}
   .records-grid .record-card:focus-within{transform:none}
 }
 
-/* ================================================================
-   ENGINEERING RECORDS — DATA ORDER / SPECIAL RECORDS
-   These are data rules, kept separate from card geometry.
-   ================================================================ */
+
 .records-grid .record-card[data-record="A"]{order:1}
 .records-grid .record-card[data-record="B"]{order:2}
 .records-grid .record-card[data-record="C"]{order:3}
@@ -1613,7 +1557,7 @@ body[data-theme="system"] .records-grid .file-name{color:#e2e8f0}
 .records-grid .record-card[data-record="T"]{order:20}
 .records-grid .record-card[data-record="U"]{order:21}
 
-/* Key Parts / multi-file record: keep its files compact without changing card sizing. */
+
 .records-grid .record-card[data-record="M"] .file-area{
   display:flex;
   flex-direction:column;
@@ -1650,7 +1594,7 @@ body[data-theme="system"] .records-grid .file-name{color:#e2e8f0}
 .records-grid .record-card[data-record="M"] .keypart-row .file-size{font-size:6.5px}
 .records-grid .record-card[data-record="M"] .keypart-row .download-btn{font-size:6.5px;padding:4px 5px}
 
-/* Hardware checklist record keeps its neutral engineering treatment. */
+
 .records-grid .record-card.hardware-checklist-record{border-top:3px solid #64748b}
 .records-grid .record-card.hardware-checklist-record .record-key{color:#64748b}
 .records-grid .record-card.hardware-checklist-record .record-icon{background:#64748b !important}
@@ -1675,15 +1619,14 @@ body[data-theme="system"] .records-grid .file-name{color:#e2e8f0}
   .records-grid .record-card[data-record="M"] .file-area{display:flex;flex-direction:column}
 }
 
-/* V64.1 Key Parts layout — Key Parts (M) spans two desktop cards. */
+
 @media (min-width:1200px){
   .records-grid .record-card[data-record="M"]{
     grid-column:span 2 !important;
   }
 }
 
-/* V63.4 Engineering Records tabs — horizontal scroll, intrinsic tab width.
-   Only the category-tab row is changed; cards and other toolbar elements are untouched. */
+
 .dashboard-toolbar .category-tabs{
   display:flex !important;
   flex-wrap:nowrap !important;
@@ -1702,7 +1645,7 @@ body[data-theme="system"] .records-grid .file-name{color:#e2e8f0}
   white-space:nowrap !important;
 }
 
-/* V63.4 FINAL — ENGINEERING RECORDS TAB ROW */
+
 .dashboard-toolbar .category-tabs{
   display:flex !important;
   flex-direction:row !important;
@@ -1746,14 +1689,14 @@ body[data-theme="system"] .records-grid .file-name{color:#e2e8f0}
 }
 
 
-/* V64: lighter Model Technical Document Summary motion. */
+
 .file-summary-board::before{animation:none !important;background:linear-gradient(90deg,rgba(6,182,212,.25),rgba(59,130,246,.18),rgba(99,102,241,.18)) !important;opacity:0 !important;transition:opacity .2s ease !important;}
 .file-summary-board:hover::before{opacity:1 !important;}
 .file-summary-board:hover{transform:translateY(-1px) !important;box-shadow:0 6px 16px rgba(30,64,175,.06) !important;}
 .summary-cell-clickable{cursor:pointer;transition:background .16s ease,box-shadow .16s ease;}
 .summary-cell-clickable:hover,.summary-cell-clickable:focus-visible{background:var(--accent-soft,#ecfeff) !important;outline:none;box-shadow:inset 0 0 0 1px var(--accent-border,#a5f3fc);}
 
-/* V64.1 historical order block; authoritative V64.1 FINAL block below controls the current mapping. */
+
 .records-grid .record-card{order:99 !important;grid-column:span 1 !important;}
 .records-grid .record-card[data-record="A"]{order:1 !important;}
 .records-grid .record-card[data-record="B"]{order:2 !important;}
@@ -1777,7 +1720,7 @@ body[data-theme="system"] .records-grid .file-name{color:#e2e8f0}
 .records-grid .record-card[data-record="T"]{order:20 !important;}
 .records-grid .record-card[data-record="U"]{order:21 !important;}
 .records-grid .record-card[data-record="V"]{order:22 !important;}
-/* V64.1 FINAL — canonical A→V mapping and Key Parts at M. */
+
 .records-grid .record-card{order:99 !important;grid-column:span 1 !important;}
 .records-grid .record-card[data-record="A"]{order:1 !important;}
 .records-grid .record-card[data-record="B"]{order:2 !important;}
@@ -1804,17 +1747,17 @@ body[data-theme="system"] .records-grid .file-name{color:#e2e8f0}
 @media (min-width:1200px){
   .records-grid .record-card[data-record="M"]{grid-column:span 2 !important;}
 }
-.record-focus{animation:recordFocusV641 1.45s ease-out !important;position:relative;z-index:2;}
-@keyframes recordFocusV641{0%{box-shadow:0 0 0 0 rgba(8,145,178,0);border-color:inherit}18%{box-shadow:0 0 0 4px rgba(8,145,178,.20),0 8px 24px rgba(15,23,42,.12);border-color:#0891b2}60%{box-shadow:0 0 0 3px rgba(8,145,178,.13),0 8px 20px rgba(15,23,42,.10);border-color:#0891b2}100%{box-shadow:0 0 0 0 rgba(8,145,178,0);border-color:inherit}}
+.record-focus{animation:recordFocus 1.45s ease-out !important;position:relative;z-index:2;}
+@keyframes recordFocus{0%{box-shadow:0 0 0 0 rgba(8,145,178,0);border-color:inherit}18%{box-shadow:0 0 0 4px rgba(8,145,178,.20),0 8px 24px rgba(15,23,42,.12);border-color:#0891b2}60%{box-shadow:0 0 0 3px rgba(8,145,178,.13),0 8px 20px rgba(15,23,42,.10);border-color:#0891b2}100%{box-shadow:0 0 0 0 rgba(8,145,178,0);border-color:inherit}}
 
-/* V64.1.2: compact Parameter 360° header launcher replacing the global header search. */
+
 .header-module-btn{display:flex;align-items:center;gap:7px;height:36px;min-width:176px;padding:0 12px;border:1px solid var(--accent);border-radius:9px;background:var(--portal-control,#172033);color:#fff;cursor:pointer;font:800 10px "JetBrains Mono";letter-spacing:.2px;white-space:nowrap;}
 .header-module-btn:hover{filter:brightness(1.08);box-shadow:0 0 0 3px var(--accent-soft);}
 .model-picker-label{display:flex;align-items:center;gap:7px;padding:8px 10px 7px;border-bottom:1px solid #334155;margin-bottom:4px;color:#f8fafc;font:800 9px "JetBrains Mono";text-transform:uppercase;letter-spacing:.5px;}
 @media(max-width:700px){.header-module-btn{min-width:150px;flex:1;justify-content:center}.model-picker-label{font-size:9px}}
 
 
-/* V64.1.3 interaction visibility: stronger borders for hover/selected states. */
+
 .model-picker-caption{display:block;color:#f8fafc;font:800 8px "JetBrains Mono";letter-spacing:.45px;text-transform:uppercase;white-space:nowrap;line-height:1;}
 .model-picker-menu .model-picker-label{position:sticky;top:0;z-index:2;background:#111827;}
 .model-picker-option:hover,.model-picker-option:focus-visible,.model-picker-option.active{border-color:#94a3b8 !important;box-shadow:inset 0 0 0 1px #64748b,0 0 0 1px rgba(100,116,139,.35);}
@@ -1825,7 +1768,7 @@ body[data-theme="system"] .records-grid .file-name{color:#e2e8f0}
 .header-module-btn:hover,.header-module-btn:focus-visible{border-color:#94a3b8 !important;box-shadow:0 0 0 2px rgba(100,116,139,.28) !important;}
 @media(max-width:700px){.model-picker-caption{font-size:7px}.model-picker-search{min-width:170px;gap:6px}.model-picker-search input{width:92px;}}
 
-/* V65: Engineering Records hierarchy + hide/show category tabs. */
+
 .engineering-records-heading-row{display:flex;align-items:center;justify-content:space-between;gap:12px;min-width:0;}
 .engineering-records-heading-row .section-heading{min-width:0;}
 .records-tabs-toggle{display:inline-flex;align-items:center;justify-content:center;gap:7px;min-height:30px;padding:6px 10px;border:1px solid #cbd5e1;border-radius:8px;background:#f8fafc;color:#334155;font-size:10px;font-weight:800;white-space:nowrap;cursor:pointer;transition:background .16s ease,border-color .16s ease,transform .16s ease;}
@@ -1850,8 +1793,7 @@ body[data-theme="system"] .records-grid .file-name{color:#e2e8f0}
 .p360-result-clickable{cursor:pointer;transition:border-color .16s ease,box-shadow .16s ease,transform .16s ease;}
 .p360-result-clickable:hover,.p360-result-clickable:focus-visible{border-color:#93c5fd;box-shadow:0 6px 16px rgba(30,64,175,.08);outline:none;transform:translateY(-1px);}
 
-/* V64.1.9 FINAL — Engineering Records compact summary-style presentation.
-   Keep the existing DOM/data/actions; only tighten the visual system. */
+
 .records-grid{
   grid-template-columns:repeat(6,minmax(0,1fr)) !important;
   grid-auto-rows:190px !important;
@@ -1896,7 +1838,7 @@ body[data-theme="system"] .records-grid .file-name{color:#e2e8f0}
 .records-grid .record-card.hardware-checklist-record .record-key{color:#94a3b8 !important}
 .records-grid .record-card.hardware-checklist-record .record-icon{background:#db2777 !important}
 
-/* Summary-style status marker: present/missing remains visible without adding bulk. */
+
 .records-grid .record-key::after{
   content:"";
   display:inline-block;
@@ -1919,17 +1861,13 @@ body[data-theme="system"] .records-grid .file-name{color:#e2e8f0}
   .records-grid{grid-template-columns:1fr !important;grid-auto-rows:190px !important;}
 }
 
-/* V64.1.9 — canonical T/U sequence uses the same Specification color family. */
+
 .records-grid .record-card[data-record="T"] .record-stripe,
 .records-grid .record-card[data-record="U"] .record-stripe{background:#db2777 !important}
 .records-grid .record-card[data-record="T"] .record-icon,
 .records-grid .record-card[data-record="U"] .record-icon{background:#db2777 !important}
 
-/* ======================================================================
-   V64.2 — ENGINEERING RECORDS VISUAL REDESIGN
-   Purpose: make Engineering Records visually match Model Technical
-   Document Summary. This is a visual/layout layer only.
-   ====================================================================== */
+
 .records-control-panel{
   margin:0 0 12px !important;
   padding:0 !important;
@@ -2098,7 +2036,7 @@ body[data-theme="system"] .records-grid .file-name{color:#e2e8f0}
 }
 .records-control-tools .records-more-tools{margin-left:auto !important}
 
-/* Clean five-column engineering-card grid, matching the summary density. */
+
 .records-grid{
   display:grid !important;
   grid-template-columns:repeat(5,minmax(0,1fr)) !important;
@@ -2145,7 +2083,7 @@ body[data-theme="system"] .records-grid .file-name{color:#e2e8f0}
 }
 .records-grid .text-action{font-size:7.5px !important}
 
-/* Authoritative A→V order. Prevents the previous I/P ordering break. */
+
 .records-grid .record-card[data-record="A"]{order:1 !important}
 .records-grid .record-card[data-record="B"]{order:2 !important}
 .records-grid .record-card[data-record="C"]{order:3 !important}
@@ -2201,12 +2139,7 @@ body[data-theme="dark"] .records-grid .card-footer-actions{border-color:#243244 
   .records-grid{grid-template-columns:1fr !important}
 }
 
-/* ================================================================
-   V64.2 INNOVATIVE ENGINEERING RECORD CARDS
-   Collapsed: name + file indicator only.
-   Expanded: vertical file details, preview, download and metadata.
-   Grid rows naturally move downward when a card expands.
-   ================================================================ */
+
 .records-grid{
   display:grid;
   grid-template-columns:repeat(5,minmax(0,1fr));
@@ -2271,10 +2204,7 @@ body[data-theme="dark"] .expanded-file-title,body[data-theme="system"] .expanded
 
 .records-grid .record-card{order:initial !important}
 
-/* V64.2 FINAL CARD HEIGHT FIX
-   Override legacy fixed 196px engineering-card rules.
-   Collapsed cards are compact; expanded cards grow naturally and push
-   subsequent grid rows downward without overlap. */
+
 .records-grid{
   grid-auto-rows:max-content !important;
   align-items:start !important;
@@ -2305,7 +2235,7 @@ body[data-theme="dark"] .expanded-file-title,body[data-theme="system"] .expanded
   .records-grid .record-card.is-expanded{height:auto !important;min-height:0 !important}
 }
 
-/* V64.2 V2 — compact engineering cards: 60px closed + animated vertical detail */
+
 .records-grid{
   grid-auto-rows:max-content !important;
   align-items:start !important;
@@ -2345,25 +2275,19 @@ body[data-theme="dark"] .expanded-file-title,body[data-theme="system"] .expanded
 @keyframes engineeringRowIn{from{opacity:0;transform:translateY(-4px)}to{opacity:1;transform:translateY(0)}}
 @media(prefers-reduced-motion:reduce){.records-grid .record-card,.records-grid .record-card .record-collapsed-face{transition:none !important}.records-grid .record-card.is-expanded .record-expanded-panel,.records-grid .record-card.is-expanded .expanded-file-row{animation:none !important}}
 
-/* V64.2 schematic-card visibility + exact 60px total collapsed height */
+
 .records-grid .record-card:not(.is-expanded){height:60px !important;min-height:60px !important;overflow:hidden !important;}
 .records-grid .record-card:not(.is-expanded) .record-stripe{height:3px !important;}
 .records-grid .record-card:not(.is-expanded) .record-collapsed-face{height:57px !important;min-height:57px !important;}
 .records-grid .record-card.is-expanded .record-stripe{height:3px !important;}
 .records-grid .record-card.is-expanded .record-collapsed-face{height:57px !important;min-height:57px !important;}
 
-/* Keep the requested enterprise-wide 5–6 card rhythm on the main records grid. */
+
 @media(min-width:901px) and (max-width:1499px){.records-grid{grid-template-columns:repeat(5,minmax(0,1fr))}}
 @media(min-width:1500px){.records-grid{grid-template-columns:repeat(6,minmax(0,1fr))}}
 
 
-/* ================================================================
-   V64.2 UNIFIED ENTERPRISE ENGINEERING GRID — FINAL VISUAL PASS
-   - No separate Schematics container: A/B/C are normal grid cards.
-   - 60px collapsed cards; expanded cards use natural height.
-   - 5 cards on laptop, 6 on wide desktop.
-   - Dense, polished presentation intended to use the viewport efficiently.
-   ================================================================ */
+
 .schematics-section,
 .schematics-card-grid{display:none !important;}
 
@@ -2544,17 +2468,17 @@ body[data-theme="dark"] .expanded-file-title,body[data-theme="system"] .expanded
 @keyframes engineeringPanelInFinal{from{opacity:0;transform:translateY(-8px)}to{opacity:1;transform:translateY(0)}}
 @keyframes engineeringRowInFinal{from{opacity:0;transform:translateY(-4px)}to{opacity:1;transform:translateY(0)}}
 
-/* 5 cards across on laptop, 6 on wide desktop. */
+
 @media(min-width:1500px){.records-grid{grid-template-columns:repeat(6,minmax(0,1fr)) !important;}}
 @media(min-width:901px) and (max-width:1499px){.records-grid{grid-template-columns:repeat(5,minmax(0,1fr)) !important;}}
 @media(max-width:900px){.records-grid{grid-template-columns:repeat(2,minmax(0,1fr)) !important;gap:8px !important;}}
 @media(max-width:620px){.records-grid{grid-template-columns:1fr !important;}}
 
-/* Preserve the A→V visual order regardless of legacy CSS earlier in the file. */
+
 .records-grid .record-card{order:initial !important;}
 .records-grid .record-card[data-record="A"]{order:1 !important}.records-grid .record-card[data-record="B"]{order:2 !important}.records-grid .record-card[data-record="C"]{order:3 !important}.records-grid .record-card[data-record="D"]{order:4 !important}.records-grid .record-card[data-record="E"]{order:5 !important}.records-grid .record-card[data-record="F"]{order:6 !important}.records-grid .record-card[data-record="G"]{order:7 !important}.records-grid .record-card[data-record="H"]{order:8 !important}.records-grid .record-card[data-record="I"]{order:9 !important}.records-grid .record-card[data-record="J"]{order:10 !important}.records-grid .record-card[data-record="K"]{order:11 !important}.records-grid .record-card[data-record="L"]{order:12 !important}.records-grid .record-card[data-record="N"]{order:13 !important}.records-grid .record-card[data-record="P"]{order:14 !important}.records-grid .record-card[data-record="Q"]{order:15 !important}.records-grid .record-card[data-record="R"]{order:16 !important}.records-grid .record-card[data-record="T"]{order:17 !important}.records-grid .record-card[data-record="U"]{order:18 !important}.records-grid .record-card[data-record="V"]{order:19 !important;}
 
-/* Dark/system theme. */
+
 body[data-theme="dark"] .records-grid .record-card,
 body[data-theme="system"] .records-grid .record-card{background:#0d1624 !important;border-color:#27384b !important;}
 body[data-theme="dark"] .records-grid .record-card.is-expanded .record-collapsed-face,
@@ -2574,8 +2498,7 @@ body[data-theme="system"] .records-grid .expanded-footer .text-action{background
   .records-grid .record-card:hover{transform:none !important;}
 }
 
-/* V64.2 CARD FORM FINAL — 65px collapsed / 4-column enterprise grid.
-   This block is intentionally last so historical sizing/order rules cannot override it. */
+
 .records-grid{
   grid-template-columns:repeat(4,minmax(0,1fr)) !important;
   gap:10px !important;
@@ -2681,7 +2604,7 @@ body[data-theme="system"] .records-grid .expanded-footer .text-action{background
 .records-grid .expanded-file-row{padding:7px !important;}
 .records-grid .expanded-footer{flex-wrap:wrap !important;gap:6px !important;}
 
-/* Inline document preview shown immediately when a card is expanded. */
+
 .records-grid .inline-preview{
   margin:0 0 9px !important;
   border:1px solid #dbe4ed !important;
@@ -2725,7 +2648,7 @@ body[data-theme="system"] .records-grid .expanded-footer .text-action{background
 .inline-preview-unsupported span{font-size:7px;color:#94a3b8;line-height:1.4;}
 @keyframes inlinePreviewSpin{to{transform:rotate(360deg)}}
 
-/* Actual Baseline-2 dataset contains 19 engineering records; DOM/data order remains authoritative. */
+
 .records-grid .record-card{order:initial !important;}
 .records-grid .record-card[data-record="A"]{order:1 !important}.records-grid .record-card[data-record="B"]{order:2 !important}.records-grid .record-card[data-record="C"]{order:3 !important}.records-grid .record-card[data-record="D"]{order:4 !important}.records-grid .record-card[data-record="E"]{order:5 !important}.records-grid .record-card[data-record="F"]{order:6 !important}.records-grid .record-card[data-record="G"]{order:7 !important}.records-grid .record-card[data-record="H"]{order:8 !important}.records-grid .record-card[data-record="I"]{order:9 !important}.records-grid .record-card[data-record="J"]{order:10 !important}.records-grid .record-card[data-record="K"]{order:11 !important}.records-grid .record-card[data-record="L"]{order:12 !important}.records-grid .record-card[data-record="N"]{order:13 !important}.records-grid .record-card[data-record="P"]{order:14 !important}.records-grid .record-card[data-record="Q"]{order:15 !important}.records-grid .record-card[data-record="R"]{order:16 !important}.records-grid .record-card[data-record="T"]{order:17 !important}.records-grid .record-card[data-record="U"]{order:18 !important}.records-grid .record-card[data-record="V"]{order:19 !important;}
 
@@ -2736,15 +2659,7 @@ body[data-theme="system"] .records-grid .expanded-footer .text-action{background
 @media(prefers-reduced-motion:reduce){.records-grid .record-card,.records-grid .expand-cue{transition:none !important}.inline-preview-loading i{animation:none !important}.records-grid .record-card:hover{transform:none !important;}}
 
 
-/* =====================================================================
-   V64.2 BEST-VIEW PASS — COMPACT ALL / FULL GROUP MODE
-   User-facing rules:
-   - ALL = compact 65px engineering index cards; click to expand.
-   - A selected category = full document cards with equal height.
-   - Normal laptop = 4 cards per row.
-   - Group color identifies engineering domain; green/red identify file state.
-   - Typography is intentionally larger for laptop readability.
-   ===================================================================== */
+
 :root{
   --rd-ink:#12233f;
   --rd-muted:#5e7188;
@@ -2756,7 +2671,7 @@ body[data-theme="system"] .records-grid .expanded-footer .text-action{background
   --rd-partial:#d97706;
 }
 
-/* Category tabs inherit the exact same category accent used by their cards. */
+
 .records-control-main .category-tabs .cat-btn{
   --cat-color:#2563eb;
   position:relative !important;
@@ -2796,13 +2711,13 @@ body[data-theme="system"] .records-grid .expanded-footer .text-action{background
 .records-control-main .category-tabs .cat-btn.active .cat-count{color:#fff !important;}
 .records-control-main .category-tabs .cat-btn.active .cat-count{background:rgba(255,255,255,.18) !important;}
 
-/* Larger workspace typography without making the cards bulky. */
+
 .records-control-panel #engineeringRecordsTitle{font-size:20px !important;letter-spacing:-.01em !important;}
 .records-control-panel #recordCount{font-size:11px !important;font-weight:700 !important;color:#5f7289 !important;}
 .records-control-panel .tool-btn,
 .records-control-panel .tool-select select{font-size:11px !important;font-weight:750 !important;}
 
-/* ALL view: exact 65px total card height. */
+
 body[data-record-view="all"] .records-grid{
   grid-template-columns:repeat(4,minmax(0,1fr)) !important;
   gap:12px !important;
@@ -2850,13 +2765,13 @@ body[data-record-view="all"] .records-grid .expand-cue{
   background:#f1f5f9 !important;color:#64748b !important;
 }
 
-/* ALL-view expanded card remains the user's click-to-inspect workflow. */
+
 body[data-record-view="all"] .records-grid .record-card.is-expanded{
   max-height:1700px !important;
   height:auto !important;
 }
 
-/* GROUP view: selected category becomes a document workspace, not an index. */
+
 body[data-record-view="group"] .records-grid{
   grid-template-columns:repeat(4,minmax(0,1fr)) !important;
   gap:14px !important;
@@ -2943,14 +2858,14 @@ body[data-record-view="group"] .records-grid .expanded-footer{
 body[data-record-view="group"] .records-grid .expanded-footer .text-action{height:25px !important;font-size:7.5px !important;padding:0 7px !important;}
 body[data-record-view="group"] .records-grid .is-group-view .record-expanded-panel .missing-label{font-size:7px !important;color:var(--rd-missing) !important;font-weight:850 !important;}
 
-/* Group view should never suggest another expansion: it is already the full card. */
+
 body[data-record-view="group"] .records-grid .is-group-view.is-expanded .expand-cue{transform:none !important;}
 
-/* Category color stays attached to the card in every state. */
+
 .records-grid .record-card::before{background:var(--record-accent) !important;width:4px !important;}
 .records-grid .record-card.is-expanded .record-collapsed-face{border-bottom-color:color-mix(in srgb,var(--record-accent) 18%,#e3eaf1) !important;}
 
-/* Responsive desktop rhythm: normal laptop is explicitly four columns. */
+
 @media(min-width:1100px) and (max-width:1599px){
   body[data-record-view="all"] .records-grid,
   body[data-record-view="group"] .records-grid{grid-template-columns:repeat(4,minmax(0,1fr)) !important;}
@@ -2979,7 +2894,7 @@ body[data-record-view="group"] .records-grid .is-group-view.is-expanded .expand-
 }
 
 
-/* Final readability lift across the main engineering workspace. */
+
 .app-container .section-heading h2{font-size:20px !important;font-weight:900 !important;}
 .app-container .section-heading p{font-size:11px !important;}
 .app-container .recent-heading{font-size:13px !important;}
@@ -2988,9 +2903,7 @@ body[data-record-view="group"] .records-grid .is-group-view.is-expanded .expand-
 .app-container .recent-item span{font-size:9px !important;}
 .app-container .help-text,.app-container .empty-state p{font-size:10px !important;}
 
-/* V64.2 BASE VISUAL CONSISTENCY PATCH
-   Keep category identity independent from file state, improve status legibility,
-   and keep normal laptop layouts at four equal columns. */
+
 body[data-record-view="all"] .records-grid .record-status,
 body[data-record-view="group"] .records-grid .record-status{
   display:inline-flex !important;
@@ -3062,16 +2975,9 @@ body[data-record-view="group"] .records-grid .expanded-file-title{font-size:9px 
 body[data-record-view="group"] .records-grid .expanded-file-meta{font-size:7.5px !important;}
 body[data-record-view="group"] .records-grid .expanded-footer .text-action{font-size:8px !important;}
 
-/* =====================================================================
-   V64.2 FINAL REFINEMENT — TITLE READABILITY / LAPTOP GRID / CARD RHYTHM
-   User-approved concepts preserved:
-   - ALL = exact 65px compact + expandable
-   - GROUP = full-detail, equal-size cards
-   - Normal laptop = 4 columns
-   - Group identity color stays separate from file status color
-   ===================================================================== */
 
-/* Authoritative desktop column policy: normal laptop is four columns. */
+
+
 @media (min-width:1100px) and (max-width:1599px){
   body[data-record-view="all"] .records-grid,
   body[data-record-view="group"] .records-grid{
@@ -3094,8 +3000,7 @@ body[data-record-view="group"] .records-grid .expanded-footer .text-action{font-
   }
 }
 
-/* ALL: preserve the exact 65px compact card while giving the title its own
-   vertical lane so words are never broken by the status badge. */
+
 body[data-record-view="all"] .records-grid .record-card:not(.is-expanded) .record-collapsed-face{
   height:64px !important;
   min-height:64px !important;
@@ -3143,8 +3048,7 @@ body[data-record-view="all"] .records-grid .record-card:not(.is-expanded) .expan
   align-self:center !important;
 }
 
-/* GROUP: full-detail header gets a title lane + status lane. This stops
-   words such as "Circuit" from becoming "Circ / uit". */
+
 body[data-record-view="group"] .records-grid .record-card.is-group-view .record-collapsed-face{
   height:82px !important;
   min-height:82px !important;
@@ -3192,8 +3096,7 @@ body[data-record-view="group"] .records-grid .record-card.is-group-view .expand-
   align-self:center !important;
 }
 
-/* Keep every full-detail group card exactly the same height after the taller
-   header. The content panel is reduced by the same amount. */
+
 body[data-record-view="group"] .records-grid .record-card.is-group-view{
   height:342px !important;
   min-height:342px !important;
@@ -3206,8 +3109,7 @@ body[data-record-view="group"] .records-grid .record-card.is-group-view .record-
   padding:8px 10px 8px !important;
 }
 
-/* Status is always semantic: green/red/amber. It never controls the card's
-   category accent. */
+
 body[data-record-view="all"] .records-grid .record-status.all-present,
 body[data-record-view="group"] .records-grid .record-status.all-present{
   color:#15803d !important;
@@ -3230,15 +3132,14 @@ body[data-record-view="group"] .records-grid .record-status.all-missing .status-
 body[data-record-view="all"] .records-grid .record-status.partial .status-dot,
 body[data-record-view="group"] .records-grid .record-status.partial .status-dot{background:#d97706 !important;}
 
-/* Never allow the title renderer to split normal words in either view. */
+
 .records-grid .record-title-only{
   word-break:normal !important;
   overflow-wrap:normal !important;
   hyphens:none !important;
 }
 
-/* Smaller screens can still use natural wrapping without character-level
-   breaks; readability wins over density. */
+
 @media(max-width:1099px){
   body[data-record-view="all"] .records-grid .record-card:not(.is-expanded) .record-collapsed-face{
     grid-template-columns:30px minmax(0,1fr) 22px !important;
@@ -3248,20 +3149,17 @@ body[data-record-view="group"] .records-grid .record-status.partial .status-dot{
   }
 }
 
-/* Data/DOM order is authoritative. Legacy per-record CSS order rules are
-   intentionally neutralized so filters and RECORD_ORDER stay predictable. */
+
 .records-grid .record-card{order:initial !important;}
 
-/* Equal-size group cards: content is clipped within the card, never allowed
-   to alter neighboring card geometry. */
+
 body[data-record-view="group"] .records-grid .record-card.is-group-view,
 body[data-record-view="group"] .records-grid .record-card.is-group-view *{
   box-sizing:border-box;
 }
 
 
-/* V64.2 FINAL: group cards size from their real document/version content.
-   JS synchronizes the tallest card across the entire visible group. */
+
 body[data-record-view="group"] .records-grid{
   align-items:stretch !important;
   grid-auto-rows:auto !important;
@@ -3293,11 +3191,7 @@ body[data-record-view="group"] .records-grid .record-card.is-group-view .expande
 .expanded-file-row.is-missing .version-history{display:none;}
 @media(max-width:900px){.version-row{grid-template-columns:auto minmax(0,1fr) auto;}.version-note{grid-column:2;}.version-actions{grid-column:3;grid-row:1 / span 2;}}
 
-/* =====================================================================
-   V64.2 FINAL MULTI-SLOT DOCUMENT WORKSPACE
-   Required slots are distinct from version count.
-   Group cards expand to the tallest real content and stay equal-height.
-   ===================================================================== */
+
 body[data-record-view="group"] .records-grid .record-card.is-group-view{
   height:auto !important;
   min-height:0 !important;
@@ -3464,7 +3358,7 @@ body[data-record-view="group"] .expanded-footer{
   margin-top:10px !important;
 }
 
-/* V64.2 repair: authoritative natural-flow layout. Keep expanded cards in document flow. */
+
 .workspace-shell{min-height:calc(100vh - 72px) !important;height:auto !important;overflow:visible !important;align-items:start !important}
 .workspace-shell>.app-container{min-height:0 !important;height:auto !important;overflow:visible !important}
 .records-grid{grid-auto-rows:max-content !important;align-items:start !important}
@@ -3473,7 +3367,7 @@ body[data-record-view="group"] .expanded-footer{
 .records-grid .record-card .record-expanded-panel{height:auto !important;max-height:none !important;overflow:visible !important}
 
 
-/* V64.2 repair pass: stabilize the three screenshot-marked UI areas. */
+
 .app-header .header-icon-btn{
   flex:0 0 36px !important;
   width:36px !important;
@@ -3512,7 +3406,7 @@ body[data-record-view="group"] .expanded-footer{
   .records-grid .expanded-footer{grid-template-columns:1fr !important;}
 }
 
-/* V64.2 latest repair: keep engineering category tabs compact and always visible. */
+
 .records-control-main .engineering-records-tabs-row{
   display:block !important;
   margin-top:7px !important;
@@ -3552,10 +3446,10 @@ body[data-record-view="group"] .expanded-footer{
 }
 .records-tabs-toggle{display:none !important;}
 
-/* The selected category is already communicated by the compact tab; do not repeat it as a large filter chip. */
+
 .records-control-main + .records-control-tools{}
 
-/* V64.2 latest repair: group cards must fit their actual content, not reserve a large blank footer area. */
+
 body[data-record-view="group"] .records-grid{
   align-items:start !important;
   grid-auto-rows:max-content !important;
@@ -3625,7 +3519,7 @@ body[data-record-view="group"] .records-grid .record-card.is-group-view .expande
   white-space:nowrap !important;
 }
 
-/* V64.2 latest correction: compact second-row card actions + restore Engineering Records tab readability. */
+
 .records-control-main .category-tabs .cat-btn{
   font-size:12px !important;
   font-weight:800 !important;
@@ -3637,7 +3531,7 @@ body[data-record-view="group"] .records-grid .record-card.is-group-view .expande
   font-size:10px !important;
 }
 
-/* Expanded card actions are a compact second row, never three stretched columns. */
+
 .records-grid .record-card.is-expanded .expanded-footer{
   display:flex !important;
   flex-direction:row !important;
@@ -3669,7 +3563,7 @@ body[data-record-view="group"] .records-grid .record-card.is-group-view .expande
   overflow:visible !important;
   text-overflow:clip !important;
 }
-/* Group/category cards use the same second-row footer geometry. */
+
 body[data-record-view="group"] .records-grid .record-card.is-group-view .expanded-footer{
   display:flex !important;
   flex-direction:row !important;
@@ -3699,7 +3593,7 @@ body[data-record-view="group"] .records-grid .record-card.is-group-view .expande
   text-overflow:clip !important;
 }
 
-/* Preserve natural card height; the new footer row contributes its own height. */
+
 .records-grid .record-card.is-expanded,
 body[data-record-view="group"] .records-grid .record-card.is-group-view{
   height:auto !important;
@@ -3715,9 +3609,7 @@ body[data-record-view="group"] .records-grid .record-card.is-group-view{
 }
 
 
-/* FINAL V64.2 authoritative card geometry — latest-file-only correction.
-   Keep the compact category tabs and put the three record actions on their own
-   second row. Do not let older flex/grid overrides stretch the buttons or card. */
+
 .records-grid .record-card.is-expanded .record-expanded-panel{
   display:flex !important;
   flex-direction:column !important;
@@ -3811,14 +3703,14 @@ body[data-record-view="group"] .records-grid .record-card.is-group-view{
   align-self:start !important;
 }
 
-/* Keep the Engineering Records heading typography independent from compact tabs. */
+
 .records-control-main > .records-control-header,
 .records-control-main .records-control-title,
 .records-control-main .engineering-records-title{
   font-size:20px !important;
 }
 
-/* V64.2 corrective search control */
+
 .tool-search{display:flex;align-items:center;gap:6px;min-width:210px;height:30px;padding:0 9px;border:1px solid #d7dee8;border-radius:7px;background:#fff;color:#64748b;}
 .tool-search input{width:170px;border:0;outline:0;background:transparent;color:inherit;font-size:10px;min-width:0;}
 .tool-search input::placeholder{color:#94a3b8;}
@@ -3826,11 +3718,7 @@ body[data-theme="dark"] .tool-search{background:#111827;border-color:#334155;col
 @media(max-width:700px){.tool-search{width:100%;min-width:0}.tool-search input{width:100%;}}
 
 
-/* V64.2 FINAL DOCUMENT-WORKSPACE FIX
-   An expanded record contains preview/version history and therefore must use
-   the full Engineering Records row instead of remaining trapped in one
-   compact grid column. Group/category view intentionally keeps its cards in
-   their normal multi-column workspace. */
+
 body[data-record-view="all"] .records-grid .record-card.is-expanded{
   grid-column:1 / -1 !important;
   width:100% !important;
@@ -3883,10 +3771,7 @@ body[data-record-view="all"] .records-grid .record-card.is-expanded .version-row
 }
 
 
-/* V64.2 V4 — AUTHORITATIVE CATEGORY/EXPANDED DOCUMENT WORKSPACE FIX
-   Category/group view contains full document details. It must therefore use
-   a readable minimum card width instead of the compact 5/6-column index grid.
-   Long filenames are flexible text, never layout constraints. */
+
 @media (min-width: 901px){
   body[data-record-view="group"] .records-grid{
     grid-template-columns:repeat(auto-fit,minmax(320px,1fr)) !important;
@@ -3964,4 +3849,54 @@ body[data-record-view="group"] .records-grid .record-card.is-group-view .expande
   overflow:visible !important;
 }
 
-/* Cache-bust marker for the V4 document-workspace rules. */
+
+
+
+
+@media (min-width: 1101px){
+  body[data-record-view="group"] #cardsGrid.records-grid{
+    grid-template-columns:repeat(3,minmax(320px,1fr)) !important;
+    grid-auto-rows:max-content !important;
+    align-items:start !important;
+  }
+}
+@media (min-width: 701px) and (max-width: 1100px){
+  body[data-record-view="group"] #cardsGrid.records-grid{
+    grid-template-columns:repeat(2,minmax(300px,1fr)) !important;
+    grid-auto-rows:max-content !important;
+    align-items:start !important;
+  }
+}
+@media (max-width: 700px){
+  body[data-record-view="group"] #cardsGrid.records-grid{
+    grid-template-columns:minmax(0,1fr) !important;
+    grid-auto-rows:max-content !important;
+    align-items:start !important;
+  }
+}
+body[data-record-view="group"] #cardsGrid.records-grid .record-card.is-group-view{
+  width:100% !important;
+  min-width:0 !important;
+  max-width:none !important;
+  height:auto !important;
+  min-height:0 !important;
+  overflow:visible !important;
+  align-self:start !important;
+}
+body[data-record-view="group"] #cardsGrid.records-grid .record-card.is-group-view .record-expanded-panel,
+body[data-record-view="group"] #cardsGrid.records-grid .record-card.is-group-view .expanded-file-list,
+body[data-record-view="group"] #cardsGrid.records-grid .record-card.is-group-view .expanded-file-main{
+  width:100% !important;
+  min-width:0 !important;
+  max-width:none !important;
+  box-sizing:border-box !important;
+}
+body[data-record-view="group"] #cardsGrid.records-grid .record-card.is-group-view .expanded-file-title > span:first-of-type,
+body[data-record-view="group"] #cardsGrid.records-grid .record-card.is-group-view .expanded-file-meta span:first-child,
+body[data-record-view="group"] #cardsGrid.records-grid .record-card.is-group-view .version-name,
+body[data-record-view="group"] #cardsGrid.records-grid .record-card.is-group-view .version-note{
+  min-width:0 !important;
+  overflow-wrap:anywhere !important;
+  word-break:normal !important;
+  white-space:normal !important;
+}

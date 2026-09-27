@@ -1,8 +1,4 @@
-/* ================================================================
-   PORTAL MODULES
-   Sidebar feature navigation.
-   DOM order: Active Model -> Telemetry -> Actions -> Modules -> Footer.
-   ================================================================ */
+
 
 .model-sidebar {
   display: flex;
@@ -16,7 +12,7 @@
 .model-sidebar .sidebar-modules { order: 4; }
 .model-sidebar .sidebar-footer { order: 5; margin-top: auto; }
 
-/* Feature group: deliberately distinct from telemetry/actions. */
+
 .sidebar-modules {
   margin-top: 2px;
   padding: 10px;
