@@ -1,4 +1,4 @@
-import {MODEL_ORDER,modelCodesFromData} from '../../data/models.js';
+import {MODEL_ORDER} from '../../data/models.js';
 import {isModuleEnabled} from '../modules/module-manager.js';
 
 const XLSX_URL="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js";
@@ -17,7 +17,11 @@ function setProgress(percent,label,visible=true){
 const qs=id=>document.getElementById(id);
 
 function comparisonModelList(){
-  try{const d=JSON.parse(localStorage.getItem('MOBILE_RND_DATA')||'null');return modelCodesFromData(d);}catch{return MODEL_ORDER;}
+  try{
+    const d=JSON.parse(localStorage.getItem('MOBILE_RND_DB_DATA_V10')||'null');
+    if(d&&typeof d==='object')return Object.keys(d);
+  }catch{}
+  return MODEL_ORDER;
 }
 function esc(v=""){return String(v??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]))}
 function norm(v=""){return String(v??"").toLowerCase().replace(/[\u00a0\r\n\t]+/g," ").replace(/[_/\\|:;,.()[\]{}]+/g," ").replace(/[-–—]+/g," ").replace(/\s+/g," ").trim()}

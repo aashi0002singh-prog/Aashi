@@ -73,7 +73,8 @@ function parseWorkbook(workbook,label){
   return records;
 }
 
-/* Build a bounded candidate index for predictable matching on large engineering workbooks. */
+/* Build a bounded candidate index. This replaces the previous all-vs-all
+   fuzzy scan, which could become quadratic on large engineering workbooks. */
 function buildIndex(baseRecords){
   const exact=new Map(),tokenIndex=new Map();
   baseRecords.forEach(b=>{
