@@ -6,8 +6,6 @@ import {createRecordSystem} from "./records/record-system.js";
 const STORAGE_KEY="MOBILE_RND_DB_DATA_V1";
 const PREF_KEY="MOBILE_RND_PREFS_V3";
 const AUTH_KEY="RND_AUTH_V3";
-const MAX_FILE_SIZE=500*1024*1024;
-const ALLOWED=["pdf","xlsx","xls","zip","bin","dwg","csv","doc","docx","ppt","pptx","txt","log","md","jpg","jpeg","png","webp","gif","svg"];
 const CUSTOM_MODELS_KEY="MOBILE_RND_CUSTOM_MODELS_V1";
 const RENAMED_MODELS_KEY="MOBILE_RND_RENAMED_MODELS_V1";
 function customModelCodes(){return readJson(CUSTOM_MODELS_KEY,[]).map(x=>String(x?.code||"").trim().toUpperCase()).filter(Boolean)}
@@ -57,7 +55,7 @@ function loadPrefs(){try{return {...{theme:"light",accent:"cyan",density:"comfor
 function savePrefs(){localStorage.setItem(PREF_KEY,JSON.stringify(prefs))}
 function currentItems(){return data[currentModel].items}
 function currentItemsFor(model){return data[model]?.items||{}}
-function itemText(k,item){return [k,item.title,item.category,item.filename,item.uploadedFilename,...(item.tags||[]),...(item.subItems||[]).flatMap(s=>[s.name,s.filename,s.size]),...(item.mergedSources||[]).flatMap(s=>[s.name,s.filename,s.size,s.detail])].join(" ").toLowerCase()}
+function itemText(k,item){return [k,item.title,item.category,item.filename,item.uploadedFilename,...(item.tags||[]),...(item.subItems||[]).flatMap(s=>[s.name,s.filename,s.size]),...(item.mergedSources||[]).flatMap(s=>[s.name,s.filename,s.size,s.detail]),...(item.documents||[]).flatMap(s=>[s.name,s.filename,s.size,s.detail])].join(" ").toLowerCase()}
 function markRecent(key){const id=`${currentModel}:${key}`;recentlyViewed=[id,...recentlyViewed.filter(x=>x!==id)].slice(0,8);localStorage.setItem("MOBILE_RND_RECENT_V1",JSON.stringify(recentlyViewed))}
 function parseHash(){const m=location.hash.match(/^#record\/([^/]+)\/?([^/]*)$/);if(m&&modelList().includes(m[1])&&currentItemsFor(m[1])[m[2]]){currentModel=m[1];activeCategory="all";query="";renderAll();refreshUploadedFlags(currentModel);setTimeout(()=>focusRecord(m[2]),0)}}
 function init(){
@@ -107,6 +105,13 @@ async function refreshUploadedFlags(model=currentModel){
     }else{
       slots.push({baseKey:`${model}_${key}`,sourceKey:key,selectorValue:"",name:item.title,detail:"",filename:key==="T"?"No checklist uploaded":item.filename||"No document uploaded",size:item.size||"—"});
     }
+    if(Array.isArray(item.documents)){
+      item.documents.forEach((doc,index)=>slots.push({
+        baseKey:doc.storageKey||`${model}_${key}_document_${doc.id||index+1}`,
+        sourceKey:key,selectorValue:`__doc__:${doc.id||index+1}`,documentId:doc.id||String(index+1),
+        name:doc.name||doc.filename||`Document ${index+1}`,detail:doc.detail||"",filename:doc.filename||"No document uploaded",size:doc.size||"—",additionalDocument:true
+      }));
+    }
     slotDescriptors.set(key,slots);
     slots.forEach(slot=>baseKeys.push(slot.baseKey));
   }
@@ -154,10 +159,38 @@ async function refreshUploadedFlags(model=currentModel){
     if(entries.some(x=>x.present)) uploadedKeys.add(key);
   }
   renderCards();
+  const telemetryFiles=document.getElementById("telemetryFiles");
+  if(telemetryFiles)telemetryFiles.textContent=String([...expandedFileMap.values()].flat().filter(x=>x.present).length);
 }
 
 function subpartId(sub,index){return String(sub?.id||sub?.name||`part-${index+1}`).trim().toLowerCase().replace(/[^a-z0-9]+/g,"-").replace(/^-+|-+$/g,"")||`part-${index+1}`}
 function keyForSubpart(model,key,sub,index){const storageKey=key==="M"?"O":key;return `${model}_${storageKey}_${subpartId(sub,index)}`}
+function renderHero(){const m=data[currentModel].meta;document.getElementById("activeModelCode").textContent=currentModel;document.getElementById("activeModelName").textContent=m.name;const modelType=m.modelType||(m.status==="Mass Production"?"Mass Production Model":"Development Model");document.getElementById("modelStatus").innerHTML=`<i class="fa-solid fa-circle"></i> ${escapeHtml(modelType)}`;document.getElementById("metaAp").textContent=m.ap||"—";document.getElementById("metaModelYear").textContent=m.modelYear||"—";document.getElementById("metaSielHwPic").textContent=m.sielHwPic||m.leadKorea||"—";document.getElementById("metaRfNetwork").textContent=m.rfNetwork||m.modem||"—"}
+function renderCategories(){
+  const tabColors={
+    all:"#2563eb",
+    Schematics:CATEGORY_COLORS["Schematics"],
+    "RF & Wireless":CATEGORY_COLORS["RF & Wireless"],
+    "Process & Tech":CATEGORY_COLORS["Process & Tech"],
+    "Defect summary & SW process":CATEGORY_COLORS["Defect summary & SW process"],
+    Specification:CATEGORY_COLORS.Specification
+  };
+  document.getElementById("categoryTabs").innerHTML=CATEGORIES.map(c=>`<button class="cat-btn ${activeCategory===c.key?"active":""}" data-cat="${escapeHtml(c.key)}" style="--cat-color:${tabColors[c.key]||"#2563eb"}"><i class="fa-solid ${escapeHtml(c.icon||"fa-folder")}"></i><span>${escapeHtml(c.label)}</span><b class="cat-count">${RECORD_ORDER.filter(k=>currentItems()[k]?.category===c.key).length|| (c.key==="all"?RECORD_ORDER.filter(k=>currentItems()[k]).length:0)}</b></button>`).join("")
+}
+function ensureSchematicCardsVisible(){
+  const items=currentItems();
+  const defaults=createDefaultData()[currentModel]?.items||{};
+  for(const key of ["A","B","C"]){
+    if(!items[key]) items[key]=clone(defaults[key]);
+    items[key].title=defaults[key].title;
+    items[key].category="Schematics";
+    items[key].icon=defaults[key].icon;
+    items[key].tags=clone(defaults[key].tags||[]);
+  }
+}
+
+function filteredEntries(){let arr=RECORD_ORDER.map(k=>[k,currentItems()[k]]).filter(([,i])=>i).filter(([k,i])=>{const cat=activeCategory==="all"||i.category===activeCategory;const fav=!favoritesOnly||favorites.includes(`${currentModel}:${k}`);return cat&&fav&&(!query||itemText(k,i).includes(query.toLowerCase()))});if(sortMode==="title")arr.sort((a,b)=>a[1].title.localeCompare(b[1].title));if(sortMode==="category")arr.sort((a,b)=>a[1].category.localeCompare(b[1].category)||a[0].localeCompare(b[0]));if(sortMode==="favorite")arr.sort((a,b)=>Number(favorites.includes(`${currentModel}:${b[0]}`))-Number(favorites.includes(`${currentModel}:${a[0]}`)));return arr}
+
 const recordSystem=createRecordSystem({
   getCurrentModel:()=>currentModel,
   getCurrentItems:()=>currentItems(),
@@ -171,18 +204,14 @@ const recordSystem=createRecordSystem({
   getSortMode:()=>sortMode,
   getFilteredEntries:filteredEntries,
   ensureSchematicCardsVisible,
-  getData:()=>data,
   getCategoryColors:()=>CATEGORY_COLORS,
   getRecordOrder:()=>RECORD_ORDER,
-  getColorForCategory:(category)=>CATEGORY_COLORS[category]||CATEGORY_COLORS.Specification,
   getFile,
   formatBytes,
-  getFormatBytes:formatBytes,
   escapeHtml,
   downloadRecord,
   toast,
   openUploadModal,
-  focusRecord,
   getMotion:()=>prefs.motion
 });
 const renderCards=()=>recordSystem.renderCards();
@@ -203,13 +232,15 @@ function updateSubpartSelector(preferredIndex=""){
   const model=document.getElementById("uploadModel")?.value||currentModel,key=document.getElementById("uploadRecord")?.value,wrap=document.getElementById("uploadSubPartWrap"),el=document.getElementById("uploadSubPart");
   if(!wrap||!el)return;
   const item=data[model]?.items?.[key],sources=Array.isArray(item?.mergedSources)?item.mergedSources:[],subs=Array.isArray(item?.subItems)?item.subItems:[];
-  if(!sources.length&&!subs.length){wrap.classList.add("hidden");el.innerHTML="";return}
   const options=sources.length?sources.map(s=>({value:s.key,label:s.name,filename:s.filename})):subs.map((s,i)=>({value:String(i),label:s.name||`File ${i+1}`,filename:s.filename}));
+  if(!sources.length&&!subs.length && item){options.push({value:"__base__",label:"Current document / new version",filename:item.filename||""})}
+  (item?.documents||[]).forEach((doc,index)=>options.push({value:`__doc__:${doc.id||index+1}`,label:doc.name||doc.filename||`Additional document ${index+1}`,filename:doc.filename||""}));
+  options.unshift({value:"__new__",label:"+ Add new document",filename:"Unlimited additional documents"});
   wrap.classList.remove("hidden");
   el.innerHTML=options.map(o=>`<option value="${escapeHtml(o.value)}">${escapeHtml(o.label)}${o.filename?` • ${escapeHtml(o.filename)}`:""}</option>`).join("");
   if(preferredIndex!==""&&options.some(o=>String(o.value)===String(preferredIndex)))el.value=String(preferredIndex);
 }
-function openUploadModal(recordKey="",subpartIndex=""){if(!isAdmin){toast("Admin authentication is required to upload documents.","error");return}const model=currentModel;populateUploadModels(model);populateUploadRecords(model,recordKey);updateSubpartSelector(subpartIndex);resetSelectedFile();openModal("uploadModal")}
+function openUploadModal(recordKey="",subpartIndex=""){if(!isAdmin){toast("Admin authentication is required to upload documents.","error");return}const model=currentModel;populateUploadModels(model);populateUploadRecords(model,recordKey);updateSubpartSelector(subpartIndex);if(!subpartIndex)document.getElementById("uploadSubPart")?.value="__new__";resetSelectedFile();openModal("uploadModal")}
 
 function resetSelectedFile(){selectedFiles=[];const input=document.getElementById("fileInput");if(input)input.value="";const name=document.getElementById("fileName");if(name)name.textContent="Drop files here or click to browse";const status=document.getElementById("uploadStatus");if(status)status.textContent="";const rev=document.getElementById("uploadRevision");if(rev)rev.value="";const note=document.getElementById("uploadNote");if(note)note.value=""}
 
@@ -238,7 +269,7 @@ function openRecord(key){
   requestAnimationFrame(()=>focusRecord(key));
 }
 function focusRecord(key){const el=document.getElementById(`record-${key}`);if(el){el.scrollIntoView({behavior:prefs.motion?"smooth":"auto",block:"center"});el.classList.add("record-focus");setTimeout(()=>el.classList.remove("record-focus"),1200)}}
-function renderRecent(){const wrap=document.getElementById("recentList");if(!wrap)return;const items=recentlyViewed.map(id=>{const [m,k]=id.split(":");const item=currentItemsFor(m)[k];return item?{m,k,item}:null}).filter(Boolean);wrap.innerHTML=items.length?items.map(x=>`<button class="recent-item" data-recent-model="${x.m}" data-recent-key="${x.k}"><span>${x.m} · ${x.k}</span><strong>${escapeHtml(x.item.title)}</strong></button>`).join(""):"<span class='help-text'>No recently viewed records.</span>"}
+function renderRecent(){const wrap=document.getElementById("recentList");if(!wrap)return;const panel=wrap.closest(".recent-panel");const items=recentlyViewed.map(id=>{const [m,k]=id.split(":");const item=currentItemsFor(m)[k];return item?{m,k,item}:null}).filter(Boolean);if(panel)panel.classList.toggle("hidden",!items.length);wrap.innerHTML=items.length?items.map(x=>`<button class="recent-item" data-recent-model="${x.m}" data-recent-key="${x.k}"><span>${x.m} · ${x.k}</span><strong>${escapeHtml(x.item.title)}</strong></button>`).join(""):""}
 
 function bindEvents(){
   const engineeringTabsToggle=document.getElementById("engineeringTabsToggle"),engineeringTabsRow=document.getElementById("engineeringRecordsTabsRow"),engineeringTabsHidden=false;
@@ -263,9 +294,12 @@ function bindEvents(){
     const l=e.target.closest("[data-link-record]");if(l){copyLink(l.dataset.linkRecord);return}
     const clr=e.target.closest("[data-clear-filters]");if(clr){clearFilters();return}
     const card=e.target.closest(".record-card");
-    if(card&&!e.target.closest("button,a,input,select,textarea")){const key=card.dataset.record;if(expandedCards.has(key))expandedCards.delete(key);else expandedCards.add(key);renderCards();requestAnimationFrame(()=>document.getElementById(`record-${key}`)?.scrollIntoView({behavior:prefs.motion?"smooth":"auto",block:"nearest"}));}
+    if(card&&!e.target.closest("button,a,input,select,textarea")){
+      if(activeCategory!=="all") return;
+      const key=card.dataset.record;if(expandedCards.has(key))expandedCards.delete(key);else expandedCards.add(key);renderCards();requestAnimationFrame(()=>document.getElementById(`record-${key}`)?.scrollIntoView({behavior:prefs.motion?"smooth":"auto",block:"nearest"}));
+    }
   });
-  document.getElementById("cardsGrid").addEventListener("keydown",e=>{const card=e.target.closest(".record-card");if(card&&(e.key==="Enter"||e.key===" ")&&!e.target.closest("button,input,select,textarea")){e.preventDefault();const key=card.dataset.record;if(expandedCards.has(key))expandedCards.delete(key);else expandedCards.add(key);renderCards();}});
+  document.getElementById("cardsGrid").addEventListener("keydown",e=>{const card=e.target.closest(".record-card");if(card&&(e.key==="Enter"||e.key===" ")&&!e.target.closest("button,input,select,textarea")){e.preventDefault();if(activeCategory!=="all")return;const key=card.dataset.record;if(expandedCards.has(key))expandedCards.delete(key);else expandedCards.add(key);renderCards();}});
   document.getElementById("copySpecsBtn").addEventListener("click",copySpecs);document.getElementById("exportJsonBtn").addEventListener("click",exportModel);document.getElementById("exportReportBtn").addEventListener("click",exportReport);document.getElementById("settingsBtn").addEventListener("click",openSettings);document.getElementById("themeBtn").addEventListener("click",()=>{prefs.theme=prefs.theme==="dark"?"light":"dark";savePrefs();draftPrefs={...prefs};applyPrefs()});document.getElementById("fullscreenBtn").addEventListener("click",toggleFullscreen);
   ["themeSelect","accentSelect","densitySelect","motionToggle"].forEach(id=>document.getElementById(id)?.addEventListener("change",syncDraftPrefs));
   document.getElementById("settingsApplyBtn")?.addEventListener("click",()=>applyDraftPrefs(false));document.getElementById("settingsOkBtn")?.addEventListener("click",()=>{applyDraftPrefs(true)});
@@ -326,19 +360,45 @@ async function addModel(e){
 async function deleteSelectedModel(){if(!isAdmin)return;const code=document.getElementById("editModelSelect")?.value||"";if(!code||!data[code]){toast("Select a model to delete.","error");return}const custom=readJson(CUSTOM_MODELS_KEY,[]);if(!custom.some(x=>x.code===code)){toast("Built-in models cannot be deleted from the admin panel.","error");return}if(!confirm(`Delete model ${code} and all locally stored documents for this model? This cannot be undone.`))return;await deleteFilePrefix(code);const renamed=renamedModelMap(),original=Object.entries(renamed).find(([,newCode])=>newCode===code)?.[0];delete data[code];if(original&&MODEL_ORDER.includes(original)){delete renamed[original];data[original]=createDefaultData()[original]}localStorage.setItem(CUSTOM_MODELS_KEY,JSON.stringify(custom.filter(x=>x.code!==code)));localStorage.setItem(RENAMED_MODELS_KEY,JSON.stringify(renamed));saveData();const models=modelList();currentModel=models[0]||"";localStorage.setItem("MOBILE_RND_LAST_MODEL_V1",currentModel);closeModal("addModelModal");populateUploadModels(currentModel);renderCategories();renderAll();renderModelPicker("");toast(original?`${code} removed and ${original} restored.`:`${code} deleted.`,'success');addAudit("MODEL_DELETE",{model:code,restoredModel:original||""})}
 
 function login(e){e.preventDefault();const input=document.getElementById("passwordInput");const error=document.getElementById("loginError");if(input.value==="admin123"){isAdmin=true;sessionStorage.setItem(AUTH_KEY,"true");closeModal("loginModal");document.getElementById("passwordInput").value="";renderAuth();renderCards();document.dispatchEvent(new Event("rnd-auth-changed"));toast("Admin session authenticated.","success");addAudit("LOGIN")}else{error.classList.remove("hidden");input.classList.add("input-error");input.focus();setTimeout(()=>input.classList.remove("input-error"),700)}}
-function selectFiles(fileList){if(!isAdmin){toast("Admin authentication is required to upload documents.","error");return}const files=[...(fileList||[])];if(!files.length)return;const valid=[];const rejected=[];for(const file of files){const ext=file.name.split(".").pop().toLowerCase();if(!ALLOWED.includes(ext)){rejected.push(`${file.name}: unsupported type`);continue}if(file.size>MAX_FILE_SIZE){rejected.push(`${file.name}: exceeds 500 MB`);continue}valid.push(file)}selectedFiles=[...selectedFiles,...valid];const name=document.getElementById("fileName");if(name)name.textContent=selectedFiles.length?selectedFiles.map(f=>`${f.name} (${formatBytes(f.size)})`).join(" • "):"Drop files here or click to browse";const status=document.getElementById("uploadStatus");if(status)status.textContent=rejected.length?`${selectedFiles.length} file${selectedFiles.length===1?"":"s"} ready. ${rejected.join("; ")}`:`${selectedFiles.length} file${selectedFiles.length===1?"":"s"} ready for upload.`}
+function selectFiles(fileList){
+  if(!isAdmin){toast("Admin authentication is required to upload documents.","error");return}
+  const files=[...(fileList||[])];
+  if(!files.length)return;
+  selectedFiles=[...selectedFiles,...files];
+  const name=document.getElementById("fileName");
+  if(name)name.textContent=selectedFiles.length?selectedFiles.map(f=>`${f.name} (${formatBytes(f.size)})`).join(" • "):"Drop files here or click to browse";
+  const status=document.getElementById("uploadStatus");
+  if(status)status.textContent=`${selectedFiles.length} file${selectedFiles.length===1?"":"s"} ready. No per-record document limit is enforced; browser storage capacity remains the only practical constraint.`;
+}
+
 async function upload(e){
   e.preventDefault();if(!selectedFiles.length){toast("Please select at least one file first.","error");return}
   const model=document.getElementById("uploadModel").value,key=document.getElementById("uploadRecord").value,note=document.getElementById("uploadNote").value.trim(),revision=document.getElementById("uploadRevision")?.value.trim()||"",item=data[model]?.items?.[key];
   if(!item){toast("Upload target is not available.","error");return}
-  const selector=document.getElementById("uploadSubPart"),sourceValue=selector?.value||"";
-  let storageKey=`${model}_${key}`,targetLabel=item.title,source=null;
-  if(Array.isArray(item.mergedSources)&&item.mergedSources.length){source=item.mergedSources.find(x=>String(x.key)===String(sourceValue))||item.mergedSources[0];storageKey=`${model}_${source.key}`;targetLabel=`${item.title} / ${source.name}`}
-  else if(Array.isArray(item.subItems)&&item.subItems.length){const idx=Number(sourceValue);source=item.subItems[idx];if(!source){toast("Select a document entry first.","error");return}storageKey=keyForSubpart(model,key,source,idx);targetLabel=`${item.title} / ${source.name}`}
+  const selector=document.getElementById("uploadSubPart"),sourceValue=selector?.value||"__new__";
+  let storageKey=`${model}_${key}`,targetLabel=item.title,source=null,isNewDocument=sourceValue==="__new__";
+  if(!isNewDocument && sourceValue.startsWith("__doc__:")){
+    const id=sourceValue.slice(7);
+    const doc=(item.documents||[]).find((x,index)=>String(x.id||index+1)===id);
+    if(!doc){toast("Additional document is no longer available.","error");return}
+    storageKey=doc.storageKey||`${model}_${key}_document_${id}`;targetLabel=`${item.title} / ${doc.name||doc.filename||"Additional document"}`;
+  }
+  else if(!isNewDocument && Array.isArray(item.mergedSources)&&item.mergedSources.length){source=item.mergedSources.find(x=>String(x.key)===String(sourceValue))||item.mergedSources[0];storageKey=`${model}_${source.key}`;targetLabel=`${item.title} / ${source.name}`}
+  else if(!isNewDocument && sourceValue==="__base__"){storageKey=`${model}_${key}`;targetLabel=`${item.title} / current document`}
+  else if(!isNewDocument && Array.isArray(item.subItems)&&item.subItems.length){const idx=Number(sourceValue);source=item.subItems[idx];if(!source){toast("Select a document entry first or choose Add new document.","error");return}storageKey=keyForSubpart(model,key,source,idx);targetLabel=`${item.title} / ${source.name}`}
   const files=[...selectedFiles],btn=document.getElementById("saveUploadBtn"),progressWrap=document.getElementById("uploadProgressWrap"),progress=document.getElementById("uploadProgress"),status=document.getElementById("uploadStatus");btn.disabled=true;progressWrap.classList.remove("hidden");progress.style.width="0%";
   try{
     for(let i=0;i<files.length;i++){
       const file=files[i];if(status)status.textContent=`Saving ${i+1} of ${files.length}: ${file.name}`;
+      if(isNewDocument){
+        const id=(globalThis.crypto?.randomUUID?.()||`${Date.now()}-${i}-${Math.random().toString(36).slice(2)}`);
+        storageKey=`${model}_${key}_document_${id}`;
+      }
+      let newDocumentId="";
+      if(isNewDocument){
+        newDocumentId=globalThis.crypto?.randomUUID?.()||`${Date.now()}-${i}-${Math.random().toString(36).slice(2)}`;
+        storageKey=`${model}_${key}_document_${newDocumentId}`;
+      }
       let saved;
       try{
         saved=await saveFileVersion(storageKey,file,{revision,note},(pct,part,total)=>{progress.style.width=`${pct}%`;if(status)status.textContent=`Saving ${file.name}… ${pct}% (${part}/${total} chunks)`});
@@ -349,9 +409,12 @@ async function upload(e){
         toast(`File was not saved: ${detail}`,"error");
         throw err;
       }
-      if(source){source.uploadedFilename=file.name;source.uploadedSize=formatBytes(file.size);source.updatedAt=new Date().toISOString();if(note)source.detail=note}
+      if(isNewDocument){
+        if(!Array.isArray(item.documents))item.documents=[];
+        item.documents.push({id:newDocumentId,storageKey,name:file.name,filename:file.name,size:formatBytes(file.size),uploadedFilename:file.name,uploadedSize:formatBytes(file.size),updatedAt:new Date().toISOString(),detail:note,revision});
+      }else if(source){source.uploadedFilename=file.name;source.uploadedSize=formatBytes(file.size);source.updatedAt=new Date().toISOString();if(note)source.detail=note}
       else {item.filename=file.name;item.size=formatBytes(file.size);item.uploadedFilename=file.name;item.uploadedSize=formatBytes(file.size);item.updatedAt=new Date().toISOString();if(note)item.note=note}
-      try{await addAudit("UPLOAD",{model,key,subpart:source?.name||"",filename:file.name,size:file.size,versionKey:saved.key})}
+      try{await addAudit("UPLOAD",{model,key,subpart:source?.name||"Additional document",filename:file.name,size:file.size,versionKey:saved.key})}
       catch(auditErr){console.warn("File saved but audit logging failed",auditErr)}
     }
     try{saveData()}catch(metaErr){console.warn("File saved but local metadata persistence failed",metaErr)}
