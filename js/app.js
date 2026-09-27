@@ -586,7 +586,15 @@ async function upload(e){
       catch(auditErr){console.warn("File saved but audit logging failed",auditErr)}
     }
     try{saveData()}catch(metaErr){console.warn("File saved but local metadata persistence failed",metaErr)}
-    try{expandedCards.add(key);await refreshUploadedFlags(currentModel);renderAll()}catch(uiErr){console.warn("File saved but UI refresh failed",uiErr)}
+    try{
+      // Refresh the document state without forcing the record into the compact
+      // grid's narrow column. In ALL view the user can expand the record on
+      // demand; in a category/group view the existing group layout remains
+      // expanded naturally.
+      await refreshUploadedFlags(currentModel);
+      renderRecent();
+      requestAnimationFrame(()=>focusRecord(key));
+    }catch(uiErr){console.warn("File saved but UI refresh failed",uiErr)}
     closeModal("uploadModal");toast(`${files.length} file${files.length===1?"":"s"} saved to ${targetLabel}.`,`success`);resetSelectedFile();document.getElementById("uploadModel").value=currentModel;populateUploadRecords(currentModel);updateSubpartSelector();
   }catch(err){
     console.error("Upload operation stopped",err);
