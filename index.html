@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="description" content="Mobile R&D Technical Hub — engineering records, specifications, lab testing setup and model comparison">
+  <meta name="description" content="Mobile R&D Technical Hub — clean engineering workspace">
   <title>Mobile R&D Technical Hub</title>
 
   <script src="https://cdn.tailwindcss.com"></script>
@@ -11,10 +11,10 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;600;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="css/dashboard.css?v=clean-2026-09">
-  <link rel="stylesheet" href="css/lab-knowledge.css?v=clean-2026-09">
-  <link rel="stylesheet" href="css/modular-features.css?v=clean-2026-09">
-  <link rel="stylesheet" href="css/model-comparison.css?v=clean-2026-09">
+  <link rel="stylesheet" href="css/dashboard.css?v=V65-CLEAN">
+  <link rel="stylesheet" href="css/lab-knowledge.css?v=V65-CLEAN">
+  <link rel="stylesheet" href="css/modular-features.css?v=V65-CLEAN">
+  <link rel="stylesheet" href="css/model-comparison.css?v=V65-CLEAN">
 </head>
 
 <body class="min-h-screen bg-slate-100 text-slate-800 antialiased">
@@ -68,6 +68,13 @@
         <div id="modelStatus" class="status-pill"><i class="fa-solid fa-circle"></i> Mass Production</div>
       </div>
 
+      <div class="sidebar-modules" aria-label="Portal feature modules">
+        <div class="sidebar-module-title"><i class="fa-solid fa-grip"></i><span>PORTAL MODULES</span></div>
+        <button class="sidebar-module-btn" data-module="modelDocument" id="modelDocumentBtn"><i class="fa-solid fa-folder-open"></i><span>Model Documents</span></button>
+        <button class="sidebar-module-btn" data-module="excelComparison" id="modelComparisonBtnTop"><i class="fa-solid fa-code-compare"></i><span>Parameter / Spec Comparison</span></button>
+        <button class="sidebar-module-btn" data-module="labKnowledge" id="labKnowledgeBtn"><i class="fa-solid fa-flask-vial"></i><span>R&amp;D Lab Testing Setup</span></button>
+      </div>
+
       <div class="sidebar-telemetry">
         <div class="sidebar-metric"><span><i class="fa-solid fa-microchip"></i> PROCESSOR</span><strong id="metaAp">—</strong></div>
         <div class="sidebar-metric"><span><i class="fa-solid fa-calendar-days"></i> LAUNCH YEAR</span><strong id="metaModelYear">—</strong></div>
@@ -77,13 +84,6 @@
 
       <div class="sidebar-actions">
         <button id="copySpecsBtn" class="sidebar-action"><i class="fa-regular fa-copy"></i><span>Copy Specs</span></button>
-      </div>
-
-      <div class="sidebar-modules" aria-label="Portal feature modules">
-        <div class="sidebar-module-title"><i class="fa-solid fa-grip"></i><span>PORTAL MODULES</span></div>
-        <button class="sidebar-module-btn" data-module="modelDocument" id="modelDocumentBtn"><i class="fa-solid fa-folder-open"></i><span>Model Documents</span></button>
-        <button class="sidebar-module-btn" data-module="excelComparison" id="modelComparisonBtnTop"><i class="fa-solid fa-code-compare"></i><span>Parameter / Spec Comparison</span></button>
-        <button class="sidebar-module-btn" data-module="labKnowledge" id="labKnowledgeBtn"><i class="fa-solid fa-flask-vial"></i><span>R&amp;D Lab Testing Setup</span></button>
       </div>
 
       <div class="sidebar-footer">
@@ -144,7 +144,7 @@
   <footer class="app-footer">
     <div class="app-container footer-inner">
       <div><span class="online-dot"></span> Mobile R&D Technical Hub</div>
-      <div class="mono">IndexedDB • Local Repository • <span id="appVersion">Canonical Engineering Workspace</span></div>
+      <div class="mono">IndexedDB • Local Repository • <span id="appVersion">V65.0 • Clean 3-Column Engineering Workspace</span></div>
     </div>
   </footer>
 
@@ -429,17 +429,16 @@
     import {applyModuleVisibility} from './js/modules/module-manager.js';
     import {initLabKnowledge} from './js/modules/lab-knowledge/module.js';
     import {initParameter360} from './js/modules/parameter-360/module.js';
- import {initModelDocument} from './js/modules/model-document/module.js';
     document.addEventListener('DOMContentLoaded',()=>{
       applyModuleVisibility();
       initLabKnowledge();
       initParameter360();
-   initModelDocument();
-         document.getElementById('modelComparisonBtnTop')?.addEventListener('click',()=>document.dispatchEvent(new CustomEvent('portal-open-excel-comparison')));
+      document.getElementById('modelDocumentBtn')?.addEventListener('click',()=>document.getElementById('fileCenterBtn')?.click());
+      document.getElementById('modelComparisonBtnTop')?.addEventListener('click',()=>document.dispatchEvent(new CustomEvent('portal-open-excel-comparison')));
     });
   </script>
-  <script type="module" src="js/app.js?v=clean-2026-09"></script>
-  <script type="module" src="js/file-command-center.js?v=clean-2026-09"></script>
-  <script type="module" src="js/modules/model-comparison/module.js?v=hard-clean-v8"></script>
+  <script type="module" src="js/app.js?v=V65-CLEAN"></script>
+  <script type="module" src="js/file-command-center.js?v=V65-CLEAN"></script>
+  <script type="module" src="js/model-comparison/comparison.js?v=V65-CLEAN"></script>
 </body>
 </html>
