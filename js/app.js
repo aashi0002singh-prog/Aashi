@@ -348,7 +348,7 @@ function renderExpandedFiles(key,item){
       ? `<div class="expanded-file-actions"><button class="download-btn" style="background:${color}" data-preview-file="${escapeHtml(entry.storageKey)}" data-filename="${escapeHtml(entry.filename)}"><i class="fa-solid fa-eye"></i> PREVIEW LATEST</button><button class="download-btn" style="background:${color}" data-download="${escapeHtml(entry.storageKey)}" data-filename="${escapeHtml(entry.filename)}"><i class="fa-solid fa-download"></i> DOWNLOAD</button>${isAdmin?`<button class="download-btn hw-upload-btn" style="background:${color}" data-open-upload="${escapeHtml(key)}" data-subpart-index="${escapeHtml(entry.selectorValue??entry.sourceKey??"")}"><i class="fa-solid fa-plus"></i> NEW VERSION</button>`:""}</div>`
       : (isAdmin?`<button class="download-btn hw-upload-btn" style="background:${color}" data-open-upload="${escapeHtml(key)}" data-subpart-index="${escapeHtml(entry.selectorValue??entry.sourceKey??"")}"><i class="fa-solid fa-cloud-arrow-up"></i> UPLOAD</button>`:`<span class="missing-label">ADMIN UPLOAD REQUIRED</span>`);
     const versionSummary=entry.present?`<span class="version-count">${entry.versionCount} version${entry.versionCount===1?"":"s"}</span>`:"";
-    return `<div class="expanded-file-row ${entry.present?"is-present":"is-missing"}"><div class="expanded-file-main"><div class="expanded-file-title"><i class="fa-solid ${escapeHtml(entry.present?"fa-file-circle-check":"fa-file-circle-xmark")}"></i><span>${escapeHtml(entry.name)}</span><span class="expanded-status ${entry.present?"present":"missing"}">${entry.present?"PRESENT":"MISSING"}</span>${versionSummary}</div><div class="expanded-file-meta"><span>${escapeHtml(entry.filename)}</span><span>${escapeHtml(entry.size)}</span>${entry.detail?`<span>${escapeHtml(entry.detail)}</span>`:""}</div>${entry.present?renderVersionHistory(entry,color):`<div class="slot-missing-note">No uploaded version for this required document slot.</div>`}</div>${actions}</div>`;
+    return `<div class="expanded-file-row ${entry.present?"is-present":"is-missing"}"><div class="expanded-file-main"><div class="expanded-file-title"><i class="fa-solid ${escapeHtml(entry.present?"fa-file-circle-check":"fa-file-circle-xmark")}"></i><span>${escapeHtml(entry.name)}</span><span class="expanded-status ${entry.present?"present":"missing"}">${entry.present?"PRESENT":"MISSING"}</span>${versionSummary}</div><div class="expanded-file-meta"><span>${escapeHtml(entry.filename)}</span><span>${escapeHtml(entry.size)}</span>${entry.detail?`<span>${escapeHtml(entry.detail)}</span>`:""}</div>${entry.present?renderVersionHistory(entry,color):`<div class="slot-missing-note">No uploaded version for this document.</div>`}</div>${actions}</div>`;
   }).join("");
 }
 
@@ -555,13 +555,28 @@ async function upload(e){
   try{
     for(let i=0;i<files.length;i++){
       const file=files[i];if(status)status.textContent=`Saving ${i+1} of ${files.length}: ${file.name}`;
-      const saved=await saveFileVersion(storageKey,file,{revision,note},(pct,part,total)=>{progress.style.width=`${pct}%`;if(status)status.textContent=`Saving ${file.name}… ${pct}% (${part}/${total} chunks)`});
+      let saved;
+      try{
+        saved=await saveFileVersion(storageKey,file,{revision,note},(pct,part,total)=>{progress.style.width=`${pct}%`;if(status)status.textContent=`Saving ${file.name}… ${pct}% (${part}/${total} chunks)`});
+      }catch(err){
+        const detail=err?.name?`${err.name}: ${err.message||"storage operation failed"}`:(err?.message||String(err));
+        console.error("IndexedDB file commit failed",err);
+        if(status)status.textContent=`Upload failed for ${file.name}: ${detail}`;
+        toast(`File was not saved: ${detail}`,"error");
+        throw err;
+      }
       if(source){source.uploadedFilename=file.name;source.uploadedSize=formatBytes(file.size);source.updatedAt=new Date().toISOString();if(note)source.detail=note}
       else {item.filename=file.name;item.size=formatBytes(file.size);item.uploadedFilename=file.name;item.uploadedSize=formatBytes(file.size);if(note)item.tags=[note]}
-      await addAudit("UPLOAD",{model,key,subpart:source?.name||"",filename:file.name,size:file.size,versionKey:saved.key});
+      try{await addAudit("UPLOAD",{model,key,subpart:source?.name||"",filename:file.name,size:file.size,versionKey:saved.key})}
+      catch(auditErr){console.warn("File saved but audit logging failed",auditErr)}
     }
-    saveData();expandedCards.add(key);await refreshUploadedFlags(currentModel);renderAll();closeModal("uploadModal");toast(`${files.length} file${files.length===1?"":"s"} saved to ${targetLabel}.`,`success`);resetSelectedFile();document.getElementById("uploadModel").value=currentModel;populateUploadRecords(currentModel);updateSubpartSelector();
-  }catch(err){console.error("Large file upload failed",err);if(status)status.textContent="Upload failed. The file was not committed.";toast("Could not save the file to IndexedDB. Check available browser storage and try again.","error")}finally{btn.disabled=false;setTimeout(()=>progressWrap.classList.add("hidden"),300)}
+    try{saveData()}catch(metaErr){console.warn("File saved but local metadata persistence failed",metaErr)}
+    try{expandedCards.add(key);await refreshUploadedFlags(currentModel);renderAll()}catch(uiErr){console.warn("File saved but UI refresh failed",uiErr)}
+    closeModal("uploadModal");toast(`${files.length} file${files.length===1?"":"s"} saved to ${targetLabel}.`,`success`);resetSelectedFile();document.getElementById("uploadModel").value=currentModel;populateUploadRecords(currentModel);updateSubpartSelector();
+  }catch(err){
+    console.error("Upload operation stopped",err);
+    if(status&&!String(status.textContent||"").startsWith("Upload failed")) status.textContent=`Upload stopped: ${err?.message||String(err)}`;
+  }finally{btn.disabled=false;setTimeout(()=>progressWrap.classList.add("hidden"),300)}
 }
 
 async function downloadRecord(storageKey,filename){

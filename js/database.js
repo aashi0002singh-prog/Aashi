@@ -8,7 +8,9 @@ const LOG_STORE="audit";
 
 function openDB(){
   return new Promise((resolve,reject)=>{
+    if(!globalThis.indexedDB){ reject(new Error("IndexedDB is unavailable in this browser context")); return; }
     const req=indexedDB.open(DB_NAME,DB_VERSION);
+    req.onblocked=()=>reject(new Error("IndexedDB upgrade is blocked by another open dashboard tab. Close other dashboard tabs and retry."));
     req.onupgradeneeded=e=>{
       const db=e.target.result;
       const tx=e.target.transaction;
@@ -27,8 +29,15 @@ function openDB(){
         };
       }
     };
-    req.onsuccess=()=>resolve(req.result);
-    req.onerror=()=>reject(req.error||new Error("IndexedDB open failed"));
+    req.onsuccess=()=>{
+      const db=req.result;
+      db.onversionchange=()=>db.close();
+      resolve(db);
+    };
+    req.onerror=()=>{
+      const err=req.error||new Error("IndexedDB open failed");
+      reject(err);
+    };
   });
 }
 
