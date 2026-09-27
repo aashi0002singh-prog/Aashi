@@ -1,12 +1,12 @@
 import {isModuleEnabled} from '../module-manager.js';
 import {LAB_SETUPS,LAB_EQUIPMENT,LAB_TROUBLESHOOTING} from './data.js';
-import {MODEL_ORDER,modelCodesFromData} from '../../../data/models.js';
+import {MODEL_ORDER} from '../../../data/models.js';
 import {saveFileVersion,getFile,listFileVersions,addAudit} from '../../database.js';
 import {downloadBlob,formatBytes,toast} from '../../ui.js';
 
-const AUTH_KEY='RND_AUTH';
-const STORAGE_KEY='MOBILE_RND_DATA';
-const MODEL_LINKS_KEY='MOBILE_RND_LAB_MODEL_LINKS';
+const AUTH_KEY='RND_AUTH_V3';
+const STORAGE_KEY='MOBILE_RND_DB_DATA_V10';
+const MODEL_LINKS_KEY='MOBILE_RND_LAB_MODEL_LINKS_V1';
 const MAX_FILE_SIZE=500*1024*1024;
 const ALLOWED=['pdf','doc','docx','ppt','pptx','xls','xlsx','csv','zip','png','jpg','jpeg','webp'];
 const esc=s=>String(s??'').replace(/[&<>'"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[c]));
@@ -15,7 +15,7 @@ const modal=()=>document.getElementById('labKnowledgeModal'),body=()=>document.g
 const isAdmin=()=>sessionStorage.getItem(AUTH_KEY)==='true';
 const fileKey=id=>`LAB_${id}`;
 const allItems=()=>[...LAB_SETUPS,...LAB_EQUIPMENT];
-function modelCodes(){try{const data=JSON.parse(localStorage.getItem(STORAGE_KEY)||'null');return modelCodesFromData(data)}catch{return MODEL_ORDER}}
+function modelCodes(){try{const data=JSON.parse(localStorage.getItem(STORAGE_KEY)||'null');return [...new Set([...MODEL_ORDER,...Object.keys(data||{})])]}catch{return MODEL_ORDER}}
 function loadModelLinks(){try{return JSON.parse(localStorage.getItem(MODEL_LINKS_KEY)||'{}')||{}}catch{return {}}}
 function linkedModels(id){return loadModelLinks()[id]||[]}
 function saveModelLinks(id,models){const all=loadModelLinks();all[id]=[...new Set(models)];localStorage.setItem(MODEL_LINKS_KEY,JSON.stringify(all));}
@@ -47,7 +47,7 @@ async function upload(id,file){
   if(!file)return;
   if(file.size>MAX_FILE_SIZE){toast('File exceeds the 500 MB limit.','error');return}
   const ext=fileExt(file.name);if(!ALLOWED.includes(ext)){toast(`Unsupported file type: .${ext||'unknown'}`,'error');return}
-  try{const saved=await saveFileVersion(fileKey(id),file,{revision:`Rev ${((await listFileVersions(fileKey(id))).length||0)+1}`,note:'R&D Lab knowledge revision'});await addAudit('LAB_UPLOAD',{id,filename:file.name,size:file.size,type:file.type||'',versionKey:saved.key,revision:saved.record?.versionLabel||''});toast(`${file.name} uploaded to the R&D Lab Testing Setup.`,'success');await detail(id)}catch(err){console.error(err);toast('Lab file upload failed.','error')}
+  try{const saved=await saveFileVersion(fileKey(id),file,{revision:`${Date.now()}`,note:'R&D Lab knowledge revision'});await addAudit('LAB_UPLOAD',{id,filename:file.name,size:file.size,type:file.type||'',versionKey:saved.key,revision:saved.record?.versionLabel||''});toast(`${file.name} uploaded to the R&D Lab Testing Setup.`,'success');await detail(id)}catch(err){console.error(err);toast('Lab file upload failed.','error')}
 }
 async function download(id){
   try{const latest=await fileState(id);if(!latest){toast('No uploaded file is available.','info');return}const f=await getFile(latest.key||fileKey(id));if(!f?.blob){toast('The latest knowledge file is incomplete or unavailable.','info');return}if(downloadBlob(f.blob,f.filename||latest.filename||'lab-knowledge-file')){await addAudit('LAB_DOWNLOAD',{id,filename:f.filename||latest.filename||''});toast('Download started.','success')}else toast('Browser blocked the download.','error')}catch(err){console.error(err);toast('Lab file download failed.','error')}
