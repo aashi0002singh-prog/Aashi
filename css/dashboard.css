@@ -3471,3 +3471,43 @@ body[data-record-view="group"] .expanded-footer{
 .records-grid .record-card{height:auto !important;min-height:0 !important;max-height:none !important;overflow:visible !important;align-self:start !important}
 .records-grid .record-card.is-expanded{height:auto !important;min-height:0 !important;max-height:none !important;overflow:visible !important}
 .records-grid .record-card .record-expanded-panel{height:auto !important;max-height:none !important;overflow:visible !important}
+
+
+/* V64.2 repair pass: stabilize the three screenshot-marked UI areas. */
+.app-header .header-icon-btn{
+  flex:0 0 36px !important;
+  width:36px !important;
+  min-width:36px !important;
+  height:36px !important;
+}
+.sidebar-metric strong{
+  white-space:normal !important;
+  overflow:visible !important;
+  text-overflow:clip !important;
+  overflow-wrap:anywhere !important;
+  word-break:break-word !important;
+  line-height:1.3 !important;
+}
+.records-grid .record-card.is-expanded{
+  height:auto !important;
+  min-height:65px !important;
+  max-height:none !important;
+  overflow:visible !important;
+}
+.records-grid .expanded-footer{
+  display:grid !important;
+  grid-template-columns:repeat(3,minmax(0,1fr)) !important;
+  align-items:stretch !important;
+  gap:6px !important;
+  flex-wrap:nowrap !important;
+}
+.records-grid .expanded-footer .text-action{
+  min-width:0 !important;
+  width:100% !important;
+  white-space:nowrap !important;
+  overflow:hidden !important;
+  text-overflow:ellipsis !important;
+}
+@media(max-width:620px){
+  .records-grid .expanded-footer{grid-template-columns:1fr !important;}
+}
